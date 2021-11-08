@@ -1,0 +1,40 @@
+<html data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+    <div id="opinion-system-informations" class="d-none">{info -> f:format.json()}</div>
+
+    <div>
+        <p>{f:translate(key: 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:admPanel.intro')}</p>
+    </div>
+
+    <div class="typo3-adminPanel-table-overflow">
+        <table class="typo3-adminPanel-table typo3-adminPanel-table-debug">
+            <thead>
+                <tr>
+                    <th scope="col" class="typo3-adminPanel-table-cell-key">irgend eine message</th>
+                </tr>
+            </thead>
+            <tbody>
+            <f:for each="{info}" as="information" key="k">
+                <tr>
+                    <td>{k}</td>
+                    <td>
+                        <f:switch expression="{information}">
+                            <f:case value="'false'">sdffalse</f:case>
+                            <f:case value="'Array'">array foo</f:case>
+                            <f:defaultCase>
+                                {information}
+                            </f:defaultCase>
+                        </f:switch>
+                    </td>
+                </tr>
+            </f:for>
+            </tbody>
+        </table>
+    </div>
+
+    <f:image src="EXT:opinion/Resources/Public/Images/oPInion.png" width="100" />
+
+    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="{f:uri.action(action: 'opinion', controller: 'Opinion', extensionName: 'Opinion', pageType: '1634212115', noCache: '1', noCacheHash: '1')}">Abschicken</button>
+
+</html>

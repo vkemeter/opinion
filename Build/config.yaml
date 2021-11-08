@@ -1,0 +1,85 @@
+# config file for mainly breakpoints used in
+# scss and typoscript files
+
+# main key name
+config:
+  # export value #1
+  breakpoints:
+    export:
+      # possible keys at the moments are
+      # scss / constantsts
+      # more to come though
+      scss:
+        # variable name for writing in the file
+        name: grid-breakpoints
+        # file path and name (relative to the gulp file)
+        # to write the new file
+        file: Src/Scss/Abstracts/_breakpoints.scss
+      # example for writing a constantsts file
+      # for using it in typo3
+      # same name/file as in scss
+      constantsts:
+        name: site.breakpoints
+        file: Configuration/TypoScript/Base/Extensions/FluidStyledContent/Base/Breakpoints.constants.typoscript
+        # add additional value for setting
+        # a breakpoint-max value
+        # (-1px to the upcomming breakpoint)
+        additional: max
+        # add value typecast
+        typecast: parseInt
+    # the values which should be written to
+    # the new file
+    values:
+      - { key: xs, value: 0 }
+      - { key: sm, value: 576px }
+      - { key: md, value: 768px }
+      - { key: lg, value: 992px }
+      - { key: xl, value: 1200px }
+      - { key: xxl, value: 1440px }
+      - { key: ultrawide, value: 2600px }
+
+  # export value #2
+  # same keys possible as above
+  container:
+    export:
+      scss:
+        name: container-max-widths
+        file: Src/Scss/Abstracts/_container.scss
+    values:
+      - { key: sm, value: 540px }
+      - { key: md, value: 720px }
+      - { key: lg, value: 960px }
+      - { key: xl, value: 1140px }
+      - { key: xxl, value: 1440px }
+
+  # export value #3
+  # export a colors.scss file with theme colors
+  # for usage in typo3 backend and in scss files
+  colors:
+      export:
+          scss:
+            name: colors
+            file: Src/Scss/Abstracts/_colors.scss
+          yaml:
+            name: colors
+            file: Configuration/Misc/colors.yaml
+      values:
+        - { key: primary, value: 'primary' }
+
+  # export value #4
+  # export a aspect-ratios.scss file with aspect ratios
+  # for usage in scss
+  aspect-ratios:
+      export:
+          scss:
+            name: aspect-ratios
+            file: Src/Scss/Abstracts/_aspect-ratios.scss
+          yaml:
+            advanced: true
+            name: aspectRatios
+            file: Configuration/ImageManipulation/Imports/aspect-ratios.yaml
+      values:
+        - { key: 16by9, value: '16 9' }
+        - { key: 4by3, value: '4 3' }
+        - { key: 3by2, value: '3 2' }
+        - { key: 1by1, value: '1 1' }

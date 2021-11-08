@@ -1,0 +1,31 @@
+<html data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+    <h1>feedback, oida!</h1>
+
+    <table>
+        <tr>
+            <td>Datum/ Uhrzeit</td>
+            <td>{opinion.time -> f:format.date(format: 'd.m.Y H:i:s')}</td>
+        </tr>
+        <tr>
+            <td>Browser</td>
+            <td>{opinion.browser.appVersion}</td>
+        </tr>
+        <tr>
+            <td>Uri</td>
+            <td>{opinion.document.uri}</td>
+        </tr>
+        <tr>
+            <td>Breakpoint</td>
+            <td>{opinion.display.breakpoint}</td>
+        </tr>
+        <tr>
+            <td>Screenshot</td>
+            <td>
+                <img src="cid:screenshot" width="500">
+            </td>
+        </tr>
+    </table>
+
+</html>

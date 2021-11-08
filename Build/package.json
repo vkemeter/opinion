@@ -1,0 +1,15 @@
+{
+  "name": "Opinion",
+  "version": "1.0.0",
+  "description": "Getting user opinions like a boss",
+  "main": "index.js",
+  "author": "Volker Kemeter",
+  "license": "MIT",
+  "dependencies": {
+    "frontend-pipeline-main": "https://github.com/vkemeter/frontend-pipeline-main.git",
+    "html2canvas": "^1.3.2"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.4"
+  }
+}
