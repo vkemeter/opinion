@@ -1,4 +1,35 @@
 /** Opinion CSS File **/
+.typo3-adminPanel-headline {
+	line-height: 1.2;
+}
+
+.opinion {
+	&-intro {
+		margin: 32px 0;
+	}
+
+	&-form {
+		font-size: 12px;
+		font-weight: 400;
+		white-space: normal;
+		outline: 0;
+
+		&-label {
+			display: block;
+		}
+
+		&-textarea {
+			display: block;
+			width: 100%;
+			height: 200px;
+			padding: 16px;
+			border-radius: 2px;
+			border: 1px solid #dadada;
+			background-color: #fff;
+			margin: 0 0 32px 0;
+		}
+	}
+}
 
 .d-none {
 	display: none !important;

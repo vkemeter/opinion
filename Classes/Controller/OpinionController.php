@@ -28,6 +28,7 @@ class OpinionController extends ActionController
 
             $opinion = new Opinion();
             $opinion->setTime(new \DateTime($decodedData['time']));
+            $opinion->setMessage($decodedData['message']);
             $opinion->setBrowser($decodedData['browser']);
             $opinion->setDocument($decodedData['document']);
             $opinion->setDisplay($decodedData['display']);

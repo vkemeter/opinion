@@ -1,31 +1,85 @@
 <html data-namespace-typo3-fluid="true"
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-    <h1>feedback, oida!</h1>
+    <style>
+        th {
+            background: #efefef;
+        }
+        th, td {
+            padding: 4px;
+        }
+    </style>
 
-    <table>
-        <tr>
-            <td>Datum/ Uhrzeit</td>
-            <td>{opinion.time -> f:format.date(format: 'd.m.Y H:i:s')}</td>
-        </tr>
-        <tr>
-            <td>Browser</td>
-            <td>{opinion.browser.appVersion}</td>
-        </tr>
-        <tr>
-            <td>Uri</td>
-            <td>{opinion.document.uri}</td>
-        </tr>
-        <tr>
-            <td>Breakpoint</td>
-            <td>{opinion.display.breakpoint}</td>
-        </tr>
-        <tr>
-            <td>Screenshot</td>
-            <td>
-                <img src="cid:screenshot" width="500">
-            </td>
-        </tr>
+    <h1>{f:translate(key: 'LLL:opinion/Resources/Private/Language/locallang.xlf:email-intro')}</h1>
+
+    <table style="width: 100%; border: 1px solid #efefef;">
+        <f:render section="Heading" arguments="{text : 'General Data'}" />
+        <f:render section="Row" arguments="{column : 'User', value : '{opinion.beuser.user.username}'}" />
+        <f:render section="Row" arguments="{column : 'Message', value : '{opinion.message}'}" />
+        <f:render section="Row" arguments="{column : 'Date', value : '{opinion.time -> f:format.date(format: \'d.m.Y H:i:s\')}'}" />
+
+        <f:render section="Heading" arguments="{text : 'Browser'}" />
+        <f:render section="Row" arguments="{column : 'appCodeName', value: '{opinion.browser.appCodeName}'}" />
+        <f:render section="Row" arguments="{column : 'appName', value: '{opinion.browser.appName}'}" />
+        <f:render section="Row" arguments="{column : 'appVersion', value: '{opinion.browser.appVersion}'}" />
+        <f:render section="Row" arguments="{column : 'plattform', value: '{opinion.browser.plattform}'}" />
+        <f:render section="Row" arguments="{column : 'language', value: '{opinion.browser.language}'}" />
+        <f:render section="Row" arguments="{column : 'userAgent', value: '{opinion.browser.userAgent}'}" />
+        <f:render section="Row" arguments="{column : 'vendor', value: '{opinion.browser.vendor}'}" />
+
+        <f:render section="Heading" arguments="{text : 'Document' }" />
+        <f:render section="Row" arguments="{column : 'Uri', value: '{opinion.document.uri}'}" />
+        <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
+        <f:render section="Row" arguments="{column : 'pageType', value: '{opinion.page.pageType}'}" />
+        <f:render section="Row" arguments="{column : 'noCache', value: '{opinion.page.noCache}'}" />
+        <f:render section="Row" arguments="{column : 'countUserInt', value: '{opinion.page.countUserInt}'}" />
+        <f:render section="Row" arguments="{column : 'totalParsetime', value: '{opinion.page.totalParsetime}'}" />
+        <f:render section="Row" arguments="{column : 'imagesOnPage', value: '{opinion.page.imagesOnPage.total} / {opinion.page.imagesOnPage.totalSize}'}" />
+        <f:render section="Row" arguments="{column : 'documentSize', value: '{opinion.page.documentSize}'}" />
+
+        <f:render section="Heading" arguments="{text : 'Screenshot' }" />
+        <f:render section="Screenshot" />
+
+        <f:render section="Heading" arguments="{text : 'Cookies' }" />
+        <f:render section="Array" arguments="{ array : '{opinion.cookies}'}" />
+
     </table>
 
+    <f:section name="Heading">
+        <tr>
+            <th colspan="2" style="text-align: left; font-weight: bold; border-bottom: 2px solid #efefef;">{text}</th>
+        </tr>
+    </f:section>
+
+    <f:section name="Row">
+        <tr>
+            <td>{column}</td>
+            <td>{value}</td>
+        </tr>
+    </f:section>
+
+    <f:section name="Screenshot">
+        <tr>
+            <td colspan="2">
+                <figure>
+                    <img src="cid:screenshot" width="500">
+                    <figcaption>
+                        {opinion.screenshot.identifier}
+                    </figcaption>
+                </figure>
+            </td>
+        </tr>
+    </f:section>
+
+    <f:section name="Array">
+        <tr>
+            <td colspan="2">
+                <ul>
+                    <f:for each="{array}" as="v" key="k">
+                        <li>{k}: {v}</li>
+                    </f:for>
+                </ul>
+            </td>
+        </tr>
+    </f:section>
 </html>

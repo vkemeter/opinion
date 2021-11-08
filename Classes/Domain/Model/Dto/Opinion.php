@@ -2,6 +2,7 @@
 declare(strict_types = 1);
 namespace Supseven\Opinion\Domain\Model\Dto;
 
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
@@ -9,6 +10,9 @@ class Opinion extends AbstractEntity
 {
     /** @var \DateTime */
     protected $time;
+
+    /** @var string */
+    protected $message;
 
     /** @var array */
     protected $browser = [];
@@ -27,6 +31,9 @@ class Opinion extends AbstractEntity
 
     /** @var array */
     protected $cookies = [];
+
+    /** @var BackendUserAuthentication */
+    protected $be_user;
 
     /**
      * @return \DateTime
@@ -138,5 +145,29 @@ class Opinion extends AbstractEntity
     public function setCookies(array $cookies): void
     {
         $this->cookies = $cookies;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+
+    /**
+     * @param string $message
+     */
+    public function setMessage(string $message): void
+    {
+        $this->message = $message;
+    }
+
+    /**
+     * @return BackendUserAuthentication
+     */
+    public function getBeUser(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 }

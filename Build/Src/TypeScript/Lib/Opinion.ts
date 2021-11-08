@@ -45,7 +45,8 @@ export class Opinion {
                 'width': this.getWindowWidth()
             },
             'page': this.getSystemInformations(),
-            'screenshot': await this.getScreenshot()
+            'screenshot': await this.getScreenshot(),
+            'message': this.getMessage()
         }
 
         return JSON.stringify(data);
@@ -58,7 +59,6 @@ export class Opinion {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         const video = document.createElement("video");
-        const container = document.getElementById('testfoo');
 
         video.autoplay = true;
 
@@ -123,5 +123,10 @@ export class Opinion {
 
     getWindowHeight() {
         return window.innerHeight;
+    }
+
+    getMessage() {
+        const textarea = <HTMLInputElement> document.getElementById('opinion-message');
+        return textarea.value;
     }
 }

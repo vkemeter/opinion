@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="1.2" xmlns:t3="http://typo3.org/schemas/xliff" xmlns="urn:oasis:names:tc:xliff:document:1.2">
-	<file source-language="en" target-language="de" original="" datatype="plaintext" date="2021-11-04T13:39:34+01:00">
+	<file source-language="en" target-language="de" original="" datatype="plaintext" date="2021-11-08T14:56:21+01:00">
 		<body>
 			<trans-unit id="admPanel.intro" resname="admPanel.intro">
 				<source>Following data will be collected and send as feedback</source>
 				<target>Folgende Daten werden ausgewählt und als Feedback verschickt</target>
+			</trans-unit>
+			<trans-unit id="email.intro" resname="email.intro">
+				<source>User Feedback (Opinion)</source>
+				<target>Benutzer Feedback (Opinion)</target>
 			</trans-unit>
 			<trans-unit id="module.label" resname="module.label">
 				<source>Opinion</source>
