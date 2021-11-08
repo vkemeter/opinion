@@ -21,3 +21,7 @@ Login into Backend and open the Frontend. See the Admin Panel (Opinion Tab)
 ## Development State
 
 very early alpha ;)
+
+## Screenshots / Videos and more
+
+preview: https://www.youtube.com/watch?v=_NtXVf4oFh4
