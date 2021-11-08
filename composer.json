@@ -6,25 +6,24 @@
 	"version": "1.0.0",
 	"license": "GPL-3.0-or-later",
 	"require": {
-		"typo3/cms-core": " ^10",
-		"php": ">=7.2"
+		"typo3/cms-core": ">= 9.5, < 11",
+		"php":">=7.2,<8"
+	},
+	"require-dev": {
 	},
 	"autoload": {
 		"psr-4": {
 			"Supseven\\Opinion\\": "Classes"
 		}
 	},
-	"replace": {
-		"opinion": "self.version"
-	},
 	"config": {
-		"vendor-dir": ".Build/vendor",
-		"bin-dir": ".Build/bin"
+		"bin-dir": "bin/"
 	},
 	"scripts": {
 	},
 	"extra": {
 		"typo3/cms": {
+			"web-dir": "vendor/_www/",
 			"extension-key": "opinion"
 		},
 		"installer-name": "opinion"

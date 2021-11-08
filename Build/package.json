@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "typescript": "^4.4.4"
+  },
+  "scripts": {
+    "build": "./node_modules/gulp/bin/gulp.js default"
   }
 }
