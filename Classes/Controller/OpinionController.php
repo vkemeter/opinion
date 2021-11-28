@@ -5,6 +5,7 @@ namespace Supseven\Opinion\Controller;
 use Supseven\Opinion\Domain\Model\Dto\Opinion;
 use Supseven\Opinion\Service\Image;
 use Symfony\Component\Mime\Address;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\Mailer;
@@ -13,6 +14,18 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 
 class OpinionController extends ActionController
 {
+    /** @var array Settings */
+    protected $tsSettings = [];
+
+    /** @var mixed|object|\Psr\Log\LoggerAwareInterface|ExtensionConfiguration|\TYPO3\CMS\Core\SingletonInterface */
+    protected $extensionConfiguration;
+
+    public function __construct()
+    {
+        $this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
+        $this->tsSettings = $this->extensionConfiguration->get('opinion');
+    }
+
     /**
      * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
      * @return void
@@ -26,6 +39,10 @@ class OpinionController extends ActionController
                'cookies' => $_COOKIE,
             ]);
 
+            if ($GLOBALS['BE_USER']->user['email'] === '') {
+                throw new \TYPO3\CMS\Extbase\Exception('No E-Mail Address set for Your BE-User.');
+            }
+
             $opinion = new Opinion();
             $opinion->setTime(new \DateTime($decodedData['time']));
             $opinion->setMessage($decodedData['message']);
@@ -38,10 +55,10 @@ class OpinionController extends ActionController
 
             $email = GeneralUtility::makeInstance(FluidEmail::class);
             $email
-                ->to('v.kemeter@supseven.at')
-                ->from(new Address('volker@kemeter.de', 'Volker'))
-                ->subject('Opinion Feedback')
-                ->format('html') // send HTML and plaintext mail
+                ->to($this->tsSettings['emailAddress'])
+                ->from(new Address($GLOBALS['BE_USER']->user['email'], $GLOBALS['BE_USER']->user['realName'] ?: $GLOBALS['BE_USER']->user['username']))
+                ->subject($this->tsSettings['subject'])
+                ->format('html')
                 ->setTemplate('EMail')
                 ->assignMultiple([
                     'opinion' => $opinion,

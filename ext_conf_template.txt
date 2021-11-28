@@ -1,0 +1,5 @@
+# cat=Email; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:emailAddress
+emailAddress = admin@email.tld
+
+# cat=Email; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:subject
+subject = A opinion was sent
