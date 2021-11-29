@@ -53,8 +53,8 @@ export class Opinion {
     }
 
     async getScreenshot() {
-        const admPanel: HTMLElement = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0] as HTMLElement;
-        admPanel.click();
+        // const admPanel: HTMLElement = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0] as HTMLElement;
+        // admPanel.click();
 
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -126,7 +126,7 @@ export class Opinion {
     }
 
     getMessage() {
-        const textarea = <HTMLInputElement> document.getElementById('opinion-message');
-        return textarea.value;
+        // const textarea = <HTMLInputElement> document.getElementById('opinion-message');
+        // return textarea.value;
     }
 }

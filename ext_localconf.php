@@ -4,6 +4,8 @@ defined('TYPO3_MODE') || die('Access denied.');
 
 call_user_func(
     function ($extKey) {
+        $GLOBALS['TYPO3_CONF_VARS']['BE']['toolbarItems'][1638100815] = \Supseven\Opinion\Hooks\Backend\Toolbar\OpinionToolbarItem::class;
+
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['adminpanel']['modules'][$extKey] = [
             'module' => \Supseven\Opinion\Adminpanel\Modules\OpinionModule::class,
             'after' => ['cache'],
