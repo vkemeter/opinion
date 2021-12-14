@@ -1,14 +1,17 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Domain\Model\Dto;
 
+use DateTime;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
 class Opinion extends AbstractEntity
 {
-    /** @var \DateTime */
+    /** @var DateTime */
     protected $time;
 
     /** @var string */
@@ -36,17 +39,17 @@ class Opinion extends AbstractEntity
     protected $be_user;
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getTime(): \DateTime
+    public function getTime(): DateTime
     {
         return $this->time;
     }
 
     /**
-     * @param \DateTime $time
+     * @param DateTime $time
      */
-    public function setTime(\DateTime $time): void
+    public function setTime(DateTime $time): void
     {
         $this->time = $time;
     }
@@ -116,11 +119,15 @@ class Opinion extends AbstractEntity
     }
 
     /**
-     * @return File
+     * @return File|null
      */
-    public function getScreenshot(): File
+    public function getScreenshot(): ?File
     {
-        return $this->screenshot;
+        if ($this->screenshot instanceof File) {
+            return $this->screenshot;
+        }
+
+        return null;
     }
 
     /**

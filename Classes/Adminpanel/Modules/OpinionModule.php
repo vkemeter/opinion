@@ -1,6 +1,7 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Adminpanel\Modules;
 
 use TYPO3\CMS\Adminpanel\ModuleApi\AbstractModule;

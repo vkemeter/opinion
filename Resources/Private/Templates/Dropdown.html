@@ -1,8 +1,13 @@
 <html data-namespace-typo3-fluid="true"
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-    <div id="opinion-system-informations" class="d-none">{info -> f:format.json()}</div>
+    <div id="opinion-system-informations" class="display-none">{info -> f:format.json()}</div>
 
-    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="/typo3/index.php?route=%2Fajax%2Fopinion%2Fbackend&token=2e3e9184c96d6b4bf80505053c74becfb2c8be45">Abschicken</button>
+    <div class="opinion-form opinion-form-group">
+        <label for="message" class="opinion-form opinion-form-label">Your Message:</label>
+        <f:form.textarea class="sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></f:form.textarea>
+    </div>
+
+    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="/typo3/index.php?route=%2Fajax%2Fopinion%2Fbackend&token=45ecc869f0f637df4a705244bbe9f5d2556ce914">Abschicken</button>
 
 </html>

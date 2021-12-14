@@ -29,16 +29,28 @@
 
         <f:render section="Heading" arguments="{text : 'Document' }" />
         <f:render section="Row" arguments="{column : 'Uri', value: '{opinion.document.uri}'}" />
-        <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
-        <f:render section="Row" arguments="{column : 'pageType', value: '{opinion.page.pageType}'}" />
-        <f:render section="Row" arguments="{column : 'noCache', value: '{opinion.page.noCache}'}" />
-        <f:render section="Row" arguments="{column : 'countUserInt', value: '{opinion.page.countUserInt}'}" />
-        <f:render section="Row" arguments="{column : 'totalParsetime', value: '{opinion.page.totalParsetime}'}" />
-        <f:render section="Row" arguments="{column : 'imagesOnPage', value: '{opinion.page.imagesOnPage.total} / {opinion.page.imagesOnPage.totalSize}'}" />
-        <f:render section="Row" arguments="{column : 'documentSize', value: '{opinion.page.documentSize}'}" />
+        <f:if condition="{opinion.page.backend} === true">
+            <f:else>
+                <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
+                <f:render section="Row" arguments="{column : 'pageType', value: '{opinion.page.pageType}'}" />
+                <f:render section="Row" arguments="{column : 'noCache', value: '{opinion.page.noCache}'}" />
+                <f:render section="Row" arguments="{column : 'countUserInt', value: '{opinion.page.countUserInt}'}" />
+                <f:render section="Row" arguments="{column : 'totalParsetime', value: '{opinion.page.totalParsetime}'}" />
+                <f:render section="Row" arguments="{column : 'imagesOnPage', value: '{opinion.page.imagesOnPage.total} / {opinion.page.imagesOnPage.totalSize}'}" />
+                <f:render section="Row" arguments="{column : 'documentSize', value: '{opinion.page.documentSize}'}" />
+            </f:else>
+        </f:if>
 
-        <f:render section="Heading" arguments="{text : 'Screenshot' }" />
-        <f:render section="Screenshot" />
+        <f:render section="Heading" arguments="{text : 'Display Informations' }" />
+        <f:if condition="{opinion.display.breakpoint} !== ''">
+            <f:render section="Row" arguments="{column : 'Breakpoint', value: '{opinion.display.breakpoint}'}" />
+        </f:if>
+        <f:render section="Row" arguments="{column : 'Display Width x Height', value: '{opinion.display.width} x {opinion.display.height}'}" />
+
+        <f:if condition="{opinion.screenshot.identifier}">
+            <f:render section="Heading" arguments="{text : 'Screenshot' }" />
+            <f:render section="Screenshot" />
+        </f:if>
 
         <f:render section="Heading" arguments="{text : 'Cookies' }" />
         <f:render section="Array" arguments="{ array : '{opinion.cookies}'}" />

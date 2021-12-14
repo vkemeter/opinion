@@ -53,8 +53,11 @@ export class Opinion {
     }
 
     async getScreenshot() {
-        // const admPanel: HTMLElement = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0] as HTMLElement;
-        // admPanel.click();
+        const admPanel: HTMLElement = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0] as HTMLElement;
+
+        if (admPanel) {
+            admPanel.click();
+        }
 
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -96,13 +99,16 @@ export class Opinion {
             return frame;
 
         } catch (err) {
-            console.error("Error: " + err);
+            console.log('The Image was not attached due to Users interaction.');
         }
     }
 
     getSystemInformations() {
         let infos = document.querySelector<HTMLElement>('#opinion-system-informations');
-        return JSON.parse(infos.textContent);
+
+        if (infos) {
+            return JSON.parse(infos.textContent);
+        }
     }
 
     getActiveBreakpoint() {
@@ -126,7 +132,10 @@ export class Opinion {
     }
 
     getMessage() {
-        // const textarea = <HTMLInputElement> document.getElementById('opinion-message');
-        // return textarea.value;
+        const textarea = <HTMLInputElement> document.getElementById('opinion-message');
+
+        if (textarea) {
+            return textarea.value;
+        }
     }
 }

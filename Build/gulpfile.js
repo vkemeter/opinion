@@ -12,6 +12,7 @@ _gulp.task('default',
     _gulp.series(
         _gulp.parallel(
             'Frontend:TYPESCRIPT',
+            'Frontend:JS',
             'Frontend:SCSS',
         )
     )
@@ -21,6 +22,7 @@ _gulp.task('watch',
     _gulp.series(
         'default',
         function() {
+            _gulp.watch([ _config().frontend.javascript.watch ], {interval: 1000, usePolling: true}, _gulp.parallel('Frontend:JS'));
             _gulp.watch([ _config().frontend.typescript.watch ], {interval: 1000, usePolling: true}, _gulp.parallel('Frontend:TYPESCRIPT'));
             _gulp.watch([ _config().frontend.css.watch ], {interval: 1000, usePolling: true}, _gulp.parallel('Frontend:SCSS'));
         }

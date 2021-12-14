@@ -1,5 +1,7 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Adminpanel\Modules\Opinion;
 
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,13 +23,13 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
         return new ModuleData(
             [
                 'info' => [
-                    'pageUid'        => $tsfe->id,
-                    'pageType'       => $tsfe->type,
-                    'noCache'        => $this->isNoCacheEnabled(),
-                    'countUserInt'   => count($tsfe->config['INTincScript'] ?? []),
+                    'pageUid' => $tsfe->id,
+                    'pageType' => $tsfe->type,
+                    'noCache' => $this->isNoCacheEnabled(),
+                    'countUserInt' => count($tsfe->config['INTincScript'] ?? []),
                     'totalParsetime' => $this->getTimeTracker()->getParseTime(),
-                    'imagesOnPage'   => $this->collectImagesOnPage(),
-                    'documentSize'   => $this->collectDocumentSize(),
+                    'imagesOnPage' => $this->collectImagesOnPage(),
+                    'documentSize' => $this->collectDocumentSize(),
                 ],
             ]
         );
@@ -36,7 +38,7 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     /**
      * Creates the content for the "info" section ("module") of the Admin Panel
      *
-     * @param \TYPO3\CMS\Adminpanel\ModuleApi\ModuleData $data
+     * @param ModuleData $data
      * @return string HTML content for the section. Consists of a string with table-rows with four columns.
      * @see display()
      */
@@ -80,9 +82,9 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     protected function collectImagesOnPage(): array
     {
         $imagesOnPage = [
-            'files'          => [],
-            'total'          => 0,
-            'totalSize'      => 0,
+            'files' => [],
+            'total' => 0,
+            'totalSize' => 0,
             'totalSizeHuman' => GeneralUtility::formatSize(0),
         ];
 
@@ -91,8 +93,8 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
         foreach (GeneralUtility::makeInstance(AssetCollector::class)->getMedia() as $file => $information) {
             $fileSize = (int)@filesize($file);
             $imagesOnPage['files'][] = [
-                'name'      => $file,
-                'size'      => $fileSize,
+                'name' => $file,
+                'size' => $fileSize,
                 'sizeHuman' => GeneralUtility::formatSize($fileSize),
             ];
             $totalImageSize += $fileSize;

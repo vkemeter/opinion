@@ -1,5 +1,7 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Service;
 
 use TYPO3\CMS\Core\Core\Environment;
@@ -17,7 +19,8 @@ class Image
     {
         $resourceFactory = GeneralUtility::makeInstance(ResourceFactory::class);
         $storage = $resourceFactory->getDefaultStorage();
-        $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . 'fileadmin' . $storage->getDefaultFolder()->getIdentifier() . DIRECTORY_SEPARATOR;
+        $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . 'fileadmin' . $storage->getDefaultFolder(
+            )->getIdentifier() . DIRECTORY_SEPARATOR;
         $tmpPath = Environment::getPublicPath() . DIRECTORY_SEPARATOR . 'typo3temp' . DIRECTORY_SEPARATOR;
 
         // needs to be dynamic

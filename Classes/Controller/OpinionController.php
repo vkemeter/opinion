@@ -1,26 +1,30 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Controller;
 
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Supseven\Opinion\Domain\Model\Dto\Opinion;
-use Supseven\Opinion\Service\Image;
-use Symfony\Component\Mime\Address;
+use Psr\Log\LoggerAwareInterface;
+use Supseven\Opinion\Service\Email;
+use Supseven\Opinion\Service\OpinionService;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\Mailer;
+use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 class OpinionController extends ActionController
 {
     /** @var array Settings */
     protected $tsSettings = [];
 
-    /** @var mixed|object|\Psr\Log\LoggerAwareInterface|ExtensionConfiguration|\TYPO3\CMS\Core\SingletonInterface */
+    /** @var mixed|object|LoggerAwareInterface|ExtensionConfiguration|SingletonInterface */
     protected $extensionConfiguration;
 
     public function __construct()
@@ -29,97 +33,47 @@ class OpinionController extends ActionController
         $this->tsSettings = $this->extensionConfiguration->get('opinion');
     }
 
-    /**
-     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
-     * @return void
-     */
     public function opinionAction(): void
     {
-        $data = file_get_contents('php://input');
+        try {
+            $data = OpinionService::getData();
 
-        if ($data) {
-            $decodedData = array_merge(\json_decode($data, true), [
-               'cookies' => $_COOKIE,
+            $mergedData = OpinionService::mergeData($data, [
+                'cookies' => $_COOKIE
             ]);
 
-            if ($GLOBALS['BE_USER']->user['email'] === '') {
-                throw new \TYPO3\CMS\Extbase\Exception('No E-Mail Address set for Your BE-User.');
-            }
-
-            $opinion = new Opinion();
-            $opinion->setTime(new \DateTime($decodedData['time']));
-            $opinion->setMessage($decodedData['message'] ?: 'fix mich');
-            $opinion->setBrowser($decodedData['browser']);
-            $opinion->setDocument($decodedData['document']);
-            $opinion->setDisplay($decodedData['display']);
-            $opinion->setPage($decodedData['page']);
-            $opinion->setScreenshot(Image::saveImage($decodedData['screenshot']));
-            $opinion->setCookies($decodedData['cookies']);
-
-            $email = GeneralUtility::makeInstance(FluidEmail::class);
-            $email
-                ->to($this->tsSettings['emailAddress'])
-                ->from(new Address($GLOBALS['BE_USER']->user['email'], $GLOBALS['BE_USER']->user['realName'] ?: $GLOBALS['BE_USER']->user['username']))
-                ->subject($this->tsSettings['subject'])
-                ->format('html')
-                ->setTemplate('EMail')
-                ->assignMultiple([
-                    'opinion' => $opinion,
-                 ]);
-
-            $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . $opinion->getScreenshot()->getPublicUrl();
-            $email->embedFromPath(
-                $path,
-                'screenshot'
-            );
+            $opinion = OpinionService::getOpinionDto($mergedData);
+            $email = GeneralUtility::makeInstance(Email::class)->create($opinion);
 
             GeneralUtility::makeInstance(Mailer::class)->send($email);
+        } catch (Exception|TransportExceptionInterface $e) {
+            DebuggerUtility::var_dump($e);
+            // @TODO: add log and do something
+            die();
         }
     }
 
-    public function opinionBackendAction(ServerRequestInterface $request, ResponseInterface $response = null): ResponseInterface
-    {
-        $data = file_get_contents('php://input');
+    public function opinionBackendAction(
+        ServerRequestInterface $request,
+        ResponseInterface $response = null
+    ): ResponseInterface {
+        try {
+            $data = OpinionService::getData();
 
-        if ($data) {
-            $decodedData = array_merge(\json_decode($data, true), [
-                'cookies' => $_COOKIE,
+            $mergedData = OpinionService::mergeData($data, [
+                'cookies' => $_COOKIE
             ]);
 
-            if ($GLOBALS['BE_USER']->user['email'] === '') {
-                throw new \TYPO3\CMS\Extbase\Exception('No E-Mail Address set for Your BE-User.');
-            }
-
-            $opinion = new Opinion();
-            $opinion->setTime(new \DateTime($decodedData['time']));
-            $opinion->setMessage($decodedData['message'] ?: 'fix mich');
-            $opinion->setBrowser($decodedData['browser']);
-            $opinion->setDocument($decodedData['document']);
-            $opinion->setDisplay($decodedData['display']);
-            $opinion->setPage($decodedData['page']);
-            $opinion->setScreenshot(Image::saveImage($decodedData['screenshot']));
-            $opinion->setCookies($decodedData['cookies']);
-
-            $email = GeneralUtility::makeInstance(FluidEmail::class);
-            $email
-                ->to($this->tsSettings['emailAddress'])
-                ->from(new Address($GLOBALS['BE_USER']->user['email'], $GLOBALS['BE_USER']->user['realName'] ?: $GLOBALS['BE_USER']->user['username']))
-                ->subject($this->tsSettings['subject'])
-                ->format('html')
-                ->setTemplate('EMail')
-                ->assignMultiple([
-                                     'opinion' => $opinion,
-                                 ]);
-
-            $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . $opinion->getScreenshot()->getPublicUrl();
-            $email->embedFromPath(
-                $path,
-                'screenshot'
-            );
+            $opinion = OpinionService::getOpinionDto($mergedData);
+            $email = GeneralUtility::makeInstance(Email::class)->create($opinion);
 
             GeneralUtility::makeInstance(Mailer::class)->send($email);
-        }
 
-        return new HtmlResponse('<h1>foo</h1>');
+            return new HtmlResponse('');
+        } catch (Exception|TransportExceptionInterface $e) {
+            DebuggerUtility::var_dump($e);
+            // @TODO: add log and do something
+            die();
+        }
     }
 }

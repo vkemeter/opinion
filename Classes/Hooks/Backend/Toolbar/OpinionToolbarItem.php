@@ -2,7 +2,6 @@
 
 namespace Supseven\Opinion\Hooks\Backend\Toolbar;
 
-use Supseven\Theme\Backend\FormDataProvider\General;
 use TYPO3\CMS\Backend\Toolbar\ToolbarItemInterface;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -10,12 +9,15 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class OpinionToolbarItem implements ToolbarItemInterface
 {
+    /** @var PageRenderer */
+    private $pageRenderer;
 
     public function __construct()
     {
-        $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->addJsFile('EXT:opinion/Resources/Public/JavaScript/Opinion.js');
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/Opinion/OpinionBe');
+        $this->pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
+        $this->pageRenderer->addJsFile('EXT:opinion/Resources/Public/JavaScript/Opinion.js');
+        $this->pageRenderer->addCssFile('EXT:opinion/Resources/Public/Css/Styles.min.css');
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Opinion/OpinionBe');
     }
 
     public function checkAccess(): bool
@@ -37,8 +39,10 @@ class OpinionToolbarItem implements ToolbarItemInterface
     {
         $view = $this->getTemplate('Dropdown.html');
         $view->assignMultiple([
-            'info' => [],
-        ]);
+                                  'info' => [
+                                      'backend' => true,
+                                  ],
+                              ]);
         return $view->render();
     }
 

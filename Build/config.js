@@ -67,16 +67,15 @@ module.exports = function () {
                 watch: build + '/Src/TypeScript/**/*.ts'
             },
             javascript: {
-                enabled: false,
-                src: build + '/Src/JavaScript/Main.js',
+                enabled: true,
+                src: build + '/Src/JavaScript/OpinionBe.js',
                 dest: theme + '/Resources/Public/JavaScript',
+                file: 'OpinionBe.js',
+                minify: false,
                 watch: build + '/Src/JavaScript/**/*.js',
-                includeJquery: true,
+                includeJquery: false,
                 modules: [
-                    build +'/node_modules/frontend-pipeline-main/Src/JavaScript/Plugins/plugin.Breakoints.js',
-                ],
-                ie11: build + '/Src/JavaScript/IE11.js',
-                ie11Modules: []
+                ]
             },
             fonts: {
                 enabled: false,
