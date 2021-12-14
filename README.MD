@@ -8,9 +8,13 @@ Getting user opinions like a boss
 
 ## Rudimentary Documentation
 
+# Configuration
+
+Set your email address and subject in your ext-conf
+
 What it does: Collects User data and sends it via mail.
 
-Login into Backend and open the Frontend. See the Admin Panel (Opinion Tab)
+Login into Backend and open the Frontend. See the Admin Panel (Opinion Tab) or in the Backend the Opinion Toolbar Item.
 
 ## Requirements
 
@@ -24,4 +28,4 @@ very early alpha ;)
 
 ## Screenshots / Videos and more
 
-preview: https://www.youtube.com/watch?v=_NtXVf4oFh4
+preview: https://www.youtube.com/watch?v=ojsrjBpaeDU
