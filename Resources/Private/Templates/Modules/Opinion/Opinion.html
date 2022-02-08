@@ -7,10 +7,15 @@
         <p>{f:translate(key: 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:admPanel.intro')}</p>
     </div>
 
-    <div class="opinion-form opinion-form-group">
+    <div id="opinion-approve-contents">
+        <div id="opinion-data"></div>
+    </div>
+
+    <div id="opinion-textarea" class="opinion-form opinion-form-group">
         <label for="message" class="opinion-form opinion-form-label">Your Message:</label>
         <f:form.textarea class="sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></f:form.textarea>
     </div>
 
-    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="{f:uri.action(action: 'opinion', controller: 'Opinion', extensionName: 'Opinion', pageType: '1634212115', noCache: '1', noCacheHash: '1')}">Abschicken</button>
+
+    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="{f:uri.action(action: 'opinion', controller: 'Opinion', extensionName: 'Opinion', pageType: '1634212115', noCache: '1', noCacheHash: '1')}">Screenshot aufnehmen</button>
 </html>

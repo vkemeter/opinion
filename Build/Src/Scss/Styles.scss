@@ -30,6 +30,42 @@
 			color: #000;
 		}
 	}
+	
+	&-image {
+		max-width: 400px;
+		height: auto;
+	}
+
+	&-data-table {
+		width: 100% !important;
+		border: 1px solid #efefef !important;
+		margin: 32px 0;
+
+		td, th {
+			padding: 8px !important;
+			border-bottom: 1px solid #efefef !important;
+		}
+
+		th {
+			background: #efefef !important;
+			font-weight: bold !important;
+			text-transform: capitalize;
+		}
+
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
+
+		li span {
+			font-weight: bold !important;
+		}
+
+		ul ul {
+			margin: 8px 32px;
+		}
+	}
 }
 
 .display-none {

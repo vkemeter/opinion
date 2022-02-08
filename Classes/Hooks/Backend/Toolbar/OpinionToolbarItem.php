@@ -2,6 +2,7 @@
 
 namespace Supseven\Opinion\Hooks\Backend\Toolbar;
 
+use Supseven\Opinion\Service\OpinionService;
 use TYPO3\CMS\Backend\Toolbar\ToolbarItemInterface;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -39,10 +40,12 @@ class OpinionToolbarItem implements ToolbarItemInterface
     {
         $view = $this->getTemplate('Dropdown.html');
         $view->assignMultiple([
-                                  'info' => [
-                                      'backend' => true,
-                                  ],
-                              ]);
+            'info' => [
+                'backend' => true,
+                'beUser' => OpinionService::getBeUserName(),
+//                'pageUid' => $tsfe->id,
+            ],
+        ]);
         return $view->render();
     }
 

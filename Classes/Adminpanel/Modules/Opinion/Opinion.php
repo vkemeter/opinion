@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Supseven\Opinion\Adminpanel\Modules\Opinion;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Supseven\Opinion\Service\OpinionService;
 use TYPO3\CMS\Adminpanel\ModuleApi\AbstractSubModule;
 use TYPO3\CMS\Adminpanel\ModuleApi\DataProviderInterface;
 use TYPO3\CMS\Adminpanel\ModuleApi\ModuleData;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\TimeTracker\TimeTracker;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -20,9 +22,12 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     {
         $tsfe = $this->getTypoScriptFrontendController();
 
+        /** @var BackendUserAuthentication $beUser */
+        $beUser = $GLOBALS['BE_USER'];
         return new ModuleData(
             [
                 'info' => [
+                    'beUser' => OpinionService::getBeUserName(),
                     'pageUid' => $tsfe->id,
                     'pageType' => $tsfe->type,
                     'noCache' => $this->isNoCacheEnabled(),

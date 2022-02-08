@@ -51,6 +51,20 @@ class OpinionService
     }
 
     /**
+     * returns the logged in username
+     *
+     * @return string
+     */
+    public static function getBeUserName(): string
+    {
+        if (!$GLOBALS['BE_USER']->user) {
+            throw new Exception('No BE_USER Object available. User must be logged in.', 1639476847);
+        }
+
+        return $GLOBALS['BE_USER']->user['username'];
+    }
+
+    /**
      * checks the be user object and the inserted email address
      *
      * @return string

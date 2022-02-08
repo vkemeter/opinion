@@ -30,6 +30,9 @@
         <f:render section="Heading" arguments="{text : 'Document' }" />
         <f:render section="Row" arguments="{column : 'Uri', value: '{opinion.document.uri}'}" />
         <f:if condition="{opinion.page.backend} === true">
+            <f:then>
+                <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
+            </f:then>
             <f:else>
                 <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
                 <f:render section="Row" arguments="{column : 'pageType', value: '{opinion.page.pageType}'}" />
