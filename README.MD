@@ -19,8 +19,8 @@ Login into Backend and open the Frontend. See the Admin Panel (Opinion Tab) or i
 ## Requirements
 
 * https is mandatory due to screensharing functionality
-* php > 7.2 < 8
-* typo3 > 10 < 11
+* php >= 7.2 < 8
+* typo3 >= 10 < 11
 
 ## Development State
 
