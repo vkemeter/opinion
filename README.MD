@@ -28,4 +28,7 @@ very early alpha ;)
 
 ## Screenshots / Videos and more
 
-preview: https://www.youtube.com/watch?v=ojsrjBpaeDU
+previews: 
+
+* https://www.youtube.com/watch?v=ojsrjBpaeDU
+* https://www.youtube.com/watch?v=2GtiEX3et1s
