@@ -23,8 +23,8 @@ call_user_func(
         TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
             'Supseven.' . $extKey,
             'Opinion',
-            ['Opinion' => 'opinion'],
-            ['Opinion' => 'opinion']
+            [\Supseven\Opinion\Controller\OpinionController::class => 'opinion'],
+            [\Supseven\Opinion\Controller\OpinionController::class => 'opinion']
         );
 
         \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup(
