@@ -38,6 +38,15 @@ call_user_func(
             ],
         ];
 
+        $iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class);
+        if (!$iconRegistry->isRegistered('actions-document-opinion')) {
+            $iconRegistry->registerIcon(
+                'actions-document-opinion',
+                \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+                ['source' => 'EXT:opinion/Resources/Public/Icons/actions-document-opinion.svg']
+            );
+        }
+
         ExtensionUtility::configurePlugin(
             'Opinion',
             'Opinion',

@@ -17,7 +17,7 @@ class OpinionModule extends AbstractModule implements ShortInfoProviderInterface
      */
     public function getIconIdentifier(): string
     {
-        return 'actions-document-info';
+        return 'actions-document-opinion';
     }
 
     /**
@@ -43,9 +43,7 @@ class OpinionModule extends AbstractModule implements ShortInfoProviderInterface
      */
     public function getShortInfo(): string
     {
-        return $this->getLanguageService()->sL(
-            'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:module.shortinfo'
-        );
+        return '';
     }
 
     /**

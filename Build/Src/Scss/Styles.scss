@@ -3,6 +3,17 @@
 	line-height: 1.2;
 }
 
+.toolbar-item-opinion {
+  border-radius: 3px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #000;
+  gap: 8px;
+}
+
 .opinion {
 	&-intro {
 		margin: 32px 0;
@@ -30,7 +41,7 @@
 			color: #000;
 		}
 	}
-	
+
 	&-image {
 		max-width: 400px;
 		height: auto;

@@ -45,7 +45,6 @@ class OpinionToolbarItem implements ToolbarItemInterface
             'info' => [
                 'backend' => true,
                 'beUser'  => OpinionService::getBeUserName(),
-//                'pageUid' => $tsfe->id,
             ],
         ]);
         return $view->render();
