@@ -3,11 +3,12 @@
 	"type": "typo3-cms-extension",
 	"description": "Getting user opinions like a boss",
 	"homepage": "https://www.supseven.at/opinion",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"license": "GPL-3.0-or-later",
 	"require": {
-		"typo3/cms-core": ">= 10.4",
-		"php":">=7.2"
+		"typo3/cms-core": "^11.5.0",
+        "typo3/cms-adminpanel": "^11.5.0",
+		"php":">=7.4.1"
 	},
 	"require-dev": {
 	},
