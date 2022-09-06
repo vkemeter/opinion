@@ -33,7 +33,7 @@ class OpinionController extends ActionController
         $this->tsSettings = $this->extensionConfiguration->get('opinion');
     }
 
-    public function opinionAction(): void
+    public function opinionAction(): ResponseInterface
     {
         try {
             $data = OpinionService::getData();
@@ -51,6 +51,7 @@ class OpinionController extends ActionController
             // @TODO: add log and do something
             die();
         }
+        return $this->htmlResponse();
     }
 
     public function opinionBackendAction(

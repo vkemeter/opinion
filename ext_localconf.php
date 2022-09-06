@@ -2,18 +2,25 @@
 
 declare(strict_types=1);
 
-defined('TYPO3_MODE') || die('Access denied.');
+use Supseven\Opinion\Hooks\Backend\Toolbar\OpinionToolbarItem;
+use Supseven\Opinion\Adminpanel\Modules\OpinionModule;
+use Supseven\Opinion\Adminpanel\Modules\Opinion\Opinion;
+use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
+use Supseven\Opinion\Controller\OpinionController;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
+defined('TYPO3') || die('Access denied.');
 
 call_user_func(
     function ($extKey): void {
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['toolbarItems'][1638100815] = \Supseven\Opinion\Hooks\Backend\Toolbar\OpinionToolbarItem::class;
+        $GLOBALS['TYPO3_CONF_VARS']['BE']['toolbarItems'][1638100815] = OpinionToolbarItem::class;
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['adminpanel']['modules'][$extKey] = [
-            'module'     => \Supseven\Opinion\Adminpanel\Modules\OpinionModule::class,
+            'module'     => OpinionModule::class,
             'after'      => ['cache'],
             'submodules' => [
                 'general' => [
-                    'module' => Supseven\Opinion\Adminpanel\Modules\Opinion\Opinion::class,
+                    'module' => Opinion::class,
                 ],
             ],
         ];
@@ -22,28 +29,28 @@ call_user_func(
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['partialRootPaths'][1636015092] = 'EXT:opinion/Resources/Private/Partials/';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1636015092] = 'EXT:opinion/Resources/Private/Templates/';
 
-        TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
-            'Supseven.' . $extKey,
+        ExtensionUtility::configurePlugin(
             'Opinion',
-            [\Supseven\Opinion\Controller\OpinionController::class => 'opinion'],
-            [\Supseven\Opinion\Controller\OpinionController::class => 'opinion']
+            'Opinion',
+            [OpinionController::class => 'opinion'],
+            [OpinionController::class => 'opinion']
         );
 
-        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup(
+        ExtensionManagementUtility::addTypoScriptSetup(
             '
             config.debug = 1
             config.admPanel = 1
         '
         );
 
-        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addUserTSConfig(
+        ExtensionManagementUtility::addUserTSConfig(
             '
             admPanel.enable.all = 0
             admPanel.enable.opinion = 1
         '
         );
 
-        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup(
+        ExtensionManagementUtility::addTypoScriptSetup(
             '
             opinion = PAGE
             opinion {
@@ -61,7 +68,7 @@ call_user_func(
                     no_cache = 1
                     debug = 0
                 }
-            
+
                 10 = USER
                 10 {
                     userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run

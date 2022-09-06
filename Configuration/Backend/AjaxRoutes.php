@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Supseven\Opinion\Controller\OpinionController;
+
 return [
     // Main backend rendering setup (previously called backend.php) for the TYPO3 Backend
     'opinion-backend' => [
         'path'   => '/opinion/backend',
-        'target' => \Supseven\Opinion\Controller\OpinionController::class . '::opinionBackendAction',
+        'target' => OpinionController::class . '::opinionBackendAction',
     ],
 ];
