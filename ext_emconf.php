@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 $EM_CONF[$_EXTKEY] = [
     'title'            => 'Opinion',
     'description'      => 'Getting user opinions like a boss',

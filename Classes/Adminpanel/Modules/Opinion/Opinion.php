@@ -27,14 +27,14 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
         return new ModuleData(
             [
                 'info' => [
-                    'beUser' => OpinionService::getBeUserName(),
-                    'pageUid' => $tsfe->id,
-                    'pageType' => $tsfe->type,
-                    'noCache' => $this->isNoCacheEnabled(),
-                    'countUserInt' => count($tsfe->config['INTincScript'] ?? []),
+                    'beUser'         => OpinionService::getBeUserName(),
+                    'pageUid'        => $tsfe->id,
+                    'pageType'       => $tsfe->type,
+                    'noCache'        => $this->isNoCacheEnabled(),
+                    'countUserInt'   => count($tsfe->config['INTincScript'] ?? []),
                     'totalParsetime' => $this->getTimeTracker()->getParseTime(),
-                    'imagesOnPage' => $this->collectImagesOnPage(),
-                    'documentSize' => $this->collectDocumentSize(),
+                    'imagesOnPage'   => $this->collectImagesOnPage(),
+                    'documentSize'   => $this->collectDocumentSize(),
                 ],
             ]
         );
@@ -87,9 +87,9 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     protected function collectImagesOnPage(): array
     {
         $imagesOnPage = [
-            'files' => [],
-            'total' => 0,
-            'totalSize' => 0,
+            'files'          => [],
+            'total'          => 0,
+            'totalSize'      => 0,
             'totalSizeHuman' => GeneralUtility::formatSize(0),
         ];
 
@@ -98,8 +98,8 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
         foreach (GeneralUtility::makeInstance(AssetCollector::class)->getMedia() as $file => $information) {
             $fileSize = (int)@filesize($file);
             $imagesOnPage['files'][] = [
-                'name' => $file,
-                'size' => $fileSize,
+                'name'      => $file,
+                'size'      => $fileSize,
                 'sizeHuman' => GeneralUtility::formatSize($fileSize),
             ];
             $totalImageSize += $fileSize;

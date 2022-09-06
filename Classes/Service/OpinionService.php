@@ -6,14 +6,15 @@ namespace Supseven\Opinion\Service;
 
 use DateTime;
 use Exception;
-use Supseven\Opinion\Domain\Model\Dto\Opinion;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function json_decode;
 
+use Supseven\Opinion\Domain\Model\Dto\Opinion;
+
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 class OpinionService
 {
-
     /**
      * the whole data sent by the system, including base64 encoded image
      *

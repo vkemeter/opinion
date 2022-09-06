@@ -20,7 +20,7 @@ class Image
         $resourceFactory = GeneralUtility::makeInstance(ResourceFactory::class);
         $storage = $resourceFactory->getDefaultStorage();
         $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . 'fileadmin' . $storage->getDefaultFolder(
-            )->getIdentifier() . DIRECTORY_SEPARATOR;
+        )->getIdentifier() . DIRECTORY_SEPARATOR;
         $tmpPath = Environment::getPublicPath() . DIRECTORY_SEPARATOR . 'typo3temp' . DIRECTORY_SEPARATOR;
 
         // needs to be dynamic

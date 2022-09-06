@@ -39,7 +39,7 @@ class OpinionController extends ActionController
             $data = OpinionService::getData();
 
             $mergedData = OpinionService::mergeData($data, [
-                'cookies' => $_COOKIE
+                'cookies' => $_COOKIE,
             ]);
 
             $opinion = OpinionService::getOpinionDto($mergedData);
@@ -61,7 +61,7 @@ class OpinionController extends ActionController
             $data = OpinionService::getData();
 
             $mergedData = OpinionService::mergeData($data, [
-                'cookies' => $_COOKIE
+                'cookies' => $_COOKIE,
             ]);
 
             $opinion = OpinionService::getOpinionDto($mergedData);

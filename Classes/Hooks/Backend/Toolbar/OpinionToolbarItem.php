@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Supseven\Opinion\Hooks\Backend\Toolbar;
 
 use Supseven\Opinion\Service\OpinionService;
@@ -42,7 +44,7 @@ class OpinionToolbarItem implements ToolbarItemInterface
         $view->assignMultiple([
             'info' => [
                 'backend' => true,
-                'beUser' => OpinionService::getBeUserName(),
+                'beUser'  => OpinionService::getBeUserName(),
 //                'pageUid' => $tsfe->id,
             ],
         ]);

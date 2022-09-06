@@ -1,32 +1,36 @@
 {
-	"name": "supseven/opinion",
-	"type": "typo3-cms-extension",
-	"description": "Getting user opinions like a boss",
-	"homepage": "https://www.supseven.at/opinion",
-	"version": "2.0.0",
-	"license": "GPL-3.0-or-later",
-	"require": {
-		"typo3/cms-core": "^11.5.0",
+    "name": "supseven/opinion",
+    "type": "typo3-cms-extension",
+    "description": "Getting user opinions like a boss",
+    "homepage": "https://www.supseven.at/opinion",
+    "version": "2.0.0",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "typo3/cms-core": "^11.5.0",
         "typo3/cms-adminpanel": "^11.5.0",
-		"php":">=7.4.1"
-	},
-	"require-dev": {
-	},
-	"autoload": {
-		"psr-4": {
-			"Supseven\\Opinion\\": "Classes"
-		}
-	},
-	"config": {
-		"bin-dir": "bin/"
-	},
-	"scripts": {
-	},
-	"extra": {
-		"typo3/cms": {
-			"web-dir": "vendor/_www/",
-			"extension-key": "opinion"
-		},
-		"installer-name": "opinion"
-	}
+        "php": ">=7.4.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "Supseven\\Opinion\\": "Classes"
+        }
+    },
+    "config": {
+        "bin-dir": "bin/"
+    },
+    "scripts": {
+        "fix": [
+            "php-cs-fixer --diff -v fix"
+        ]
+    },
+    "extra": {
+        "typo3/cms": {
+            "web-dir": "vendor/_www/",
+            "extension-key": "opinion"
+        },
+        "installer-name": "opinion"
+    }
 }
