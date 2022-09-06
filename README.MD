@@ -10,7 +10,7 @@ Getting user opinions like a boss
 
 # Configuration
 
-Set your email address and subject in your ext-conf
+Set your admins email address and subject in your ext-conf and your user email address in the be-user settings.
 
 What it does: Collects User data and sends it via mail.
 
@@ -19,16 +19,16 @@ Login into Backend and open the Frontend. See the Admin Panel (Opinion Tab) or i
 ## Requirements
 
 * https is mandatory due to screensharing functionality
-* php >= 7.2 < 8
-* typo3 >= 10 < 11
+* php >= 7.4
+* typo3 >= 10 < 12
 
 ## Development State
 
-very early alpha ;)
+not very early alpha ;)
 
 ## Screenshots / Videos and more
 
-previews: 
+previews:
 
 * https://www.youtube.com/watch?v=ojsrjBpaeDU
 * https://www.youtube.com/watch?v=2GtiEX3et1s
