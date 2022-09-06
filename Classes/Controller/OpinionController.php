@@ -8,6 +8,7 @@ use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 use Supseven\Opinion\Service\Email;
 use Supseven\Opinion\Service\OpinionService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -17,7 +18,6 @@ use TYPO3\CMS\Core\Mail\Mailer;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 class OpinionController extends ActionController
 {
@@ -27,10 +27,14 @@ class OpinionController extends ActionController
     /** @var mixed|object|LoggerAwareInterface|ExtensionConfiguration|SingletonInterface */
     protected $extensionConfiguration;
 
-    public function __construct()
+    /** @var LoggerInterface */
+    private LoggerInterface $logger;
+
+    public function __construct(LoggerInterface $logger)
     {
         $this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
         $this->tsSettings = $this->extensionConfiguration->get('opinion');
+        $this->logger = $logger;
     }
 
     public function opinionAction(): ResponseInterface
@@ -39,7 +43,7 @@ class OpinionController extends ActionController
             $data = OpinionService::getData();
 
             $mergedData = OpinionService::mergeData($data, [
-                'cookies' => $_COOKIE,
+                'cookies' => $this->request->getCookieParams(),
             ]);
 
             $opinion = OpinionService::getOpinionDto($mergedData);
@@ -47,10 +51,12 @@ class OpinionController extends ActionController
 
             GeneralUtility::makeInstance(Mailer::class)->send($email);
         } catch (Exception|TransportExceptionInterface $e) {
-            DebuggerUtility::var_dump($e);
-            // @TODO: add log and do something
-            die();
+            $this->logger->error('FE-Mail send failed: {message} with code {code}', [
+                'message' => $e->getMessage(),
+                'code'    => $e->getCode(),
+            ]);
         }
+
         return $this->htmlResponse();
     }
 
@@ -62,19 +68,20 @@ class OpinionController extends ActionController
             $data = OpinionService::getData();
 
             $mergedData = OpinionService::mergeData($data, [
-                'cookies' => $_COOKIE,
+                'cookies' => $request->getCookieParams(),
             ]);
 
             $opinion = OpinionService::getOpinionDto($mergedData);
             $email = GeneralUtility::makeInstance(Email::class)->create($opinion);
 
             GeneralUtility::makeInstance(Mailer::class)->send($email);
-
-            return new HtmlResponse('');
         } catch (Exception|TransportExceptionInterface $e) {
-            DebuggerUtility::var_dump($e);
-            // @TODO: add log and do something
-            die();
+            $this->logger->error('FE-Mail send failed: {message} with code {code}', [
+                'message' => $e->getMessage(),
+                'code'    => $e->getCode(),
+            ]);
         }
+
+        return new HtmlResponse('');
     }
 }

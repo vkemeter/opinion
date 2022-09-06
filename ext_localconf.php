@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-use Supseven\Opinion\Hooks\Backend\Toolbar\OpinionToolbarItem;
-use Supseven\Opinion\Adminpanel\Modules\OpinionModule;
+use Psr\Log\LogLevel;
 use Supseven\Opinion\Adminpanel\Modules\Opinion\Opinion;
-use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
+use Supseven\Opinion\Adminpanel\Modules\OpinionModule;
 use Supseven\Opinion\Controller\OpinionController;
+use Supseven\Opinion\Hooks\Backend\Toolbar\OpinionToolbarItem;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') || die('Access denied.');
 
@@ -28,6 +29,14 @@ call_user_func(
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['layoutRootPaths'][1636015092] = 'EXT:opinion/Resources/Private/Layouts/';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['partialRootPaths'][1636015092] = 'EXT:opinion/Resources/Private/Partials/';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1636015092] = 'EXT:opinion/Resources/Private/Templates/';
+
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['Supseven']['Opinion']['writerConfiguration'] = [
+            LogLevel::ERROR => [
+                \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
+                    'logFile' => \TYPO3\CMS\Core\Core\Environment::getVarPath() . '/log/typo3_opinion.log',
+                ],
+            ],
+        ];
 
         ExtensionUtility::configurePlugin(
             'Opinion',
