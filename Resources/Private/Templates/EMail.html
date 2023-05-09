@@ -1,24 +1,19 @@
 <html data-namespace-typo3-fluid="true"
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-    <style>
-        th {
-            background: #efefef;
-        }
-        th, td {
-            padding: 4px;
-        }
-    </style>
+    <f:layout name="Email" />
 
-    <h1>{f:translate(key: 'LLL:opinion/Resources/Private/Language/locallang.xlf:email-intro')}</h1>
+    <f:section name="Title">Wienxtra Bildungschancen Feedback</f:section>
+    <f:section name="Intro">Es wurde Feedback zur Seite {opinion.document.uri} gegeben.</f:section>
+    <f:section name="Screenshot">{hasScreenshot}</f:section>
+    <f:section name="Message">{opinion.message}</f:section>
 
-    <table style="width: 100%; border: 1px solid #efefef;">
-        <f:render section="Heading" arguments="{text : 'General Data'}" />
-        <f:render section="Row" arguments="{column : 'User', value : '{opinion.beuser.user.username}'}" />
-        <f:render section="Row" arguments="{column : 'Message', value : '{opinion.message}'}" />
+    <f:section name="Content">
+        <f:render section="Heading" arguments="{title: 'General Data'}" />
         <f:render section="Row" arguments="{column : 'Date', value : '{opinion.time -> f:format.date(format: \'d.m.Y H:i:s\')}'}" />
+        <f:render section="Row" arguments="{column : 'User', value : '{opinion.beuser.user.username}'}" />
 
-        <f:render section="Heading" arguments="{text : 'Browser'}" />
+        <f:render section="Heading" arguments="{title : 'Browser', spacer: 1}" />
         <f:render section="Row" arguments="{column : 'appCodeName', value: '{opinion.browser.appCodeName}'}" />
         <f:render section="Row" arguments="{column : 'appName', value: '{opinion.browser.appName}'}" />
         <f:render section="Row" arguments="{column : 'appVersion', value: '{opinion.browser.appVersion}'}" />
@@ -27,8 +22,10 @@
         <f:render section="Row" arguments="{column : 'userAgent', value: '{opinion.browser.userAgent}'}" />
         <f:render section="Row" arguments="{column : 'vendor', value: '{opinion.browser.vendor}'}" />
 
-        <f:render section="Heading" arguments="{text : 'Document' }" />
-        <f:render section="Row" arguments="{column : 'Uri', value: '{opinion.document.uri}'}" />
+        <f:render section="Heading" arguments="{title : 'Document', spacer: 1}" />
+        <f:variable name="uri">{f:link.typolink(parameter: '{opinion.document.uri}', absolute: 'true')}</f:variable>
+        <f:render section="Row" arguments="{column : 'Uri', value: '{uri}'}" />
+
         <f:if condition="{opinion.page.backend} === true">
             <f:then>
                 <f:render section="Row" arguments="{column : 'pageUid', value: '{opinion.page.pageUid}'}" />
@@ -44,45 +41,31 @@
             </f:else>
         </f:if>
 
-        <f:render section="Heading" arguments="{text : 'Display Informations' }" />
+        <f:render section="Heading" arguments="{title : 'Display Informations', spacer: 1}" />
         <f:if condition="{opinion.display.breakpoint} !== ''">
             <f:render section="Row" arguments="{column : 'Breakpoint', value: '{opinion.display.breakpoint}'}" />
         </f:if>
         <f:render section="Row" arguments="{column : 'Display Width x Height', value: '{opinion.display.width} x {opinion.display.height}'}" />
 
-        <f:if condition="{opinion.screenshot.identifier}">
-            <f:render section="Heading" arguments="{text : 'Screenshot' }" />
-            <f:render section="Screenshot" />
-        </f:if>
-
-        <f:render section="Heading" arguments="{text : 'Cookies' }" />
+        <f:render section="Heading" arguments="{title : 'Cookies', spacer: 1}" />
         <f:render section="Array" arguments="{ array : '{opinion.cookies}'}" />
 
-    </table>
+    </f:section>
+
 
     <f:section name="Heading">
+        <f:if condition="{spacer}">
+            <tr><td colspan="2">&nbsp;</td></tr>
+        </f:if>
         <tr>
-            <th colspan="2" style="text-align: left; font-weight: bold; border-bottom: 2px solid #efefef;">{text}</th>
+            <th align="left" colspan="2" style="border-bottom: 1px solid #000; background-color: #000; color: #fff;">{title}</th>
         </tr>
     </f:section>
 
     <f:section name="Row">
         <tr>
-            <td>{column}</td>
-            <td>{value}</td>
-        </tr>
-    </f:section>
-
-    <f:section name="Screenshot">
-        <tr>
-            <td colspan="2">
-                <figure>
-                    <img src="cid:screenshot" width="500">
-                    <figcaption>
-                        {opinion.screenshot.identifier}
-                    </figcaption>
-                </figure>
-            </td>
+            <th align="left" width="30%">{f:translate(key: 'email.{column}', default: '{column}')}</th>
+            <td>{value -> f:format.raw()}</td>
         </tr>
     </f:section>
 
@@ -97,4 +80,6 @@
             </td>
         </tr>
     </f:section>
+
+
 </html>

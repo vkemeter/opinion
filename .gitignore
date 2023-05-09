@@ -2,6 +2,7 @@
 
 Build/node_modules
 Build/*.log
+Build/Dist
 
 Resources/Public/Css/*.map
 Resources/Public/JavaScript/*.map

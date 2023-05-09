@@ -11,6 +11,7 @@ use Symfony\Component\Mime\Address;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Mail\FluidEmail;
+use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
@@ -45,6 +46,12 @@ class Email
             ->to($toAddress)
             ->from(
                 new Address(
+                    $GLOBALS['TYPO3_CONF_VARS']['MAIL']['defaultMailFromAddress'],
+                    $GLOBALS['TYPO3_CONF_VARS']['MAIL']['defaultMailFromName']
+                )
+            )
+            ->replyTo(
+                new Address(
                     $beUserEmailAddress,
                     $GLOBALS['BE_USER']->user['realName'] ?: $GLOBALS['BE_USER']->user['username']
                 )
@@ -53,8 +60,15 @@ class Email
             ->format('html')
             ->setTemplate('EMail')
             ->assignMultiple([
-                                 'opinion' => $opinion,
-                             ]);
+                'opinion' => $opinion,
+            ]);
+
+        $logoPath = GeneralUtility::makeInstance(PackageManager::class)->resolvePackagePath('EXT:opinion/Resources/Public/Icons/actions-document-opinion.svg');
+        $fluidEmail->assign('test', $logoPath);
+        $fluidEmail->embedFromPath(
+            $logoPath,
+            'logo'
+        );
 
         if ($opinion->getScreenshot()) {
             $path = Environment::getPublicPath() . DIRECTORY_SEPARATOR . $opinion->getScreenshot()->getPublicUrl();
@@ -62,6 +76,7 @@ class Email
                 $path,
                 'screenshot'
             );
+            $fluidEmail->assign('hasScreenshot', 'true');
         }
 
         return $fluidEmail;
