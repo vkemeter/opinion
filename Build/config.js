@@ -57,7 +57,7 @@ module.exports = function () {
                 watch: build + '/Src/Scss/**/*.scss'
             },
             typescript: {
-                enabled: true,
+                enabled: false,
                 src: build + '/Src/TypeScript/',
                 entries: [
                     build + '/Src/TypeScript/main.ts',
@@ -67,7 +67,7 @@ module.exports = function () {
                 watch: build + '/Src/TypeScript/**/*.ts'
             },
             javascript: {
-                enabled: true,
+                enabled: false,
                 src: build + '/Src/JavaScript/OpinionBe.js',
                 dest: theme + '/Resources/Public/JavaScript',
                 file: 'OpinionBe.js',

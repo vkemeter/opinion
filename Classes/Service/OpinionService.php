@@ -106,11 +106,11 @@ class OpinionService
     {
         $opinion = new Opinion();
         $opinion->setTime(new DateTime($data['time']));
-        $opinion->setMessage($data['message'] ?: '');
-        $opinion->setBrowser($data['browser'] ?: []);
-        $opinion->setDocument($data['document'] ?: []);
-        $opinion->setDisplay($data['display'] ?: []);
-        $opinion->setPage($data['page'] ?: []);
+        $opinion->setMessage($data['message'] ?? '');
+        $opinion->setBrowser($data['browser'] ?? []);
+        $opinion->setDocument($data['document'] ?? []);
+        $opinion->setDisplay($data['display'] ?? []);
+        $opinion->setPage($data['page'] ?? []);
 
         if ($data['screenshot']) {
             $opinion->setScreenshot(Image::saveImage($data['screenshot']));

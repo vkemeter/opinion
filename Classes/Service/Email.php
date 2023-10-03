@@ -60,7 +60,8 @@ class Email
             ->format('html')
             ->setTemplate('EMail')
             ->assignMultiple([
-                'opinion' => $opinion,
+                'opinion'  => $opinion,
+                'siteName' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'],
             ]);
 
         $logoPath = GeneralUtility::makeInstance(PackageManager::class)->resolvePackagePath('EXT:opinion/Resources/Public/Icons/actions-document-opinion.svg');

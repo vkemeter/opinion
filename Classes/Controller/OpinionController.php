@@ -4,30 +4,25 @@ declare(strict_types=1);
 
 namespace Supseven\Opinion\Controller;
 
-use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Supseven\Opinion\Service\Email;
 use Supseven\Opinion\Service\OpinionService;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Mail\Mailer;
-use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class OpinionController extends ActionController
 {
     /** @var array Settings */
-    protected $tsSettings = [];
+    protected array $tsSettings = [];
 
-    /** @var mixed|object|LoggerAwareInterface|ExtensionConfiguration|SingletonInterface */
-    protected $extensionConfiguration;
+    /** @var ExtensionConfiguration */
+    protected ExtensionConfiguration $extensionConfiguration;
 
     /** @var LoggerInterface */
     private LoggerInterface $logger;
@@ -35,37 +30,12 @@ class OpinionController extends ActionController
     public function __construct(LoggerInterface $logger)
     {
         $this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
-        $this->tsSettings = $this->extensionConfiguration->get('opinion');
+        $this->tsSettings = $this->extensionConfiguration->get('opinion') ?? [];
         $this->logger = $logger;
     }
 
-    public function opinionAction(): ResponseInterface
+    public function opinionBackendAction(ServerRequestInterface $request): ResponseInterface
     {
-        try {
-            $data = OpinionService::getData();
-
-            $mergedData = OpinionService::mergeData($data, [
-                'cookies' => $this->request->getCookieParams(),
-            ]);
-
-            $opinion = OpinionService::getOpinionDto($mergedData);
-            $email = GeneralUtility::makeInstance(Email::class)->create($opinion);
-
-            GeneralUtility::makeInstance(Mailer::class)->send($email);
-        } catch (Exception|TransportExceptionInterface $e) {
-            $this->logger->error('FE-Mail send failed: {message} with code {code}', [
-                'message' => $e->getMessage(),
-                'code'    => $e->getCode(),
-            ]);
-        }
-
-        return $this->htmlResponse();
-    }
-
-    public function opinionBackendAction(
-        ServerRequestInterface $request,
-        ResponseInterface $response = null
-    ): ResponseInterface {
         try {
             $data = OpinionService::getData();
 
@@ -78,30 +48,22 @@ class OpinionController extends ActionController
 
             GeneralUtility::makeInstance(Mailer::class)->send($email);
 
-            $message = GeneralUtility::makeInstance(FlashMessage::class,
-                'The Message was sent successfully',
-                '[OPINION] Message sent.',
-                FlashMessage::OK,
-                true
-            );
-        } catch (Exception|TransportExceptionInterface $e) {
-            $message = GeneralUtility::makeInstance(FlashMessage::class,
-                'The Message was not sent',
-                '[OPINION] Message not sent.',
-                FlashMessage::ERROR,
-                true
-            );
+            $success = true;
+        } catch (\Throwable $e) {
+            $success = false;
 
-            $this->logger->error('FE-Mail send failed: {message} with code {code}', [
+            $this->logger->error('Mail send failed: ' . $e->getMessage(), [
                 'message' => $e->getMessage(),
                 'code'    => $e->getCode(),
             ]);
         }
 
-        $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
-        $messageQueue = $flashMessageService->getMessageQueueByIdentifier();
-        $messageQueue->addMessage($message);
+        $message = [
+            'title'   => LocalizationUtility::translate('LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:msg.title'),
+            'body'    => LocalizationUtility::translate('LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:msg.' . ($success ? 'success' : 'error')),
+            'success' => $success,
+        ];
 
-        return new HtmlResponse('');
+        return new JsonResponse($message);
     }
 }

@@ -51,7 +51,9 @@ class OpinionModule extends AbstractModule implements ShortInfoProviderInterface
      */
     public function getJavaScriptFiles(): array
     {
-        return ['EXT:opinion/Resources/Public/JavaScript/Opinion.js'];
+        return [
+            'EXT:opinion/Resources/Public/JavaScript/OpinionAdminPanel.js',
+        ];
     }
 
     /**
@@ -72,5 +74,10 @@ class OpinionModule extends AbstractModule implements ShortInfoProviderInterface
     protected function getTimeTracker(): TimeTracker
     {
         return GeneralUtility::makeInstance(TimeTracker::class);
+    }
+
+    public function isEnabled(): bool
+    {
+        return true;
     }
 }

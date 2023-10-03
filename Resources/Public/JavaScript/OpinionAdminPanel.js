@@ -1,55 +1,17 @@
-export class Opinion {
-    constructor() {
-        this.init();
-    }
 
-    init() {
-        const button = document.getElementById('opinion-send');
+window.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById('opinion-send');
 
-        button.addEventListener('click', async e => {
-            e.preventDefault();
+    let running = false;
 
-            let data = await this.getBrowserData();
+    button.addEventListener('click', async e => {
+        e.preventDefault();
 
-            if (button.classList.contains('opinion-be')) {
+        await populateData();
+    });
 
-                const selectedPageTreeItem = document.getElementsByClassName('node-selected')[0];
-
-                if (selectedPageTreeItem) {
-                    const tmpJson = JSON.parse(data);
-                    tmpJson['page']['pageUid'] = selectedPageTreeItem.getAttribute('data-state-id');
-                    data = JSON.stringify(tmpJson);
-                }
-
-                let _uri = button.dataset.action;
-                const response = await fetch(_uri, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: data
-                });
-                const responseData = await response.text();
-            } else {
-                this.populateData(data);
-            }
-        });
-    }
-
-    toggleAdminPanel() {
-        const admPanelTabs = Array.from(document.getElementsByClassName('typo3-adminPanel-module-trigger-label'));
-
-        for (let tab of admPanelTabs) {
-            if (tab.textContent === 'Opinion') {
-                tab.parentElement.click();
-            }
-        }
-    }
-
-    populateData(data) {
-        this.toggleAdminPanel();
-        const _data = JSON.parse(data);
-
+    const populateData = async () => {
+        const _data = await getBrowserData();
         const _dataElem = document.getElementById('opinion-data');
 
         const _hidden = document.createElement('div');
@@ -122,7 +84,6 @@ export class Opinion {
 
         _dataElem.appendChild(_table);
         _dataElem.appendChild(_hidden);
-        document.getElementById('opinion-textarea').remove();
 
         const send = document.getElementById('opinion-send');
         const submit = document.createElement('button');
@@ -136,7 +97,7 @@ export class Opinion {
 
         submit.addEventListener('click', async e => {
             e.preventDefault();
-            let newData = document.querySelector<HTMLElement>('#opinion-dataset');
+            let newData = document.querySelector('#opinion-dataset');
 
             if (newData) {
                 let _uri = submit.dataset.action;
@@ -147,7 +108,7 @@ export class Opinion {
                     },
                     body: newData.textContent
                 });
-                const responseData = await response.text();
+                const responseData = await response.json();
 
                 if (responseData) {
                     location.reload();
@@ -156,8 +117,8 @@ export class Opinion {
         });
     }
 
-    async getBrowserData() {
-        let data = {
+    const getBrowserData = async () => {
+        return {
             'time': new Date().toLocaleString(),
             'browser': {
                 'appCodeName': window.navigator.appCodeName,
@@ -172,20 +133,52 @@ export class Opinion {
                 'uri': document.location.href,
             },
             'display': {
-                'breakpoint': this.getActiveBreakpoint(),
-                'height': this.getWindowHeight(),
-                'width': this.getWindowWidth()
+                'breakpoint': getActiveBreakpoint(),
+                'height': getWindowHeight(),
+                'width': getWindowWidth()
             },
-            'page': this.getSystemInformations(),
-            'screenshot': await this.getScreenshot(),
-            'message': this.getMessage()
+            'page': getSystemInformations(),
+            'screenshot': await getScreenshot(),
+            'message': getMessage()
         }
-
-        return JSON.stringify(data);
     }
 
-    async getScreenshot() {
-        const admPanel: HTMLElement = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0] as HTMLElement;
+    const getActiveBreakpoint = () => {
+        let breakpoint = '';
+        Array.from(document.querySelectorAll('.breakpoint')).forEach(controlElement => {
+            let style = window.getComputedStyle(controlElement);
+            if (style.display === 'block') {
+                breakpoint = controlElement.dataset.breakpoint;
+            }
+        });
+
+        return breakpoint;
+    };
+
+    const getWindowWidth = () => {
+        return window.innerWidth;
+    }
+
+    const getWindowHeight = () => {
+        return window.innerHeight;
+    }
+
+    const getMessage = () => {
+        const textarea = document.getElementById('opinion-message');
+
+        if (textarea) {
+            return textarea.value;
+        }
+    }
+
+    const getScreenshot = async () => {
+        if (running) {
+            return;
+        }
+
+        running = true;
+
+        const admPanel = document.getElementsByClassName('typo3-adminPanel-content-header-close')[0];
 
         if (admPanel) {
             admPanel.click();
@@ -211,9 +204,9 @@ export class Opinion {
                     hasTimeouted = true;
                     reject('Cannot render video capture');
                 }, 5000);
-                requestAnimationFrame(() => renderVideoToCanvas.apply(this))
+                requestAnimationFrame(() => renderVideoToCanvas())
 
-                function renderVideoToCanvas(this: Opinion) {
+                const renderVideoToCanvas = () => {
                     if (video.readyState === video.HAVE_ENOUGH_DATA) {
                         canvas.width = video.videoWidth;
                         canvas.height = video.videoHeight;
@@ -222,53 +215,34 @@ export class Opinion {
                         resolve(canvas.toDataURL("image/png"));
                     } else {
                         if (!hasTimeouted) {
-                            requestAnimationFrame(() => renderVideoToCanvas.apply(this));
+                            requestAnimationFrame(() => renderVideoToCanvas());
                         }
                     }
                 }
             });
             captureStream.getTracks().forEach(track => track.stop());
+
+            if (admPanel) {
+                document.querySelectorAll('.typo3-adminPanel-module-trigger').forEach((el) => {
+                    if (el.textContent.trim() === 'Opinion') {
+                        el.click();
+                    }
+                })
+            }
+
             return frame;
 
         } catch (err) {
-            console.log('The Image was not attached due to Users interaction.');
+            console.error('The Image was not attached due to Users interaction.');
             return '';
         }
     }
 
-    getSystemInformations() {
-        let infos = document.querySelector<HTMLElement>('#opinion-system-informations');
+    const getSystemInformations = () => {
+        let infos = document.querySelector('#opinion-system-informations');
 
         if (infos) {
             return JSON.parse(infos.textContent);
         }
     }
-
-    getActiveBreakpoint() {
-        let breakpoint = '';
-        Array.from(document.querySelectorAll<HTMLElement>('.breakpoint')).forEach(controlElement => {
-            let style = window.getComputedStyle(controlElement);
-            if (style.display === 'block') {
-                breakpoint = controlElement.dataset.breakpoint;
-            }
-        });
-
-        return breakpoint;
-    }
-
-    getWindowWidth() {
-        return window.innerWidth;
-    }
-
-    getWindowHeight() {
-        return window.innerHeight;
-    }
-
-    getMessage() {
-        const textarea = <HTMLInputElement>document.getElementById('opinion-message');
-
-        if (textarea) {
-            return textarea.value;
-        }
-    }
-}
+});

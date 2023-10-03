@@ -18,9 +18,8 @@ class OpinionToolbarItem implements ToolbarItemInterface
     public function __construct()
     {
         $this->pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $this->pageRenderer->addJsFile('EXT:opinion/Resources/Public/JavaScript/Opinion.js');
         $this->pageRenderer->addCssFile('EXT:opinion/Resources/Public/Css/Styles.min.css');
-        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Opinion/OpinionBe');
+        $this->pageRenderer->loadJavaScriptModule('@vkemeter/opinion/OpinionBe.js');
     }
 
     public function checkAccess(): bool
