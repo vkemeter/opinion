@@ -85,12 +85,18 @@ window.addEventListener("DOMContentLoaded", () => {
         _dataElem.appendChild(_table);
         _dataElem.appendChild(_hidden);
 
+        const messageElement = document.getElementById('opinion-textarea');
+
+        if (messageElement) {
+            messageElement.parentNode.removeChild(messageElement);
+        }
+
         const send = document.getElementById('opinion-send');
         const submit = document.createElement('button');
         submit.id = 'opinion-submit';
         submit.textContent = 'Abschicken';
         submit.setAttribute('data-action', send.dataset.action);
-        submit.className = 'btn btn-primary sf-reset';
+        submit.className = 'typo3-adminPanel-btn typo3-adminPanel-btn-default';
 
         send.parentElement.appendChild(submit);
         send.remove();
@@ -233,7 +239,7 @@ window.addEventListener("DOMContentLoaded", () => {
             return frame;
 
         } catch (err) {
-            console.error('The Image was not attached due to Users interaction.');
+            console.error('The Image was not attached due to Users interaction.', err);
             return '';
         }
     }

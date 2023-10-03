@@ -10,6 +10,7 @@ use TYPO3\CMS\Adminpanel\ModuleApi\AbstractSubModule;
 use TYPO3\CMS\Adminpanel\ModuleApi\DataProviderInterface;
 use TYPO3\CMS\Adminpanel\ModuleApi\ModuleData;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\TimeTracker\TimeTracker;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -22,20 +23,18 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     {
         $tsfe = $this->getTypoScriptFrontendController();
 
-        return new ModuleData(
-            [
-                'info' => [
-                    'beUser'         => OpinionService::getBeUserName(),
-                    'pageUid'        => $tsfe->id,
-                    'pageType'       => $tsfe->getPageArguments()->getPageType(),
-                    'noCache'        => $this->isNoCacheEnabled(),
-                    'countUserInt'   => count($tsfe->config['INTincScript'] ?? []),
-                    'totalParsetime' => $this->getTimeTracker()->getParseTime(),
-                    'imagesOnPage'   => $this->collectImagesOnPage(),
-                    'documentSize'   => $this->collectDocumentSize(),
-                ],
-            ]
-        );
+        return new ModuleData([
+            'info' => [
+                'beUser'         => OpinionService::getBeUserName(),
+                'pageUid'        => $tsfe->id,
+                'pageType'       => $tsfe->getPageArguments()->getPageType(),
+                'noCache'        => $this->isNoCacheEnabled(),
+                'countUserInt'   => count($tsfe->config['INTincScript'] ?? []),
+                'totalParsetime' => $this->getTimeTracker()->getParseTime(),
+                'imagesOnPage'   => $this->collectImagesOnPage(),
+                'documentSize'   => $this->collectDocumentSize(),
+            ],
+        ]);
     }
 
     /**
@@ -89,16 +88,14 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
     protected function collectImagesOnPage(): array
     {
         $imagesOnPage = [
-            'files'          => [],
-            'total'          => 0,
-            'totalSize'      => 0,
-            'totalSizeHuman' => GeneralUtility::formatSize(0),
+            'files' => [],
         ];
 
         $count = 0;
         $totalImageSize = 0;
+
         foreach (GeneralUtility::makeInstance(AssetCollector::class)->getMedia() as $file => $information) {
-            $fileSize = (int)@filesize($file);
+            $fileSize = (int)@filesize(Environment::getProjectPath() . $file);
             $imagesOnPage['files'][] = [
                 'name'      => $file,
                 'size'      => $fileSize,
@@ -107,7 +104,9 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
             $totalImageSize += $fileSize;
             $count++;
         }
-        $imagesOnPage['totalSize'] = GeneralUtility::formatSize($totalImageSize);
+
+        $imagesOnPage['totalSize'] = $totalImageSize;
+        $imagesOnPage['totalSizeHuman'] = GeneralUtility::formatSize($totalImageSize);
         $imagesOnPage['total'] = $count;
 
         return $imagesOnPage;
@@ -120,7 +119,7 @@ class Opinion extends AbstractSubModule implements DataProviderInterface
      */
     protected function collectDocumentSize(): string
     {
-        $documentSize = mb_strlen($this->getTypoScriptFrontendController()->content, 'UTF-8');
+        $documentSize = strlen($this->getTypoScriptFrontendController()->content);
 
         return GeneralUtility::formatSize($documentSize);
     }
