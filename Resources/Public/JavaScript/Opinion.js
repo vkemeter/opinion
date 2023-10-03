@@ -14,7 +14,10 @@ export class Opinion {
                 const selectedPageTreeItem = document.getElementsByClassName('node-selected')[0];
 
                 if (selectedPageTreeItem) {
-                    data['page']['pageUid'] = selectedPageTreeItem.getAttribute('data-state-id');
+                    if (!data.page) {
+                        data.page = {};
+                    }
+                    data.page.pageUid = selectedPageTreeItem.getAttribute('data-state-id');
                 }
 
                 let _uri = button.dataset.action;
