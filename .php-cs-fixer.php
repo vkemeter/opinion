@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->name('\\.php$')
-    ->in(__DIR__);
+    ->in(__DIR__)
+    ->notPath('vendor/*')
+    ->notPath('bin/*')
+    ->notPath('node_modules/*');
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)

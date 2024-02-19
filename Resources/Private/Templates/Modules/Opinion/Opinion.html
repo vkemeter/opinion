@@ -1,21 +1,25 @@
 <html data-namespace-typo3-fluid="true"
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-    <div id="opinion-system-informations" class="display-none">{info -> f:format.json()}</div>
+<div id="opinion-system-informations" class="display-none">{info -> f:format.json()}</div>
 
-    <div class="sf-opinion opinion-intro">
-        <p>{f:translate(key: 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:admPanel.intro')}</p>
-    </div>
+<div class="sf-opinion opinion-intro">
+    <p>{f:translate(key: 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:admPanel.intro')}</p>
+</div>
 
-    <div id="opinion-approve-contents">
-        <div id="opinion-data"></div>
-    </div>
+<div id="opinion-approve-contents">
+    <div id="opinion-data"></div>
+</div>
 
-    <div id="opinion-textarea" class="opinion-form opinion-form-group">
-        <label for="message" class="opinion-form opinion-form-label">Your Message:</label>
-        <f:form.textarea class="sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></f:form.textarea>
-    </div>
+<div id="opinion-textarea" class="opinion-form opinion-form-group">
+    <label for="opinion-message" class="opinion-form opinion-form-label">
+        <f:translate key="LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:message">Message</f:translate>
+    </label>
+    <textarea class="sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></textarea>
+</div>
 
+<button class="typo3-adminPanel-btn typo3-adminPanel-btn-default" id="opinion-send" data-action="{xhrUrl -> f:format.htmlspecialchars()}">
+    <f:translate key="LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:send">Send</f:translate>
+</button>
 
-    <button class="btn btn-primary sf-reset" id="opinion-send" data-action="{f:uri.action(action: 'opinion', controller: 'Opinion', extensionName: 'Opinion', pageType: '1634212115', noCache: '1')}">Screenshot aufnehmen</button>
 </html>

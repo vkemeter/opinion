@@ -1,6 +1,7 @@
 {
-  "name": "Opinion",
-  "version": "1.0.0",
+  "name": "opinion",
+  "version": "3.0.0",
+  "private": true,
   "description": "Getting user opinions like a boss",
   "main": "index.js",
   "author": "Volker Kemeter",

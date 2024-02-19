@@ -1,6 +1,7 @@
 <html data-namespace-typo3-fluid="true"
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
+<div class="dropdown-item-text">
     <div id="opinion-system-informations" class="display-none">{info -> f:format.json()}</div>
 
     <div id="opinion-approve-contents">
@@ -8,10 +9,11 @@
     </div>
 
     <div id="opinion-textarea" class="opinion-form opinion-form-group">
-        <label for="message" class="opinion-form opinion-form-label">Your Message:</label>
-        <f:form.textarea class="sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></f:form.textarea>
+        <label for="opinion-message" class="opinion-form opinion-form-label"><f:translate key="LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:message">Message</f:translate></label>
+        <textarea class="form-control sf-opinion opinion-form opinion-form-textarea" name="message" id="opinion-message"></textarea>
     </div>
 
-    <button class="btn btn-primary sf-reset opinion-be" id="opinion-send" data-action="/typo3/index.php?route=%2Fajax%2Fopinion%2Fbackend&token=45ecc869f0f637df4a705244bbe9f5d2556ce914">Abschicken</button>
+    <button class="btn btn-primary sf-reset opinion-be" id="opinion-send" data-action=""><f:translate key="LLL:EXT:opinion/Resources/Private/Language/locallang_be.xlf:send">Send</f:translate></button>
+</div>
 
 </html>

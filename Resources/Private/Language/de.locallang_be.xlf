@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="1.2" xmlns:t3="http://typo3.org/schemas/xliff" xmlns="urn:oasis:names:tc:xliff:document:1.2">
-	<file source-language="en" original="" datatype="plaintext" date="2023-10-03T11:45:38+02:00">
+	<file source-language="en" target-language="de" original="" datatype="plaintext" date="2023-10-03T11:45:38+02:00">
 		<body>
 			<trans-unit id="emailAddress" resname="emailAddress">
 				<source>Enter the receivers E-Mail Address</source>
+				<target>Empfänger E-Mail Addresse</target>
 			</trans-unit>
 			<trans-unit id="subject" resname="subject">
 				<source>Enter a Subject for the Email composed Email</source>
+				<target>Betreff der E-Mail</target>
 			</trans-unit>
 			<trans-unit id="message" resname="message">
 				<source>Your Message</source>
+				<target>Ihre Nachricht</target>
 			</trans-unit>
 			<trans-unit id="send" resname="send">
 				<source>Submit</source>
-			</trans-unit>
-			<trans-unit id="msg.title" resname="msg.title">
-				<source>Opinion</source>
+				<target>Abschicken</target>
 			</trans-unit>
 			<trans-unit id="msg.error" resname="msg.error">
 				<source>Unable to send message.</source>
+				<target>Die Nachricht konnte nicht verrsendet werden</target>
 			</trans-unit>
 			<trans-unit id="msg.success" resname="msg.success">
 				<source>Message was sent</source>
+				<target>Die Nachricht wurde versendet.</target>
 			</trans-unit>
 		</body>
 	</file>
