@@ -2,9 +2,10 @@
  * Browser test of the shared feedback dialog against a mocked endpoint.
  *
  * Runs Chromium in the "new headless" mode, which supports tab capture:
- *   node packages/opinion/Tests/Browser/dialog.test.mjs
+ *   npm --prefix Build ci && npx --prefix Build playwright install chromium
+ *   node Tests/Browser/dialog.test.mjs
  *
- * Playwright is taken from tests/playwright-base (npm ci there first).
+ * Playwright is taken from Build/node_modules.
  */
 import { createReadStream } from 'node:fs';
 import { createServer } from 'node:http';
@@ -14,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const packagePath = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const publicPath = join(packagePath, 'Resources', 'Public');
-const require = createRequire(join(packagePath, '..', '..', 'tests', 'playwright-base', 'package.json'));
+const require = createRequire(join(packagePath, 'Build', 'package.json'));
 const { chromium } = require('playwright');
 
 const contentTypes = { '.js': 'text/javascript', '.css': 'text/css' };

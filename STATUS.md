@@ -1,19 +1,19 @@
 # Development status
 
-State of 2026-10-09. Read this first when picking the work up again.
-
-claude --resume fbdd807f-9a77-4ef0-a449-5549b97ed616
+State of 2026-10-13. Read this first when picking the work up again.
 
 ## Where the code lives
 
-- Project: `q-science-space-typo3`, branch `feature/opinion-core` (local only,
-  not pushed). No pull request: the extension will be extracted into its own
-  project.
-- Package: `packages/opinion` — Composer `vkemeter/opinion`, namespace
-  `Vkemeter\Opinion\`, extension key `opinion`, TYPO3 v14.3, PHP 8.4.
+- Own repository `vkemeter/opinion` (this directory), branch `main`. Extracted
+  on 2026-10-13 from `packages/opinion` of the project `q-science-space-typo3`
+  (branch `feature/opinion-core`, last commit `088c8c6`); the code is identical.
+  The previous Claude session ran there: `fbdd807f-9a77-4ef0-a449-5549b97ed616`.
+- Composer `vkemeter/opinion`, namespace `Vkemeter\Opinion\`, extension key
+  `opinion`, TYPO3 v14.3, PHP 8.4.
 - Documents: [SPEC.md](SPEC.md) (capability map), `SPEC-opinion-*.md`,
   [tasks/plan.md](tasks/plan.md), [tasks/todo.md](tasks/todo.md),
-  [README.md](README.md).
+  [README.md](README.md). `tasks/` describes the work in the old project, paths
+  there still read `packages/opinion`.
 
 ## Done and tested by the user
 
@@ -48,29 +48,42 @@ All on request after the plan (T1–T12) was finished:
 - Possible next steps, not requested yet: delete action in the admin module,
   screenshot annotation (v2), ticket system delivery channel.
 
-## Coupling to the project, to resolve when extracting
+## Standalone setup (2026-10-13)
+
+- Dev dependencies in `composer.json`, installed into `.Build/` (vendor, bin,
+  public).
+- `Build/Scripts/runTests.sh`: docker/podman runner with the suites
+  `composerUpdate`, `unit`, `functional` (`-d sqlite|mariadb|mysql|postgres`),
+  `phpstan`, `cgl`, `lint`.
+- `Build/phpunit/*.xml` use the bootstraps of `typo3/testing-framework`.
+- `Build/phpstan/phpstan.neon`: level 8, strict rules, no baseline.
+- `.php-cs-fixer.php`: rules taken over from the old project (PER-CS 3.0 based).
+- `Build/package.json`: Playwright for `Tests/Browser/dialog.test.mjs`.
+- `var/` in the root is written by `ssch/typo3-debug-dump-pass` (via
+  `phpstan-typo3`) and ignored.
+
+## Left behind in the old project
+
+To clean up there once it requires the extension from this repository:
 
 - `build/deployment/custom_tasks.php`: `var/opinion` is a shared and writable
-  dir.
+  dir. Every project using the extension needs this.
 - `config/system/settings.php`: extension configuration values (`opinion`).
 - `packages/f_theme/Configuration/Sets/BaseSet/setup.typoscript`:
   `config.admPanel` enabled by the user for the frontend button.
-- Tests run with this project's setup: `build/phpunit/*.xml`,
-  `build/Scripts/runTests.sh`, Playwright from `tests/playwright-base`.
 
 ## Checks
 
 ```bash
-ddev exec 'vendor/bin/phpunit -c build/phpunit/UnitTests.xml packages/opinion/Tests/Unit'   # 65 tests
-CI=true build/Scripts/runTests.sh -s functional                                             # 55 tests
-CI=true build/Scripts/runTests.sh -s functional -d mariadb
-node packages/opinion/Tests/Browser/dialog.test.mjs                                         # 7 scenarios
-ddev composer check
+Build/Scripts/runTests.sh -s composerUpdate
+Build/Scripts/runTests.sh -s unit                    # 65 tests
+Build/Scripts/runTests.sh -s functional              # 55 tests
+Build/Scripts/runTests.sh -s functional -d mariadb
+Build/Scripts/runTests.sh -s phpstan
+Build/Scripts/runTests.sh -s cgl -n
+Build/Scripts/runTests.sh -s lint
+node Tests/Browser/dialog.test.mjs                   # 7 scenarios
 ```
-
-All green on 2026-10-09. `composer test:*` needs a TTY, hence `CI=true`.
-`composer check` reports `config/system/settings.php` whenever TYPO3 rewrote
-it after saving the extension configuration.
 
 ## Things learned on the way
 

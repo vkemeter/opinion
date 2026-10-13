@@ -162,15 +162,29 @@ Extension points:
 
 ## Development
 
+The PHP suites run in `ghcr.io/typo3/core-testing-php84` containers (docker or
+podman), no local PHP or Composer needed. Dependencies are installed into
+`.Build/`.
+
 ```bash
-vendor/bin/phpunit -c build/phpunit/UnitTests.xml packages/opinion/Tests/Unit
-CI=true build/Scripts/runTests.sh -s functional
-node packages/opinion/Tests/Browser/dialog.test.mjs
+Build/Scripts/runTests.sh -s composerUpdate          # install dependencies
+Build/Scripts/runTests.sh -s unit
+Build/Scripts/runTests.sh -s functional              # SQLite
+Build/Scripts/runTests.sh -s functional -d mariadb   # also mysql, postgres
+Build/Scripts/runTests.sh -s phpstan
+Build/Scripts/runTests.sh -s cgl -n                  # php-cs-fixer dry run
+Build/Scripts/runTests.sh -s lint
+Build/Scripts/runTests.sh -h                         # all options
 ```
 
 The browser test runs the dialog against a mocked endpoint in headless
-Chromium, including the screenshot flow. It uses Playwright from
-`tests/playwright-base`.
+Chromium, including the screenshot flow. Playwright comes from `Build/`:
+
+```bash
+npm --prefix Build ci
+npx --prefix Build playwright install chromium
+node Tests/Browser/dialog.test.mjs
+```
 
 ## Specification
 

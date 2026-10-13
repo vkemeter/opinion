@@ -4,8 +4,8 @@ Editors report problems on the page they are looking at: a short description, an
 screenshot captured via `navigator.mediaDevices.getDisplayMedia()`, and automatically collected
 client and TYPO3 context. Each submission is stored as a record and delivered by email.
 
-Package: `packages/opinion` · Composer `vkemeter/opinion` · extension key `opinion`.
-Successor of the legacy extension <https://github.com/vkemeter/opinion> (TYPO3 v12, `supseven/opinion`),
+Repository: <https://github.com/vkemeter/opinion> · Composer `vkemeter/opinion` · extension key `opinion`.
+Successor of the legacy extension from the same repository (TYPO3 v12, `supseven/opinion`),
 rewritten for TYPO3 v14. Only the concept is carried over, not the code.
 
 | Module id | Responsibility | Depends on |

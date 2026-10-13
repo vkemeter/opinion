@@ -1,0 +1,12 @@
+{
+  "name": "vkemeter-opinion-build",
+  "private": true,
+  "description": "Development tooling of the opinion extension",
+  "type": "module",
+  "scripts": {
+    "test:browser": "node ../Tests/Browser/dialog.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "~1.63.0"
+  }
+}

@@ -1,0 +1,12 @@
+includes:
+    - ../../.Build/vendor/saschaegerer/phpstan-typo3/extension.neon
+    - ../../.Build/vendor/phpstan/phpstan-phpunit/extension.neon
+    - ../../.Build/vendor/phpstan/phpstan-phpunit/rules.neon
+    - ../../.Build/vendor/phpstan/phpstan-strict-rules/rules.neon
+parameters:
+    level: 8
+    paths:
+        - ../../Classes/
+        - ../../Configuration/
+        - ../../Tests/
+        - ../../ext_localconf.php

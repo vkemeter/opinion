@@ -13,4 +13,8 @@ Resources/Public/JavaScript/*.map
 
 /.idea
 /composer.list
-.php-cs-fixer.cache
+
+/.Build
+/var
+/composer.lock
+.phpunit.cache
