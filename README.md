@@ -172,6 +172,12 @@ Extension points:
 
 ## Development
 
+`make help` lists all tasks: `make install`, `make test`, `make check`,
+`make fix`, `make docs`, `make ci` (everything the CI runs) and more. The
+variables `PHP`, `DB` and `CONTAINER` select PHP version, database and
+container tool, e.g. `make test-functional DB=mariadb`. The targets wrap the
+commands below.
+
 The PHP suites run in `ghcr.io/typo3/core-testing-php84` containers (docker or
 podman), no local PHP or Composer needed. Dependencies are installed into
 `.Build/`.

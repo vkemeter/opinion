@@ -208,7 +208,7 @@ case ${TEST_SUITE} in
         SUITE_EXIT_CODE=$?
         ;;
     lint)
-        runPhp "find . -name '*.php' ! -path './.Build/*' -print0 | xargs -0 -n1 -P4 php -dxdebug.mode=off -l >/dev/null"
+        runPhp "find . -name '*.php' ! -path './.Build/*' ! -path './Documentation-GENERATED-temp/*' ! -path './Build/node_modules/*' -print0 | xargs -0 -n1 -P4 php -dxdebug.mode=off -l >/dev/null"
         SUITE_EXIT_CODE=$?
         ;;
     clean)

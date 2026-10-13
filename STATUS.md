@@ -56,6 +56,9 @@ All on request after the plan (T1–T12) was finished:
 
 - Dev dependencies in `composer.json`, installed into `.Build/` (vendor, bin,
   public).
+- `Makefile`: wraps all tasks (`install`, `test*`, `check`, `lint`, `cgl`,
+  `phpstan`, `fix`, `docs`, `docs-test`, `ci`, `clean`); `PHP`, `DB`,
+  `CONTAINER` as variables.
 - `Build/Scripts/runTests.sh`: docker/podman runner with the suites
   `composerUpdate`, `unit`, `functional` (`-d sqlite|mariadb|mysql|postgres`),
   `phpstan`, `cgl`, `lint`.
@@ -85,6 +88,8 @@ To clean up there once it requires the extension from this repository:
   `config.admPanel` enabled by the user for the frontend button.
 
 ## Checks
+
+`make ci` runs all of them (`make help` for single tasks).
 
 ```bash
 Build/Scripts/runTests.sh -s composerUpdate

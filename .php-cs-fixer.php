@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
-    ->exclude(['.Build', 'Build/node_modules', 'var']);
+    ->exclude(['.Build', 'Build/node_modules', 'Documentation-GENERATED-temp', 'var']);
 
 $config = new PhpCsFixer\Config();
 $config

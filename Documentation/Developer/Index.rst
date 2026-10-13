@@ -172,6 +172,18 @@ configuration (`endpoint`).
 Running the tests
 =================
 
+The `Makefile` bundles all tasks, `make help` lists them:
+
+..  code-block:: bash
+
+    make install                       # Composer and Playwright dependencies
+    make test                          # unit, functional and browser tests
+    make test-functional DB=mariadb    # DB=sqlite|mariadb|mysql|postgres, PHP=8.4|8.5
+    make check                         # lint, coding guidelines, PHPStan, documentation
+    make fix                           # fix the coding guidelines
+    make ci                            # everything the CI runs
+
+The targets wrap the following commands.
 The PHP suites run in `ghcr.io/typo3/core-testing-*` containers with docker
 or podman, no local PHP or Composer needed:
 
