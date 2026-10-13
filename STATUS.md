@@ -42,7 +42,7 @@ All on request after the plan (T1–T12) was finished:
 - switches for every collected detail (`CollectableField`, `CollectionFilter`)
 - email address mandatory for sending
 - "Feedback" in the admin panel bar opens the dialog directly instead of the
-  panel with its button (2026-10-13, browser test; not yet tested by the user)
+  panel with its button (2026-10-13, tested by the user in the project)
 
 ## Open
 

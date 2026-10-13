@@ -17,7 +17,8 @@ from the admin panel. The page context is attached automatically.
   The button carries the dialog configuration (tokenised endpoint, labels) as
   `data-opinion-config`.
 - A click on "Feedback" in the admin panel bar opens the dialog directly, the
-  module panel stays closed (added 2026-10-13, saves a click).
+  module panel stays closed (added 2026-10-13, saves a click; tested by the
+  user in the project).
   `adminpanel-module.js` listens in the capture phase and stops the click
   before the core listener on the module trigger. The module is recognised by
   its tab `opinion_feedback`, the configuration is taken from the button in the
