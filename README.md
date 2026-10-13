@@ -6,7 +6,7 @@ TYPO3. Every submission is stored as a record and delivered by email.
 
 The dialog opens from two places:
 
-- **Frontend:** admin panel tab "Feedback" with a button "Send feedback". The
+- **Frontend:** entry "Feedback" in the admin panel; a click opens the dialog. The
   page, site, language and workspace are attached.
 - **Backend:** speech-bubble button in the toolbar. The current module, page
   and module URL are attached.

@@ -41,6 +41,8 @@ All on request after the plan (T1–T12) was finished:
   and request parameters are left out)
 - switches for every collected detail (`CollectableField`, `CollectionFilter`)
 - email address mandatory for sending
+- "Feedback" in the admin panel bar opens the dialog directly instead of the
+  panel with its button (2026-10-13, browser test; not yet tested by the user)
 
 ## Open
 
@@ -87,7 +89,7 @@ Build/Scripts/runTests.sh -s functional -d mariadb
 Build/Scripts/runTests.sh -s phpstan
 Build/Scripts/runTests.sh -s cgl -n
 Build/Scripts/runTests.sh -s lint
-node Tests/Browser/dialog.test.mjs                   # 9 scenarios
+node Tests/Browser/dialog.test.mjs                   # 11 scenarios
 ```
 
 ## Things learned on the way

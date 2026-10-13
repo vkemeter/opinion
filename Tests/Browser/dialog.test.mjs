@@ -347,5 +347,52 @@ await scenario('users without email address see a notice instead of the form', [
   await page.waitForFunction(() => !document.querySelector('dialog'));
 });
 
+// Markup of the admin panel bar as rendered by EXT:adminpanel (Partials/Modules/Item.fluid.html), reduced
+function adminPanelHtml(withConfig) {
+  const dialogConfig = { ...config, labels: { title: 'Send feedback', message: 'Message', charactersLeft: '{count}', send: 'Send', cancel: 'Cancel' } };
+  const content = withConfig
+    ? `<button type="button" id="panel-button" data-opinion-config="${JSON.stringify(dialogConfig).replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">Send feedback</button>`
+    : '<p>No email address</p><a href="/typo3/module/user/setup">Open user settings</a>';
+  const module = (uid, label, tab, inner) => `<div class="typo3-adminPanel-module typo3-adminPanel-module-${uid}">
+    <div class="typo3-adminPanel-module-trigger" data-typo3-role="typo3-adminPanel-module-trigger" id="trigger-${tab}"><span class="typo3-adminPanel-module-trigger-icon">*</span><span class="typo3-adminPanel-module-trigger-label">${label}</span></div>
+    <div class="typo3-adminPanel-content" data-typo3-role="typo3-adminPanel-content"><div class="typo3-adminPanel-content-nav"><a href="#" data-typo3-role="typo3-adminPanel-content-tab" data-typo3-tab-target="${tab}">${label}</a></div>
+    <div class="typo3-adminPanel-content-panes-item" data-typo3-tab-id="${tab}">${inner}</div></div></div>`;
+  return `<!doctype html><html><head><link rel="stylesheet" href="/Css/opinion-dialog.css"></head><body>
+<form id="TSFE_ADMIN_PANEL_FORM" data-typo3-role="typo3-adminPanel">${module(0, 'Info', 'info_general', '<p>General</p>')}${module(1, 'Feedback', 'opinion_feedback', content)}</form>
+<script>
+// Stand-in for EXT:adminpanel: a click on a trigger opens the module panel
+window.openedPanels = [];
+document.querySelectorAll('[data-typo3-role=typo3-adminPanel-module-trigger]').forEach((trigger) => trigger.addEventListener('click', () => {
+  trigger.closest('.typo3-adminPanel-module').classList.add('typo3-adminPanel-module-active');
+  window.openedPanels.push(trigger.id);
+}));
+</script>
+<script src="/JavaScript/adminpanel-module.js"></script></body></html>`;
+}
+
+await scenario('admin panel: "Feedback" in the bar opens the dialog directly', [], async (page) => {
+  await page.route(`${BASE}/adminpanel.html`, (route) => route.fulfill({ contentType: 'text/html', body: adminPanelHtml(true) }));
+  await page.goto(`${BASE}/adminpanel.html`);
+  await page.click('#trigger-opinion_feedback .typo3-adminPanel-module-trigger-label');
+  await page.waitForSelector('dialog.opinion-dialog[open]');
+  assert(await page.textContent('.opinion-dialog__title') === 'Send feedback', 'dialog not opened with the panel configuration');
+  assert(JSON.stringify(await page.evaluate(() => window.openedPanels)) === '[]', 'module panel opened as well');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog'));
+  // Other modules are left alone, the button in the panel still works
+  await page.click('#trigger-info_general');
+  assert(JSON.stringify(await page.evaluate(() => window.openedPanels)) === '["trigger-info_general"]', 'other module not opened');
+  await page.click('#panel-button');
+  await page.waitForSelector('dialog.opinion-dialog[open]');
+});
+
+await scenario('admin panel: without dialog configuration the panel opens as usual', [], async (page) => {
+  await page.route(`${BASE}/adminpanel.html`, (route) => route.fulfill({ contentType: 'text/html', body: adminPanelHtml(false) }));
+  await page.goto(`${BASE}/adminpanel.html`);
+  await page.click('#trigger-opinion_feedback');
+  assert(JSON.stringify(await page.evaluate(() => window.openedPanels)) === '["trigger-opinion_feedback"]', 'panel not opened');
+  assert(await page.locator('dialog').count() === 0, 'dialog opened without configuration');
+});
+
 server.close();
 process.exit(failures > 0 ? 1 : 0);

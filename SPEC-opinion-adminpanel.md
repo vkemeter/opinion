@@ -16,6 +16,13 @@ from the admin panel. The page context is attached automatically.
 - The module content shows a short description and a button "Send feedback".
   The button carries the dialog configuration (tokenised endpoint, labels) as
   `data-opinion-config`.
+- A click on "Feedback" in the admin panel bar opens the dialog directly, the
+  module panel stays closed (added 2026-10-13, saves a click).
+  `adminpanel-module.js` listens in the capture phase and stops the click
+  before the core listener on the module trigger. The module is recognised by
+  its tab `opinion_feedback`, the configuration is taken from the button in the
+  panel. Users without email address have no button; for them the panel opens
+  as before and shows the notice with the link to the user settings.
 - Context: `pageUid`, `siteIdentifier`, `languageId`, `workspaceId`, taken from
   the frontend request. `FrontendContextProvider` validates them on submit:
   page exists and is not deleted (adds the title), site exists, language exists
@@ -35,6 +42,8 @@ from the admin panel. The page context is attached automatically.
 ## Verification
 
 - Functional: `OpinionModuleTest`, `ContextProviderTest`.
+- Browser: `dialog.test.mjs` with the admin panel markup of the core template
+  (direct opening, other modules untouched, fallback without configuration).
 - Manual (open): admin panel tab visible for admin / editor with TSconfig,
   hidden for editor without; dialog opens, submission arrives with page context;
   token generated in the frontend is accepted.
