@@ -47,4 +47,5 @@ Freehand drawing, text labels, moving or resizing existing shapes, keeping the o
 ## Status
 
 Implemented 2026-10-13. Covered by two scenarios in `Tests/Browser/dialog.test.mjs` (Chromium).
-Open: manual check in the real backend and admin panel, Firefox and Safari, touch devices.
+Tested by the user in Chrome in the backend toolbar and the admin panel on 2026-10-13: everything
+is transmitted as expected. Firefox, Safari and touch devices are not tested, not needed for now.

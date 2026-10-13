@@ -29,6 +29,7 @@ State of 2026-10-13. Read this first when picking the work up again.
 | Configurable details | one switch per field in the extension configuration (tab "Collected details") |
 | Email address required | users without one get a notice with a link to the user settings |
 | `opinion:cleanup` | retention period, `--days`, `--dry-run`, schedulable |
+| Screenshot annotation (v2) | rectangle, arrow, black out, undo; burnt into the image. Tested by the user in Chrome, frontend and backend, 2026-10-13 |
 
 ## Added beyond the original plan
 
@@ -43,11 +44,9 @@ All on request after the plan (T1–T12) was finished:
 
 ## Open
 
-- Manual checks: Firefox and Safari, setting up the cleanup task in the
-  Scheduler.
-- Screenshot annotation (v2, [SPEC-opinion-annotation.md](SPEC-opinion-annotation.md)):
-  implemented and covered by the browser test on 2026-10-13, not yet tested by
-  the user in the backend and the admin panel (also touch devices).
+- Manual check: setting up the cleanup task in the Scheduler.
+- Firefox and Safari are not tested; not needed for now (user decision
+  2026-10-13), Chrome is the browser in use.
 - Possible next steps, not requested yet: ticket system delivery channel.
   A delete action in the admin module is not needed, `opinion:cleanup` covers it.
 
