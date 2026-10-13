@@ -44,6 +44,22 @@ final readonly class DialogConfigurationBuilder
         'screenshotUnsupported' => 'dialog.screenshotUnsupported',
         'screenshotDenied' => 'dialog.screenshotDenied',
         'screenshotFailed' => 'dialog.screenshotFailed',
+        'annotate' => 'dialog.annotate',
+        'annotationTitle' => 'dialog.annotationTitle',
+        'annotationHint' => 'dialog.annotationHint',
+        'annotationTools' => 'dialog.annotationTools',
+        'annotationRectangle' => 'dialog.annotationRectangle',
+        'annotationArrow' => 'dialog.annotationArrow',
+        'annotationBlackout' => 'dialog.annotationBlackout',
+        'annotationColor' => 'dialog.annotationColor',
+        'annotationColorRed' => 'dialog.annotationColorRed',
+        'annotationColorYellow' => 'dialog.annotationColorYellow',
+        'annotationColorBlue' => 'dialog.annotationColorBlue',
+        'annotationUndo' => 'dialog.annotationUndo',
+        'annotationClear' => 'dialog.annotationClear',
+        'annotationApply' => 'dialog.annotationApply',
+        'annotationCanvas' => 'dialog.annotationCanvas',
+        'annotationFailed' => 'dialog.annotationFailed',
     ];
 
     public function __construct(

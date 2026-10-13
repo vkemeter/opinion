@@ -320,6 +320,70 @@
                 <source>The screenshot could not be taken. You can send the feedback without one.</source>
                 <target>Der Screenshot konnte nicht aufgenommen werden. Sie können das Feedback ohne Screenshot senden.</target>
             </trans-unit>
+            <trans-unit id="dialog.annotate">
+                <source>Mark up</source>
+                <target>Markieren</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTitle">
+                <source>Mark up screenshot</source>
+                <target>Screenshot markieren</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationHint">
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Black out personal data before sending.</source>
+                <target>Zeichnen Sie mit der Maus, einem Stift oder dem Finger auf den Screenshot. Schwärzen Sie personenbezogene Daten vor dem Senden.</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTools">
+                <source>Tool</source>
+                <target>Werkzeug</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationRectangle">
+                <source>Rectangle</source>
+                <target>Rechteck</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationArrow">
+                <source>Arrow</source>
+                <target>Pfeil</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationBlackout">
+                <source>Black out</source>
+                <target>Schwärzen</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColor">
+                <source>Colour</source>
+                <target>Farbe</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorRed">
+                <source>Red</source>
+                <target>Rot</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorYellow">
+                <source>Yellow</source>
+                <target>Gelb</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorBlue">
+                <source>Blue</source>
+                <target>Blau</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationUndo">
+                <source>Undo</source>
+                <target>Rückgängig</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationClear">
+                <source>Clear all</source>
+                <target>Alles entfernen</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationApply">
+                <source>Apply</source>
+                <target>Übernehmen</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationCanvas">
+                <source>Screenshot with markings</source>
+                <target>Screenshot mit Markierungen</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationFailed">
+                <source>The screenshot could not be opened for marking up. You can send it without markings.</source>
+                <target>Der Screenshot konnte nicht zum Markieren geöffnet werden. Sie können ihn ohne Markierungen senden.</target>
+            </trans-unit>
             <trans-unit id="adminpanel.label">
                 <source>Feedback</source>
                 <target>Feedback</target>

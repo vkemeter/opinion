@@ -161,6 +161,139 @@ await scenario('screenshot capture, preview, retake, remove, upload', ['--auto-a
   assert(body.includes('name="screenshot"; filename="screenshot.jpg"\r\nContent-Type: image/jpeg\r\n\r\n\xFF\xD8\xFF'), 'screenshot not uploaded as JPEG');
 });
 
+async function dragOnCanvas(page, from, to) {
+  const box = await page.locator('.opinion-annotation__canvas').boundingBox();
+  await page.mouse.move(box.x + box.width * from[0], box.y + box.height * from[1]);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * ((from[0] + to[0]) / 2), box.y + box.height * ((from[1] + to[1]) / 2), { steps: 3 });
+  await page.mouse.move(box.x + box.width * to[0], box.y + box.height * to[1], { steps: 3 });
+  await page.mouse.up();
+}
+
+// Colour of the image (data URL or the editor canvas) at relative coordinates
+async function pixelsAt(page, source, points) {
+  return page.evaluate(async ({ source, points }) => {
+    let image = document.querySelector('.opinion-annotation__canvas');
+    if (source) {
+      image = new Image();
+      image.src = source;
+      await image.decode();
+    }
+    const c = document.createElement('canvas'); c.width = image.width; c.height = image.height;
+    const ctx = c.getContext('2d'); ctx.drawImage(image, 0, 0);
+    return points.map(([x, y]) => {
+      const [r, g, b] = ctx.getImageData(Math.round(image.width * x), Math.round(image.height * y), 1, 1).data;
+      return { r, g, b };
+    });
+  }, { source, points });
+}
+
+const isYellow = ({ r, g, b }) => r > 200 && g > 170 && b < 110;
+const isBlack = ({ r, g, b }) => r < 40 && g < 40 && b < 40;
+const pressed = (page, selector) => page.getAttribute(selector, 'aria-pressed');
+
+// The preview is updated after the editor closed; the focus returns to "Mark up" once it is done
+async function closeEditor(page, action) {
+  await action();
+  await page.waitForSelector('dialog.opinion-annotation', { state: 'detached' });
+  await page.waitForFunction(() => document.activeElement?.textContent === '[annotate]', null, { timeout: 5000 });
+}
+
+await scenario('screenshot annotation: rectangle, arrow, black out, undo, cancel, upload', ['--auto-accept-this-tab-capture'], async (page) => {
+  let body = '';
+  await page.route('**/typo3/ajax/opinion/submit**', async (route) => {
+    body = route.request().postDataBuffer().toString('latin1');
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, title: 'Feedback', message: 'ok', delivered: true }) });
+  });
+  assert(!(await page.isVisible('text=[annotate]')), 'mark up visible without screenshot');
+  await page.click('text=[screenshotTake]');
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  const original = await page.getAttribute('.opinion-dialog__preview', 'src');
+
+  // Editor opens above the dialog with the first tool selected
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await page.locator('dialog.opinion-dialog[open]').count() === 1, 'feedback dialog closed');
+  assert(await page.evaluate(() => document.activeElement?.dataset.tool) === 'rectangle', 'rectangle tool not focused');
+  assert(await pressed(page, '[data-tool=rectangle]') === 'true', 'rectangle not pressed');
+  assert(await page.isDisabled('text=[annotationUndo]') && await page.isDisabled('text=[annotationClear]'), 'undo/clear enabled without shapes');
+
+  await page.click('[data-color=yellow]');
+  assert(await pressed(page, '[data-color=yellow]') === 'true' && await pressed(page, '[data-color=red]') === 'false', 'colour state wrong');
+  await dragOnCanvas(page, [0.1, 0.1], [0.4, 0.4]);
+  await page.click('text=[annotationArrow]');
+  await dragOnCanvas(page, [0.1, 0.7], [0.4, 0.7]);
+  await page.click('text=[annotationBlackout]');
+  assert(await page.isDisabled('[data-color=red]'), 'colours enabled for black out');
+  await dragOnCanvas(page, [0.6, 0.1], [0.9, 0.4]);
+  await page.click('text=[annotationUndo]');
+  let [blackout] = await pixelsAt(page, null, [[0.75, 0.25]]);
+  assert(!isBlack(blackout), 'undo did not remove the black out');
+  await dragOnCanvas(page, [0.6, 0.1], [0.9, 0.4]);
+  await page.keyboard.press('Control+z');
+  [blackout] = await pixelsAt(page, null, [[0.75, 0.25]]);
+  assert(!isBlack(blackout), 'Ctrl+Z did not remove the black out');
+  await dragOnCanvas(page, [0.6, 0.1], [0.9, 0.4]);
+  // A click without dragging adds no shape
+  await dragOnCanvas(page, [0.5, 0.9], [0.5, 0.9]);
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+
+  const annotated = await page.getAttribute('.opinion-dialog__preview', 'src');
+  assert(annotated !== original && annotated.startsWith('data:image/jpeg;base64,'), 'preview not updated');
+  const [rectangleEdge, arrowShaft, blackoutCentre, untouched] = await pixelsAt(page, annotated, [[0.1, 0.25], [0.25, 0.7], [0.75, 0.25], [0.5, 0.9]]);
+  assert(isYellow(rectangleEdge), 'rectangle missing: ' + JSON.stringify(rectangleEdge));
+  assert(isYellow(arrowShaft), 'arrow missing: ' + JSON.stringify(arrowShaft));
+  assert(isBlack(blackoutCentre), 'black out missing: ' + JSON.stringify(blackoutCentre));
+  assert(!isBlack(untouched) && !isYellow(untouched), 'click added a shape');
+
+  // Reopening shows the shapes; Escape closes only the editor and keeps the image
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await page.isEnabled('text=[annotationUndo]'), 'shapes not restored');
+  [blackout] = await pixelsAt(page, null, [[0.75, 0.25]]);
+  assert(isBlack(blackout), 'black out not shown again');
+  await page.click('text=[annotationClear]');
+  await closeEditor(page, () => page.keyboard.press('Escape'));
+  assert(await page.locator('dialog.opinion-dialog[open]').count() === 1, 'Escape closed the feedback dialog');
+  assert(await page.getAttribute('.opinion-dialog__preview', 'src') === annotated, 'cancel changed the screenshot');
+
+  await page.fill('textarea', 'The teaser image is cropped.');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('.opinion-dialog__status--success');
+  const uploaded = Buffer.from(annotated.split(',')[1], 'base64').toString('latin1');
+  assert(body.includes('filename="screenshot.jpg"\r\nContent-Type: image/jpeg\r\n\r\n' + uploaded), 'annotated image not uploaded');
+});
+
+await scenario('screenshot annotation: clear all restores the capture, retake drops the shapes', ['--auto-accept-this-tab-capture'], async (page) => {
+  await page.click('text=[screenshotTake]');
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  const original = await page.getAttribute('.opinion-dialog__preview', 'src');
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await page.click('text=[annotationBlackout]');
+  await dragOnCanvas(page, [0.2, 0.2], [0.8, 0.8]);
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+  assert(await page.getAttribute('.opinion-dialog__preview', 'src') !== original, 'black out not applied');
+
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await page.click('text=[annotationClear]');
+  assert(await page.evaluate(() => document.activeElement?.dataset.tool) === 'rectangle', 'focus lost after clear');
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+  assert(await page.getAttribute('.opinion-dialog__preview', 'src') === original, 'clear all did not restore the capture');
+
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await page.click('text=[annotationBlackout]');
+  await dragOnCanvas(page, [0.2, 0.2], [0.8, 0.8]);
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+  await page.click('text=[screenshotRetake]');
+  await page.waitForFunction((previous) => document.querySelector('.opinion-dialog__preview')?.src !== previous, await page.getAttribute('.opinion-dialog__preview', 'src'), { timeout: 10000 });
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await page.isDisabled('text=[annotationUndo]'), 'shapes kept after retake');
+});
+
 await scenario('denied screenshot shows notice and text submit still possible', ['--auto-reject-this-tab-capture'], async (page) => {
   await page.click('text=[screenshotTake]');
   await page.waitForFunction(() => document.querySelector('.opinion-dialog__notice')?.textContent !== '', null, { timeout: 10000 });

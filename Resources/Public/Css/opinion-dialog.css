@@ -1,5 +1,7 @@
 /* Self-contained, the dialog is shown on frontend pages with arbitrary site styles and in the backend. */
-.opinion-dialog {
+.opinion-dialog,
+.opinion-annotation {
+  --opinion-color-background: #fff;
   --opinion-color-text: #1a1a1a;
   --opinion-color-muted: #555;
   --opinion-color-border: #8c8c8c;
@@ -8,7 +10,9 @@
   --opinion-color-error: #c00;
   --opinion-color-success: #107c10;
   --opinion-focus: 0 0 0 3px rgb(0 120 230 / 40%);
+}
 
+.opinion-dialog {
   box-sizing: border-box;
   width: min(40rem, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
@@ -17,7 +21,7 @@
   overflow: auto;
   border: 0;
   border-radius: 6px;
-  background: #fff;
+  background: var(--opinion-color-background);
   color: var(--opinion-color-text);
   box-shadow: 0 10px 40px rgb(0 0 0 / 30%);
   font: 400 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -26,11 +30,16 @@
 
 .opinion-dialog *,
 .opinion-dialog *::before,
-.opinion-dialog *::after {
+.opinion-dialog *::after,
+.opinion-annotation,
+.opinion-annotation *,
+.opinion-annotation *::before,
+.opinion-annotation *::after {
   box-sizing: border-box;
 }
 
-.opinion-dialog::backdrop {
+.opinion-dialog::backdrop,
+.opinion-annotation::backdrop {
   background: rgb(0 0 0 / 50%);
 }
 
@@ -41,7 +50,8 @@
   visibility: hidden;
 }
 
-.opinion-dialog [hidden] {
+.opinion-dialog [hidden],
+.opinion-annotation [hidden] {
   display: none !important;
 }
 
@@ -209,14 +219,14 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .opinion-dialog {
+  .opinion-dialog,
+  .opinion-annotation {
     --opinion-color-text: #f0f0f0;
     --opinion-color-muted: #bbb;
     --opinion-color-border: #777;
     --opinion-color-error: #ff6b6b;
     --opinion-color-success: #6ccb6c;
-
-    background: #262626;
+    --opinion-color-background: #262626;
   }
 
   .opinion-dialog .opinion-dialog__textarea,
@@ -224,7 +234,109 @@
     background: #1a1a1a;
   }
 
-  .opinion-dialog .opinion-dialog__button:not(.opinion-dialog__button--primary) {
+  .opinion-dialog .opinion-dialog__button:not(.opinion-dialog__button--primary),
+  .opinion-annotation .opinion-dialog__button:not(.opinion-dialog__button--primary, [aria-pressed='true']) {
     background: #333;
   }
+}
+
+/* Full-screen editor to mark up the screenshot, opened above the dialog */
+.opinion-annotation {
+  display: none;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: var(--opinion-color-background);
+  color: var(--opinion-color-text);
+  font: 400 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+}
+
+.opinion-annotation[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.opinion-annotation__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.opinion-annotation__title {
+  margin: 0;
+}
+
+.opinion-annotation__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.opinion-annotation__group--end {
+  margin-left: auto;
+}
+
+.opinion-annotation .opinion-annotation__tool[aria-pressed='true'] {
+  border-color: var(--opinion-color-primary);
+  background: var(--opinion-color-primary);
+  color: var(--opinion-color-primary-text);
+}
+
+.opinion-annotation__color {
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--opinion-color-border);
+  border-radius: 50%;
+  background: var(--opinion-swatch);
+  cursor: pointer;
+}
+
+.opinion-annotation__color[aria-pressed='true'] {
+  border-color: var(--opinion-color-text);
+  box-shadow: 0 0 0 2px var(--opinion-color-primary);
+}
+
+.opinion-annotation__color:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.opinion-annotation__color:focus-visible {
+  outline: 0;
+  box-shadow: var(--opinion-focus);
+}
+
+.opinion-annotation__hint {
+  margin: 0;
+}
+
+.opinion-annotation__stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #3a3a3a;
+}
+
+.opinion-annotation__canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 40%);
+  cursor: crosshair;
+  touch-action: none;
 }

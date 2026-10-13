@@ -241,6 +241,54 @@
             <trans-unit id="dialog.screenshotFailed">
                 <source>The screenshot could not be taken. You can send the feedback without one.</source>
             </trans-unit>
+            <trans-unit id="dialog.annotate">
+                <source>Mark up</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTitle">
+                <source>Mark up screenshot</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationHint">
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Black out personal data before sending.</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTools">
+                <source>Tool</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationRectangle">
+                <source>Rectangle</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationArrow">
+                <source>Arrow</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationBlackout">
+                <source>Black out</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColor">
+                <source>Colour</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorRed">
+                <source>Red</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorYellow">
+                <source>Yellow</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationColorBlue">
+                <source>Blue</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationUndo">
+                <source>Undo</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationClear">
+                <source>Clear all</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationApply">
+                <source>Apply</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationCanvas">
+                <source>Screenshot with markings</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationFailed">
+                <source>The screenshot could not be opened for marking up. You can send it without markings.</source>
+            </trans-unit>
             <trans-unit id="adminpanel.label">
                 <source>Feedback</source>
             </trans-unit>

@@ -45,8 +45,11 @@ All on request after the plan (T1–T12) was finished:
 
 - Manual checks: Firefox and Safari, setting up the cleanup task in the
   Scheduler.
-- Possible next steps, not requested yet: delete action in the admin module,
-  screenshot annotation (v2), ticket system delivery channel.
+- Screenshot annotation (v2, [SPEC-opinion-annotation.md](SPEC-opinion-annotation.md)):
+  implemented and covered by the browser test on 2026-10-13, not yet tested by
+  the user in the backend and the admin panel (also touch devices).
+- Possible next steps, not requested yet: ticket system delivery channel.
+  A delete action in the admin module is not needed, `opinion:cleanup` covers it.
 
 ## Standalone setup (2026-10-13)
 
@@ -85,7 +88,7 @@ Build/Scripts/runTests.sh -s functional -d mariadb
 Build/Scripts/runTests.sh -s phpstan
 Build/Scripts/runTests.sh -s cgl -n
 Build/Scripts/runTests.sh -s lint
-node Tests/Browser/dialog.test.mjs                   # 7 scenarios
+node Tests/Browser/dialog.test.mjs                   # 9 scenarios
 ```
 
 ## Things learned on the way

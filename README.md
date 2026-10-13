@@ -13,6 +13,11 @@ The dialog opens from two places:
 
 Both are only shown to users who may send feedback (see below).
 
+Before sending, the screenshot can be marked up in a full-screen editor: frame
+an area with a rectangle, point at something with an arrow, or black out
+personal data. The markings are burnt into the image; only the marked-up image
+is sent.
+
 Admins find all feedback in the module **Admin Tools → Feedback**: a list,
 newest first, and a detail view with message, screenshot and all collected
 details.
@@ -99,6 +104,8 @@ command `opinion:cleanup`.
   `var/opinion/`, outside the web root. TYPO3 serves them through the
   `dumpFile` URL only; a listener answers `403` unless the request carries an
   admin session.
+- Blacked-out areas are burnt into the screenshot in the browser; the original
+  capture never leaves the page.
 - The browser sends a fixed set of environment details (URL, title, user agent,
   language, time zone, screen and viewport size, pixel ratio, color scheme,
   reduced motion, online state). The server drops every other key. Cookies,

@@ -23,10 +23,11 @@ Build order: `opinion-core` → `opinion-adminpanel` → `opinion-backend-toolba
 | `opinion-core` | [SPEC-opinion-core.md](SPEC-opinion-core.md) | Implemented 2026-10-09, manual checks open |
 | `opinion-adminpanel` | [SPEC-opinion-adminpanel.md](SPEC-opinion-adminpanel.md) | Implemented 2026-10-09, manual checks open |
 | `opinion-backend-toolbar` | [SPEC-opinion-backend-toolbar.md](SPEC-opinion-backend-toolbar.md) | Implemented 2026-10-09, manual checks open |
+| `opinion-annotation` | [SPEC-opinion-annotation.md](SPEC-opinion-annotation.md) | Implemented 2026-10-13, manual checks open |
 
 ## Roadmap beyond v1
 
-- **v2:** screenshot annotation (draw/highlight before sending).
+- **v2:** screenshot annotation (draw/highlight before sending), see `opinion-annotation`.
 - **Later:** ticket system delivery (e.g. Jira API) as an additional delivery channel; configuration
   may then move away from the extension configuration — `opinion-core` keeps configuration behind an
   interface for that reason.

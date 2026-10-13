@@ -37,14 +37,22 @@ export async function captureScreenshot() {
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     video.srcObject = null;
 
-    return await new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Screenshot could not be encoded'))), 'image/jpeg', JPEG_QUALITY);
-    });
+    return await canvasToJpeg(canvas);
   } finally {
     for (const track of stream.getTracks()) {
       track.stop();
     }
   }
+}
+
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @returns {Promise<Blob>}
+ */
+export function canvasToJpeg(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Screenshot could not be encoded'))), 'image/jpeg', JPEG_QUALITY);
+  });
 }
 
 export function blobToDataUrl(blob) {
