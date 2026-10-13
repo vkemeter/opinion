@@ -63,6 +63,11 @@ All on request after the plan (T1–T12) was finished:
 - `Build/phpstan/phpstan.neon`: level 8, strict rules, no baseline.
 - `.php-cs-fixer.php`: rules taken over from the old project (PER-CS 3.0 based).
 - `Build/package.json`: Playwright for `Tests/Browser/dialog.test.mjs`.
+- `Documentation/`: TYPO3 documentation (reST, `guides.xml`), rendered with
+  `ghcr.io/typo3-documentation/render-guides`; screenshots in
+  `Documentation/Images/` taken with Playwright from the real dialog. Publishing
+  on docs.typo3.org needs the extension in the TER and approval by the
+  documentation team, then the webhook `https://docs-hook.typo3.org`.
 - `.github/workflows/ci.yml`: quality job, test matrix (PHP 8.4 × four databases,
   PHP 8.5 × SQLite) and the browser test; `runTests.sh -b docker`, because the
   runners also have podman.
@@ -90,6 +95,7 @@ Build/Scripts/runTests.sh -s phpstan
 Build/Scripts/runTests.sh -s cgl -n
 Build/Scripts/runTests.sh -s lint
 node Tests/Browser/dialog.test.mjs                   # 11 scenarios
+docker run --rm -v $(pwd):/project ghcr.io/typo3-documentation/render-guides:latest --config=Documentation --minimal-test
 ```
 
 ## Things learned on the way

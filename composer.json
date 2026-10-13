@@ -16,6 +16,10 @@
 		}
 	],
 	"homepage": "https://github.com/vkemeter/opinion",
+	"support": {
+		"issues": "https://github.com/vkemeter/opinion/issues",
+		"source": "https://github.com/vkemeter/opinion"
+	},
 	"require": {
 		"php": "^8.4",
 		"typo3/cms-adminpanel": "^14.3",

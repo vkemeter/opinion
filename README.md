@@ -1,5 +1,8 @@
 # TYPO3 extension `opinion`
 
+The full documentation is in [Documentation/](Documentation/Index.rst)
+(reStructuredText, rendered with the TYPO3 documentation tools).
+
 Collects feedback from editors: a description, a category and severity, an
 optional screenshot of the current browser tab and details about browser and
 TYPO3. Every submission is stored as a record and delivered by email.
@@ -196,7 +199,16 @@ node Tests/Browser/dialog.test.mjs
 GitHub Actions (`.github/workflows/ci.yml`) runs the same commands on every push
 to `main` and on pull requests: lint, CGL and PHPStan; unit and functional tests
 on PHP 8.4 with SQLite, MariaDB, MySQL and PostgreSQL and on PHP 8.5 with SQLite;
-the browser test.
+the browser test; a test rendering of the documentation.
+
+### Documentation
+
+```bash
+docker run --rm --pull always -v $(pwd):/project -it \
+    ghcr.io/typo3-documentation/render-guides:latest --config=Documentation
+```
+
+Open `Documentation-GENERATED-temp/Index.html`.
 
 ## Specification
 

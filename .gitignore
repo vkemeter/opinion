@@ -18,3 +18,5 @@ Resources/Public/JavaScript/*.map
 /var
 /composer.lock
 .phpunit.cache
+
+/Documentation-GENERATED-temp

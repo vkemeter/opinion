@@ -88,3 +88,14 @@ jobs:
 
       - name: Dialog test
         run: node Tests/Browser/dialog.test.mjs
+
+  documentation:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Render documentation
+        run: |
+          docker run --rm --pull always -v "$(pwd)":/project \
+            ghcr.io/typo3-documentation/render-guides:latest --config=Documentation --no-progress --minimal-test
