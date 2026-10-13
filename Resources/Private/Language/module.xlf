@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff
+    xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" original="messages" datatype="plaintext" product-name="opinion" date="2026-10-09T17:15:50Z">
+        <header/>
+        <body>
+            <trans-unit id="title">
+                <source>Feedback</source>
+            </trans-unit>
+            <trans-unit id="short_description">
+                <source>Feedback sent by editors</source>
+            </trans-unit>
+            <trans-unit id="description">
+                <source>Lists the feedback editors sent from the admin panel and the backend toolbar, including screenshots and environment details.</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

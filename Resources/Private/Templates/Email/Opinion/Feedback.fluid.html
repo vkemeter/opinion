@@ -1,0 +1,89 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<f:layout name="SystemEmail" />
+	<f:section name="Title">{f:translate(domain: 'opinion.messages', key: 'email.headline')}</f:section>
+	<f:section name="Main">
+		<table
+			cellpadding="4"
+			cellspacing="0"
+			border="0"
+			width="100%">
+			<tr>
+				<th
+					align="left"
+					valign="top">
+					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}
+				</th>
+				<td>{f:translate(domain: 'opinion.messages', key: 'category.{submission.category.value}')}</td>
+			</tr>
+			<tr>
+				<th
+					align="left"
+					valign="top">
+					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}
+				</th>
+				<td>{f:translate(domain: 'opinion.messages', key: 'severity.{submission.severity.value}')}</td>
+			</tr>
+			<tr>
+				<th
+					align="left"
+					valign="top">
+					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}
+				</th>
+				<td>{f:translate(domain: 'opinion.messages', key: 'source.{submission.source.value}')}</td>
+			</tr>
+			<tr>
+				<th
+					align="left"
+					valign="top">
+					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}
+				</th>
+				<td>{sender.realName} ({sender.username}) {sender.email}</td>
+			</tr>
+		</table>
+
+		<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</h4>
+		<p>{submission.message -> f:format.nl2br()}</p>
+
+		<f:if condition="{hasScreenshot}">
+			<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h4>
+			<p>
+				<img
+					src="cid:screenshot"
+					alt=""
+					width="560"
+					style="max-width: 100%; height: auto; border: 1px solid #ccc" />
+			</p>
+		</f:if>
+
+		<f:for
+			each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}"
+			as="rows"
+			key="section">
+			<f:if condition="{rows}">
+				<h4>{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</h4>
+				<table
+					cellpadding="4"
+					cellspacing="0"
+					border="0"
+					width="100%">
+					<f:for
+						each="{rows}"
+						as="value"
+						key="label">
+						<tr>
+							<th
+								align="left"
+								valign="top"
+								width="35%">
+								{label}
+							</th>
+							<td style="word-break: break-all">{value}</td>
+						</tr>
+					</f:for>
+				</table>
+			</f:if>
+		</f:for>
+	</f:section>
+</html>

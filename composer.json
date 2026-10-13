@@ -1,0 +1,40 @@
+{
+	"name": "vkemeter/opinion",
+	"description": "Collects feedback from editors including a screenshot and environment details and delivers it by email",
+	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
+	"keywords": [
+		"TYPO3",
+		"extension",
+		"feedback"
+	],
+	"authors": [
+		{
+			"name": "Volker Kemeter",
+			"role": "Developer",
+			"email": "v.kemeter@fonda.at"
+		}
+	],
+	"homepage": "https://github.com/vkemeter/opinion",
+	"require": {
+		"typo3/cms-adminpanel": "^14.3",
+		"typo3/cms-backend": "^14.3",
+		"typo3/cms-core": "^14.3",
+		"typo3/cms-frontend": "^14.3"
+	},
+	"autoload": {
+		"psr-4": {
+			"Vkemeter\\Opinion\\": "Classes/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Vkemeter\\Opinion\\Tests\\": "Tests/"
+		}
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "opinion"
+		}
+	}
+}

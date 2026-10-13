@@ -1,0 +1,17 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<f:section name="Severity">
+		<f:variable
+			name="badges"
+			value="{high: 'danger', normal: 'warning', low: 'info'}" />
+		<span class="badge badge-{badges.{severity}}">{f:translate(domain: 'opinion.messages', key: 'severity.{severity}')}</span>
+	</f:section>
+
+	<f:section name="Delivery">
+		<f:variable
+			name="badges"
+			value="{sent: 'success', failed: 'danger', pending: 'default'}" />
+		<span class="badge badge-{badges.{status}}">{f:translate(domain: 'opinion.messages', key: 'deliveryStatus.{status}')}</span>
+	</f:section>
+</html>

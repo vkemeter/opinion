@@ -1,0 +1,97 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+	xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<f:layout name="Module" />
+
+	<f:section name="Content">
+		<h1>{f:translate(domain: 'opinion.module', key: 'title')}</h1>
+
+		<f:if condition="{items}">
+			<f:then>
+				<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.list.total', arguments: {count: total})}</p>
+				<div class="table-fit">
+					<table class="table table-striped table-hover">
+						<thead>
+							<tr>
+								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.date')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
+								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</span></th>
+							</tr>
+						</thead>
+						<tbody>
+							<f:for
+								each="{items}"
+								as="item">
+								<tr>
+									<td class="text-nowrap">{item.crdate -> f:format.date(format: 'd.m.Y H:i')}</td>
+									<td>{f:translate(domain: 'opinion.messages', key: 'category.{item.category}')}</td>
+									<td>
+										<f:render
+											partial="FeedbackModule/Badges"
+											section="Severity"
+											arguments="{severity: item.severity}" />
+									</td>
+									<td>
+										<a
+											href="{be:moduleLink(route: 'opinion_feedback.show', arguments: {uid: item.uid})}"
+											title="{f:translate(domain: 'opinion.messages', key: 'module.list.show')}">
+											{item.message -> f:format.crop(maxCharacters: 90)}
+										</a>
+									</td>
+									<td>{item.sender_name -> f:or(alternative: item.sender_username)}</td>
+									<td>{f:translate(domain: 'opinion.messages', key: 'source.{item.source}')}</td>
+									<td>
+										<f:render
+											partial="FeedbackModule/Badges"
+											section="Delivery"
+											arguments="{status: item.delivery_status}" />
+									</td>
+									<td>
+										<f:if condition="{item.screenshot}">
+											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasScreenshot')}">
+												{core:icon(identifier: 'mimetypes-media-image', size: 'small')}
+											</span>
+										</f:if>
+									</td>
+								</tr>
+							</f:for>
+						</tbody>
+					</table>
+				</div>
+
+				<f:if condition="{pagination.pages} > 1">
+					<nav class="d-flex align-items-center gap-3">
+						<f:if condition="{pagination.previous}">
+							<a
+								class="btn btn-default"
+								href="{pagination.previous}"
+								>{f:translate(domain: 'opinion.messages', key: 'module.list.previous')}</a
+							>
+						</f:if>
+						<span
+							>{f:translate(domain: 'opinion.messages', key: 'module.list.page', arguments: {current: pagination.current, pages:
+							pagination.pages})}</span
+						>
+						<f:if condition="{pagination.next}">
+							<a
+								class="btn btn-default"
+								href="{pagination.next}"
+								>{f:translate(domain: 'opinion.messages', key: 'module.list.next')}</a
+							>
+						</f:if>
+					</nav>
+				</f:if>
+			</f:then>
+			<f:else>
+				<f:be.infobox state="-1">{f:translate(domain: 'opinion.messages', key: 'module.list.empty')}</f:be.infobox>
+			</f:else>
+		</f:if>
+	</f:section>
+</html>

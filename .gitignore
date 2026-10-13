@@ -1,0 +1,16 @@
+.idea
+
+Build/node_modules
+Build/*.log
+Build/Dist
+
+Resources/Public/Css/*.map
+Resources/Public/JavaScript/*.map
+
+/bin
+/vendor
+/typo3_src
+
+/.idea
+/composer.list
+.php-cs-fixer.cache

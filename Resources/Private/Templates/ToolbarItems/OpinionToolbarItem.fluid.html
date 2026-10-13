@@ -1,0 +1,18 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<f:asset.module identifier="@vkemeter/opinion/toolbar-item.js" />
+	<button
+		type="button"
+		class="toolbar-item-link"
+		aria-haspopup="dialog"
+		data-opinion-toolbar-config="{configuration}">
+		<f:render
+			partial="ToolbarItems/ToolbarItem"
+			arguments="{
+                title: 'opinion.messages:dialog.title',
+                icon: '{core:icon(identifier: \'opinion-feedback-toolbar\', size: \'small\', alternativeMarkupIdentifier: \'inline\')}'
+            }" />
+	</button>
+</html>

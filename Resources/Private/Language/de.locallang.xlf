@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff
+    xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" target-language="de" original="messages" datatype="plaintext" product-name="opinion" date="2026-10-09T15:50:25Z">
+        <header/>
+        <body>
+            <trans-unit id="extconf.recipients">
+                <source>Recipients: comma-separated email addresses that receive the feedback</source>
+                <target>Empfänger: kommagetrennte E-Mail-Adressen, an die das Feedback geschickt wird</target>
+            </trans-unit>
+            <trans-unit id="extconf.subjectPrefix">
+                <source>Subject prefix of the feedback email</source>
+                <target>Betreff-Präfix der Feedback-E-Mail</target>
+            </trans-unit>
+            <trans-unit id="extconf.retentionDays">
+                <source>Retention in days: feedback records and screenshots older than this are deleted by the command opinion:cleanup</source>
+                <target>Aufbewahrung in Tagen: ältere Feedback-Datensätze und Screenshots löscht der Befehl opinion:cleanup</target>
+            </trans-unit>
+            <trans-unit id="extconf.enabled">
+                <source>Enable feedback: shows the feedback triggers and accepts submissions</source>
+                <target>Feedback aktivieren: zeigt die Feedback-Schaltflächen an und nimmt Einsendungen an</target>
+            </trans-unit>
+            <trans-unit id="response.title">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="response.accessDenied">
+                <source>You are not allowed to send feedback.</source>
+                <target>Sie sind nicht berechtigt, Feedback zu senden.</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.tab.details">
+                <source>Details</source>
+                <target>Details</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.tab.delivery">
+                <source>Delivery</source>
+                <target>Zustellung</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.source">
+                <source>Source</source>
+                <target>Quelle</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.category">
+                <source>Category</source>
+                <target>Kategorie</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.severity">
+                <source>Severity</source>
+                <target>Dringlichkeit</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.be_user">
+                <source>Sender</source>
+                <target>Absender</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.message">
+                <source>Message</source>
+                <target>Nachricht</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.screenshot">
+                <source>Screenshot</source>
+                <target>Screenshot</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.client_info">
+                <source>Browser and device</source>
+                <target>Browser und Gerät</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.system_info">
+                <source>System</source>
+                <target>System</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.context">
+                <source>Context</source>
+                <target>Kontext</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.delivery_status">
+                <source>Delivery status</source>
+                <target>Zustellstatus</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.delivery_log">
+                <source>Delivery log</source>
+                <target>Zustellprotokoll</target>
+            </trans-unit>
+            <trans-unit id="source.frontend">
+                <source>Frontend</source>
+                <target>Frontend</target>
+            </trans-unit>
+            <trans-unit id="source.backend">
+                <source>Backend</source>
+                <target>Backend</target>
+            </trans-unit>
+            <trans-unit id="category.bug">
+                <source>Bug</source>
+                <target>Fehler</target>
+            </trans-unit>
+            <trans-unit id="category.content">
+                <source>Content</source>
+                <target>Inhalt</target>
+            </trans-unit>
+            <trans-unit id="category.idea">
+                <source>Idea</source>
+                <target>Idee</target>
+            </trans-unit>
+            <trans-unit id="category.other">
+                <source>Other</source>
+                <target>Sonstiges</target>
+            </trans-unit>
+            <trans-unit id="severity.low">
+                <source>Low</source>
+                <target>Niedrig</target>
+            </trans-unit>
+            <trans-unit id="severity.normal">
+                <source>Normal</source>
+                <target>Normal</target>
+            </trans-unit>
+            <trans-unit id="severity.high">
+                <source>High</source>
+                <target>Hoch</target>
+            </trans-unit>
+            <trans-unit id="deliveryStatus.pending">
+                <source>Pending</source>
+                <target>Ausstehend</target>
+            </trans-unit>
+            <trans-unit id="deliveryStatus.sent">
+                <source>Sent</source>
+                <target>Gesendet</target>
+            </trans-unit>
+            <trans-unit id="deliveryStatus.failed">
+                <source>Failed</source>
+                <target>Fehlgeschlagen</target>
+            </trans-unit>
+            <trans-unit id="response.invalid">
+                <source>Please check your input.</source>
+                <target>Bitte prüfen Sie Ihre Eingaben.</target>
+            </trans-unit>
+            <trans-unit id="response.sent">
+                <source>Thank you! Your feedback has been sent.</source>
+                <target>Danke! Ihr Feedback wurde gesendet.</target>
+            </trans-unit>
+            <trans-unit id="response.saved">
+                <source>Thank you! Your feedback has been saved.</source>
+                <target>Danke! Ihr Feedback wurde gespeichert.</target>
+            </trans-unit>
+            <trans-unit id="response.notDelivered">
+                <source>Your feedback has been saved, but could not be delivered. The team will see it in the backend.</source>
+                <target>Ihr Feedback wurde gespeichert, konnte aber nicht zugestellt werden. Das Team sieht es im Backend.</target>
+            </trans-unit>
+            <trans-unit id="response.screenshotStorageUnavailable">
+                <source>The screenshot cannot be stored at the moment. Please send your feedback without a screenshot.</source>
+                <target>Der Screenshot kann derzeit nicht gespeichert werden. Bitte senden Sie Ihr Feedback ohne Screenshot.</target>
+            </trans-unit>
+            <trans-unit id="error.message.required">
+                <source>Please describe the problem.</source>
+                <target>Bitte beschreiben Sie das Problem.</target>
+            </trans-unit>
+            <trans-unit id="error.message.tooShort">
+                <source>Please describe the problem in at least 10 characters.</source>
+                <target>Bitte beschreiben Sie das Problem mit mindestens 10 Zeichen.</target>
+            </trans-unit>
+            <trans-unit id="error.message.tooLong">
+                <source>The description must not be longer than 5000 characters.</source>
+                <target>Die Beschreibung darf höchstens 5000 Zeichen lang sein.</target>
+            </trans-unit>
+            <trans-unit id="error.category.required">
+                <source>Please choose a category.</source>
+                <target>Bitte wählen Sie eine Kategorie.</target>
+            </trans-unit>
+            <trans-unit id="error.category.invalid">
+                <source>Please choose a category.</source>
+                <target>Bitte wählen Sie eine Kategorie.</target>
+            </trans-unit>
+            <trans-unit id="error.severity.required">
+                <source>Please choose a severity.</source>
+                <target>Bitte wählen Sie eine Dringlichkeit.</target>
+            </trans-unit>
+            <trans-unit id="error.severity.invalid">
+                <source>Please choose a severity.</source>
+                <target>Bitte wählen Sie eine Dringlichkeit.</target>
+            </trans-unit>
+            <trans-unit id="error.source.required">
+                <source>The feedback could not be assigned to its origin.</source>
+                <target>Das Feedback konnte seiner Herkunft nicht zugeordnet werden.</target>
+            </trans-unit>
+            <trans-unit id="error.source.invalid">
+                <source>The feedback could not be assigned to its origin.</source>
+                <target>Das Feedback konnte seiner Herkunft nicht zugeordnet werden.</target>
+            </trans-unit>
+            <trans-unit id="error.clientInfo.invalid">
+                <source>The browser details could not be read.</source>
+                <target>Die Browserangaben konnten nicht gelesen werden.</target>
+            </trans-unit>
+            <trans-unit id="error.clientInfo.tooLarge">
+                <source>The browser details are too large.</source>
+                <target>Die Browserangaben sind zu groß.</target>
+            </trans-unit>
+            <trans-unit id="error.context.invalid">
+                <source>The page details could not be read.</source>
+                <target>Die Seitenangaben konnten nicht gelesen werden.</target>
+            </trans-unit>
+            <trans-unit id="error.context.tooLarge">
+                <source>The page details are too large.</source>
+                <target>Die Seitenangaben sind zu groß.</target>
+            </trans-unit>
+            <trans-unit id="error.screenshot.tooLarge">
+                <source>The screenshot is too large (maximum 10 MB).</source>
+                <target>Der Screenshot ist zu groß (maximal 10 MB).</target>
+            </trans-unit>
+            <trans-unit id="error.screenshot.invalidType">
+                <source>The screenshot must be a PNG or JPEG image.</source>
+                <target>Der Screenshot muss ein PNG- oder JPEG-Bild sein.</target>
+            </trans-unit>
+            <trans-unit id="error.screenshot.uploadFailed">
+                <source>The screenshot could not be uploaded.</source>
+                <target>Der Screenshot konnte nicht hochgeladen werden.</target>
+            </trans-unit>
+            <trans-unit id="email.headline">
+                <source>New feedback</source>
+                <target>Neues Feedback</target>
+            </trans-unit>
+            <trans-unit id="email.section.context">
+                <source>Context</source>
+                <target>Kontext</target>
+            </trans-unit>
+            <trans-unit id="email.section.clientInfo">
+                <source>Browser and device</source>
+                <target>Browser und Gerät</target>
+            </trans-unit>
+            <trans-unit id="email.section.systemInfo">
+                <source>System</source>
+                <target>System</target>
+            </trans-unit>
+            <trans-unit id="dialog.title">
+                <source>Send feedback</source>
+                <target>Feedback senden</target>
+            </trans-unit>
+            <trans-unit id="dialog.intro">
+                <source>Describe what is wrong or what could be better. Browser and page details are added automatically.</source>
+                <target>Beschreiben Sie, was nicht stimmt oder was besser sein könnte. Browser- und Seitenangaben werden automatisch ergänzt.</target>
+            </trans-unit>
+            <trans-unit id="dialog.message">
+                <source>Description</source>
+                <target>Beschreibung</target>
+            </trans-unit>
+            <trans-unit id="dialog.messageHint">
+                <source>What did you do, what did you expect, what happened?</source>
+                <target>Was haben Sie gemacht, was haben Sie erwartet, was ist passiert?</target>
+            </trans-unit>
+            <trans-unit id="dialog.charactersLeft">
+                <source>Characters left: {count}</source>
+                <target>Verbleibende Zeichen: {count}</target>
+            </trans-unit>
+            <trans-unit id="dialog.category">
+                <source>Category</source>
+                <target>Kategorie</target>
+            </trans-unit>
+            <trans-unit id="dialog.severity">
+                <source>Severity</source>
+                <target>Dringlichkeit</target>
+            </trans-unit>
+            <trans-unit id="dialog.send">
+                <source>Send</source>
+                <target>Senden</target>
+            </trans-unit>
+            <trans-unit id="dialog.sending">
+                <source>Sending …</source>
+                <target>Wird gesendet …</target>
+            </trans-unit>
+            <trans-unit id="dialog.cancel">
+                <source>Cancel</source>
+                <target>Abbrechen</target>
+            </trans-unit>
+            <trans-unit id="dialog.close">
+                <source>Close</source>
+                <target>Schließen</target>
+            </trans-unit>
+            <trans-unit id="dialog.error">
+                <source>The feedback could not be sent. Please try again later.</source>
+                <target>Das Feedback konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.</target>
+            </trans-unit>
+            <trans-unit id="dialog.sessionExpired">
+                <source>Your backend session has expired. Please log in again and resend the feedback.</source>
+                <target>Ihre Backend-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an und senden Sie das Feedback noch einmal.</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshot">
+                <source>Screenshot</source>
+                <target>Screenshot</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotHint">
+                <source>Your browser asks which tab to capture. Choose this tab.</source>
+                <target>Ihr Browser fragt, welcher Tab aufgenommen werden soll. Wählen Sie diesen Tab.</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotTake">
+                <source>Take screenshot</source>
+                <target>Screenshot aufnehmen</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotRetake">
+                <source>Retake</source>
+                <target>Neu aufnehmen</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotRemove">
+                <source>Remove</source>
+                <target>Entfernen</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotPreview">
+                <source>Preview of the screenshot</source>
+                <target>Vorschau des Screenshots</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotUnsupported">
+                <source>Your browser cannot take screenshots here (a secure HTTPS connection and a current browser are required). You can still send the feedback without one.</source>
+                <target>Ihr Browser kann hier keine Screenshots aufnehmen (sichere HTTPS-Verbindung und aktueller Browser nötig). Sie können das Feedback trotzdem ohne Screenshot senden.</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotDenied">
+                <source>The screenshot was cancelled or not permitted. You can try again or send the feedback without one.</source>
+                <target>Der Screenshot wurde abgebrochen oder nicht erlaubt. Sie können es erneut versuchen oder das Feedback ohne Screenshot senden.</target>
+            </trans-unit>
+            <trans-unit id="dialog.screenshotFailed">
+                <source>The screenshot could not be taken. You can send the feedback without one.</source>
+                <target>Der Screenshot konnte nicht aufgenommen werden. Sie können das Feedback ohne Screenshot senden.</target>
+            </trans-unit>
+            <trans-unit id="adminpanel.label">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="adminpanel.description">
+                <source>Found a problem on this page or have an idea? Send it to the team, optionally with a screenshot.</source>
+                <target>Ein Problem auf dieser Seite gefunden oder eine Idee? Senden Sie es an das Team, auf Wunsch mit Screenshot.</target>
+            </trans-unit>
+            <trans-unit id="module.list.empty">
+                <source>No feedback has been sent yet.</source>
+                <target>Bisher wurde kein Feedback gesendet.</target>
+            </trans-unit>
+            <trans-unit id="module.list.total">
+                <source>{count} feedback entries</source>
+                <target>{count} Feedback-Einträge</target>
+            </trans-unit>
+            <trans-unit id="module.list.date">
+                <source>Date</source>
+                <target>Datum</target>
+            </trans-unit>
+            <trans-unit id="module.list.show">
+                <source>Show feedback</source>
+                <target>Feedback anzeigen</target>
+            </trans-unit>
+            <trans-unit id="module.list.hasScreenshot">
+                <source>With screenshot</source>
+                <target>Mit Screenshot</target>
+            </trans-unit>
+            <trans-unit id="module.list.previous">
+                <source>Previous</source>
+                <target>Zurück</target>
+            </trans-unit>
+            <trans-unit id="module.list.next">
+                <source>Next</source>
+                <target>Weiter</target>
+            </trans-unit>
+            <trans-unit id="module.list.page">
+                <source>Page {current} of {pages}</source>
+                <target>Seite {current} von {pages}</target>
+            </trans-unit>
+            <trans-unit id="module.show.openScreenshot">
+                <source>Open screenshot in full size</source>
+                <target>Screenshot in voller Größe öffnen</target>
+            </trans-unit>
+            <trans-unit id="module.show.noScreenshot">
+                <source>No screenshot attached.</source>
+                <target>Kein Screenshot angehängt.</target>
+            </trans-unit>
+            <trans-unit id="extconf.category.collect">
+                <source>Collected details</source>
+                <target>Erfasste Angaben</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect.client">
+                <source>Browser</source>
+                <target>Browser</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect.system">
+                <source>Server</source>
+                <target>Server</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect.context">
+                <source>Page and module</source>
+                <target>Seite und Modul</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_url">
+                <source>Page URL</source>
+                <target>Seiten-URL</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_title">
+                <source>Page title</source>
+                <target>Seitentitel</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_userAgent">
+                <source>User agent</source>
+                <target>User-Agent</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_userAgentData">
+                <source>Browser brands, platform, mobile (User-Agent Client Hints)</source>
+                <target>Browsermarken, Plattform, Mobilgerät (User-Agent Client Hints)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_language">
+                <source>Browser language</source>
+                <target>Browsersprache</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_languages">
+                <source>Preferred languages</source>
+                <target>Bevorzugte Sprachen</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_timezone">
+                <source>Time zone</source>
+                <target>Zeitzone</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_screen">
+                <source>Screen size and color depth</source>
+                <target>Bildschirmgröße und Farbtiefe</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_viewport">
+                <source>Viewport size</source>
+                <target>Größe des Browserfensters</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_devicePixelRatio">
+                <source>Device pixel ratio</source>
+                <target>Pixeldichte</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_colorScheme">
+                <source>Color scheme (light/dark)</source>
+                <target>Farbschema (hell/dunkel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_reducedMotion">
+                <source>Reduced motion preference</source>
+                <target>Einstellung für reduzierte Bewegung</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_online">
+                <source>Online state</source>
+                <target>Online-Status</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_client_timestamp">
+                <source>Time in the browser</source>
+                <target>Uhrzeit im Browser</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_system_typo3Version">
+                <source>TYPO3 version</source>
+                <target>TYPO3-Version</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_system_applicationContext">
+                <source>Application context</source>
+                <target>Application Context</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_system_phpVersion">
+                <source>PHP version</source>
+                <target>PHP-Version</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_system_ipAddress">
+                <source>IP address (anonymised)</source>
+                <target>IP-Adresse (anonymisiert)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_system_requestUserAgent">
+                <source>User agent sent to the server</source>
+                <target>An den Server gesendeter User-Agent</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_page">
+                <source>Page uid and title</source>
+                <target>Seiten-UID und -Titel</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_site">
+                <source>Site (frontend)</source>
+                <target>Site (Frontend)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_language">
+                <source>Language (frontend)</source>
+                <target>Sprache (Frontend)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_workspace">
+                <source>Workspace (frontend)</source>
+                <target>Workspace (Frontend)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_module">
+                <source>Module (backend)</source>
+                <target>Modul (Backend)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_url">
+                <source>Module URL (backend)</source>
+                <target>Modul-URL (Backend)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_pageType">
+                <source>Page type (admin panel)</source>
+                <target>Seitentyp (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_cacheState">
+                <source>Cache state and reasons (admin panel)</source>
+                <target>Cache-Status und Gründe (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_uncachedElements">
+                <source>Number of uncached elements (admin panel)</source>
+                <target>Anzahl ungecachter Elemente (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_parseTime">
+                <source>Parse time (admin panel)</source>
+                <target>Parse-Zeit (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_documentSize">
+                <source>Document size (admin panel)</source>
+                <target>Dokumentgröße (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_frontendUser">
+                <source>Simulated frontend user and groups (admin panel)</source>
+                <target>Simulierter Frontend-Benutzer und Gruppen (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect_context_imagesOnPage">
+                <source>Images on the page (admin panel)</source>
+                <target>Bilder auf der Seite (Admin Panel)</target>
+            </trans-unit>
+            <trans-unit id="dialog.emailMissing">
+                <source>Feedback is not available: your account has no email address, so the team could not answer you. Please add your email address in your user settings.</source>
+                <target>Feedback ist nicht verfügbar: Ihr Konto hat keine E-Mail-Adresse, daher könnte das Team Ihnen nicht antworten. Bitte tragen Sie Ihre E-Mail-Adresse in Ihren Benutzereinstellungen ein.</target>
+            </trans-unit>
+            <trans-unit id="dialog.emailMissingLink">
+                <source>Open user settings</source>
+                <target>Benutzereinstellungen öffnen</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

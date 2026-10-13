@@ -1,0 +1,85 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<f:layout name="Module" />
+
+	<f:section name="Content">
+		<h1>
+			{f:translate(domain: 'opinion.messages', key: 'category.{record.category}')}
+			<f:render
+				partial="FeedbackModule/Badges"
+				section="Severity"
+				arguments="{severity: record.severity}" />
+		</h1>
+		<p class="text-body-secondary">
+			{record.crdate -> f:format.date(format: 'd.m.Y H:i')} · {f:translate(domain: 'opinion.messages', key: 'source.{record.source}')} · {sender.realName
+			-> f:or(alternative: sender.username)}
+			<f:if condition="{sender.email}"> (<a href="mailto:{sender.email}">{sender.email}</a>) </f:if>
+		</p>
+
+		<div class="row g-4">
+			<div class="col-12 col-xl-6">
+				<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</h2>
+				<div class="card">
+					<div class="card-body">{record.message -> f:format.nl2br()}</div>
+				</div>
+
+				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</h2>
+				<p>
+					<f:render
+						partial="FeedbackModule/Badges"
+						section="Delivery"
+						arguments="{status: record.delivery_status}" />
+				</p>
+				<f:if condition="{record.delivery_log}">
+					<pre class="text-wrap">{record.delivery_log}</pre>
+				</f:if>
+			</div>
+
+			<div class="col-12 col-xl-6">
+				<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h2>
+				<f:if condition="{screenshot}">
+					<f:then>
+						<a
+							href="{screenshot.publicUrl}"
+							target="_blank"
+							rel="noopener"
+							title="{f:translate(domain: 'opinion.messages', key: 'module.show.openScreenshot')}">
+							<img
+								class="img-fluid img-thumbnail"
+								src="{screenshot.publicUrl}"
+								alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
+						</a>
+					</f:then>
+					<f:else>
+						<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.show.noScreenshot')}</p>
+					</f:else>
+				</f:if>
+			</div>
+		</div>
+
+		<f:for
+			each="{sections}"
+			as="rows"
+			key="section">
+			<f:if condition="{rows}">
+				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</h2>
+				<div class="table-fit">
+					<table class="table table-sm table-striped">
+						<tbody>
+							<f:for
+								each="{rows}"
+								as="value"
+								key="label">
+								<tr>
+									<th class="w-25 text-nowrap">{label}</th>
+									<td class="text-break">{value}</td>
+								</tr>
+							</f:for>
+						</tbody>
+					</table>
+				</div>
+			</f:if>
+		</f:for>
+	</f:section>
+</html>

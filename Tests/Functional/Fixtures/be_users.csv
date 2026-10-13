@@ -1,0 +1,6 @@
+"be_users"
+,"uid","pid","username","admin","TSconfig","email","realName","lang"
+,1,0,"admin",1,"","admin@example.com","Ada Admin","default"
+,2,0,"editor",0,"","editor@example.com","Eddie Editor","default"
+,3,0,"reporter",0,"options.opinion.enable = 1","reporter@example.com","Rita Reporter","default"
+,4,0,"noemail",1,"","","No Mail","default"

@@ -1,0 +1,14 @@
+<f:layout name="SystemEmail" />
+<f:section name="Title">{f:translate(domain: 'opinion.messages', key: 'email.headline')}</f:section>
+<f:section name="Main">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}: {f:translate(domain: 'opinion.messages', key: 'category.{submission.category.value}')}
+{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}: {f:translate(domain: 'opinion.messages', key: 'severity.{submission.severity.value}')}
+{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}: {f:translate(domain: 'opinion.messages', key: 'source.{submission.source.value}')}
+{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}: {sender.realName -> f:format.raw()} ({sender.username -> f:format.raw()}) {sender.email -> f:format.raw()}
+
+{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}:
+{submission.message -> f:format.raw()}
+<f:for each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">
+
+{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}:
+<f:for each="{rows}" as="value" key="label">{label -> f:format.raw()}: {value -> f:format.raw()}
+</f:for></f:if></f:for></f:section>
