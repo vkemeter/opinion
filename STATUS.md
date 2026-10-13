@@ -59,6 +59,9 @@ All on request after the plan (T1–T12) was finished:
 - `Build/phpstan/phpstan.neon`: level 8, strict rules, no baseline.
 - `.php-cs-fixer.php`: rules taken over from the old project (PER-CS 3.0 based).
 - `Build/package.json`: Playwright for `Tests/Browser/dialog.test.mjs`.
+- `.github/workflows/ci.yml`: quality job, test matrix (PHP 8.4 × four databases,
+  PHP 8.5 × SQLite) and the browser test; `runTests.sh -b docker`, because the
+  runners also have podman.
 - `var/` in the root is written by `ssch/typo3-debug-dump-pass` (via
   `phpstan-typo3`) and ignored.
 

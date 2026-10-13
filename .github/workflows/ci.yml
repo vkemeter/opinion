@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, CGL, PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .Build/.cache/composer
+          key: composer-${{ hashFiles('composer.json') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: Build/Scripts/runTests.sh -b docker -s composerUpdate
+
+      - name: Lint
+        run: Build/Scripts/runTests.sh -b docker -s lint
+
+      - name: CGL
+        run: Build/Scripts/runTests.sh -b docker -s cgl -n
+
+      - name: PHPStan
+        run: Build/Scripts/runTests.sh -b docker -s phpstan
+
+  tests:
+    name: PHP ${{ matrix.php }}, ${{ matrix.dbms }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { php: '8.4', dbms: sqlite }
+          - { php: '8.4', dbms: mariadb }
+          - { php: '8.4', dbms: mysql }
+          - { php: '8.4', dbms: postgres }
+          - { php: '8.5', dbms: sqlite }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .Build/.cache/composer
+          key: composer-${{ hashFiles('composer.json') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php }} -s composerUpdate
+
+      - name: Unit tests
+        if: matrix.dbms == 'sqlite'
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php }} -s unit
+
+      - name: Functional tests
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php }} -s functional -d ${{ matrix.dbms }}
+
+  browser:
+    name: Browser test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Build/package-lock.json
+
+      - name: Install Playwright
+        run: |
+          npm --prefix Build ci
+          npx --prefix Build playwright install --with-deps chromium
+
+      - name: Dialog test
+        run: node Tests/Browser/dialog.test.mjs

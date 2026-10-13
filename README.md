@@ -186,6 +186,11 @@ npx --prefix Build playwright install chromium
 node Tests/Browser/dialog.test.mjs
 ```
 
+GitHub Actions (`.github/workflows/ci.yml`) runs the same commands on every push
+to `main` and on pull requests: lint, CGL and PHPStan; unit and functional tests
+on PHP 8.4 with SQLite, MariaDB, MySQL and PostgreSQL and on PHP 8.5 with SQLite;
+the browser test.
+
 ## Specification
 
 The requirements and decisions are in [SPEC.md](SPEC.md) (capability map) and
