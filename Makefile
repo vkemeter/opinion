@@ -26,7 +26,7 @@ install-php: ## Install the Composer dependencies into .Build/
 	$(RUN_TESTS) -s composerUpdate
 
 .PHONY: install-browser
-install-browser: ## Install Playwright and Chromium for the browser test
+install-browser: ## Install the Node tools (Playwright, ESLint) and Chromium
 	npm --prefix Build ci
 	npx --prefix Build playwright install chromium
 
@@ -53,11 +53,15 @@ test-browser: ## Run the browser test of the dialog (headless Chromium)
 	node Tests/Browser/dialog.test.mjs
 
 .PHONY: check
-check: lint cgl phpstan docs-test ## Run all checks without changing files
+check: lint lint-js cgl phpstan docs-test ## Run all checks without changing files
 
 .PHONY: lint
 lint: ## Check the PHP syntax
 	$(RUN_TESTS) -s lint
+
+.PHONY: lint-js
+lint-js: ## Check the JavaScript with ESLint
+	npm --prefix Build run --silent lint:js
 
 .PHONY: cgl
 cgl: ## Check the PHP coding guidelines (php-cs-fixer dry run)

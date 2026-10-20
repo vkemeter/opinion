@@ -4,9 +4,13 @@
   "description": "Development tooling of the opinion extension",
   "type": "module",
   "scripts": {
-    "test:browser": "node ../Tests/Browser/dialog.test.mjs"
+    "test:browser": "node ../Tests/Browser/dialog.test.mjs",
+    "lint:js": "cd .. && eslint --config Build/eslint.config.mjs Resources/Public/JavaScript Tests/Browser"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
     "playwright": "~1.63.0"
   }
 }

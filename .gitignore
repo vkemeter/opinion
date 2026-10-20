@@ -20,3 +20,6 @@ Resources/Public/JavaScript/*.map
 .phpunit.cache
 
 /Documentation-GENERATED-temp
+
+# Local planning documents (specs, status, tasks), not part of the package
+/planning/

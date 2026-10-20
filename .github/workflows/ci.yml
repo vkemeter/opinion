@@ -69,6 +69,24 @@ jobs:
       - name: Functional tests
         run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php }} -s functional -d ${{ matrix.dbms }}
 
+  javascript:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Build/package-lock.json
+
+      - name: Install dependencies
+        run: npm --prefix Build ci
+
+      - name: ESLint
+        run: npm --prefix Build run lint:js
+
   browser:
     name: Browser test
     runs-on: ubuntu-latest

@@ -176,10 +176,10 @@ The `Makefile` bundles all tasks, `make help` lists them:
 
 ..  code-block:: bash
 
-    make install                       # Composer and Playwright dependencies
+    make install                       # Composer and Node dependencies (Playwright, ESLint)
     make test                          # unit, functional and browser tests
     make test-functional DB=mariadb    # DB=sqlite|mariadb|mysql|postgres, PHP=8.4|8.5
-    make check                         # lint, coding guidelines, PHPStan, documentation
+    make check                         # PHP lint, ESLint, coding guidelines, PHPStan, documentation
     make fix                           # fix the coding guidelines
     make ci                            # everything the CI runs
 
@@ -204,6 +204,13 @@ Chromium:
     npm --prefix Build ci
     npx --prefix Build playwright install chromium
     node Tests/Browser/dialog.test.mjs
+
+ESLint checks the JavaScript of the extension and the browser test, with the
+configuration :file:`Build/eslint.config.mjs`:
+
+..  code-block:: bash
+
+    npm --prefix Build run lint:js
 
 Render this documentation locally:
 

@@ -6,27 +6,3 @@ services:
 
     Vkemeter\Opinion\:
         resource: '../Classes/*'
-
-    Vkemeter\Opinion\Storage\ScreenshotStorage:
-        public: true
-
-    Vkemeter\Opinion\Storage\ScreenshotStorageInstaller:
-        public: true
-
-    Vkemeter\Opinion\Repository\FeedbackRepository:
-        public: true
-
-    Vkemeter\Opinion\Delivery\EmailDeliveryChannel:
-        public: true
-
-    Vkemeter\Opinion\Dialog\DialogConfigurationBuilder:
-        public: true
-
-    Vkemeter\Opinion\Storage\ScreenshotStorageResolver:
-        public: true
-
-    Vkemeter\Opinion\Context\FrontendContextProvider:
-        public: true
-
-    Vkemeter\Opinion\Context\BackendContextProvider:
-        public: true

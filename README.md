@@ -1,3 +1,5 @@
+<img src="Resources/Public/Images/Opinion-Logo.svg" alt="Opinion" width="250">
+
 # TYPO3 extension `opinion`
 
 The full documentation is in [Documentation/](Documentation/Index.rst)
@@ -226,10 +228,11 @@ Chromium, including the screenshot flow. Playwright comes from `Build/`:
 npm --prefix Build ci
 npx --prefix Build playwright install chromium
 node Tests/Browser/dialog.test.mjs
+npm --prefix Build run lint:js                       # ESLint, Build/eslint.config.mjs
 ```
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the same commands on every push
-to `main` and on pull requests: lint, CGL and PHPStan; unit and functional tests
+to `main` and on pull requests: lint, CGL and PHPStan; ESLint; unit and functional tests
 on PHP 8.4 with SQLite, MariaDB, MySQL and PostgreSQL and on PHP 8.5 with SQLite;
 the browser test; a test rendering of the documentation.
 
@@ -241,10 +244,3 @@ docker run --rm --pull always -v $(pwd):/project -it \
 ```
 
 Open `Documentation-GENERATED-temp/Index.html`.
-
-## Specification
-
-The requirements and decisions are in [SPEC.md](SPEC.md) (capability map) and
-the module specs `SPEC-opinion-*.md`, the implementation plan in
-[tasks/plan.md](tasks/plan.md), the current development state in
-[STATUS.md](STATUS.md).
