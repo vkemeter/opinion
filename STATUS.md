@@ -1,6 +1,6 @@
 # Development status
 
-State of 2026-10-13. Read this first when picking the work up again.
+State of 2026-10-20. Read this first when picking the work up again.
 
 ## Where the code lives
 
@@ -30,6 +30,8 @@ State of 2026-10-13. Read this first when picking the work up again.
 | Email address required | users without one get a notice with a link to the user settings |
 | `opinion:cleanup` | retention period, `--days`, `--dry-run`, schedulable |
 | Screenshot annotation (v2) | rectangle, arrow, black out, undo; burnt into the image. Tested by the user in Chrome, frontend and backend, 2026-10-13 |
+| Review fixes (2026-10-20) | no error after a failed status update, URL parameter denylist `deniedUrlParameters`, fetch timeout, counter without live region, strict browser test. Tested by the user in Chrome, 2026-10-20 |
+| Site set `vkemeter/opinion` | sets `config.admPanel` via the setting `opinion.adminPanel.enable`. Tested by the user, 2026-10-20 |
 
 ## Added beyond the original plan
 
@@ -43,9 +45,20 @@ All on request after the plan (T1–T12) was finished:
 - email address mandatory for sending
 - "Feedback" in the admin panel bar opens the dialog directly instead of the
   panel with its button (2026-10-13, tested by the user in the project)
+- fixes from an external review and the site set (2026-10-20, see below)
 
 ## Open
 
+- From the external review (2026-10-20), agreed with the user:
+  - next branch: command `opinion:redeliver` for failed/pending deliveries
+    (open: limit of attempts?), per-user rate limit on the submit route
+  - cleanup: drop `public: true` where not needed, replace `$GLOBALS` where a
+    request is available, ESLint, move the planning files before a TER release
+  - kept on purpose: `ConfigurationProviderInterface` and
+    `AdminRequestCheckerInterface`, the tests stub the final classes through them
+  - known limitation: the annotation editor needs a pointer, no keyboard
+  - idea: a status report checking table and screenshot storage (a reset
+    database without `extension:setup` only showed the screenshot message)
 - Manual check: setting up the cleanup task in the Scheduler.
 - Firefox and Safari are not tested; not needed for now (user decision
   2026-10-13), Chrome is the browser in use.
@@ -85,7 +98,9 @@ To clean up there once it requires the extension from this repository:
   dir. Every project using the extension needs this.
 - `config/system/settings.php`: extension configuration values (`opinion`).
 - `packages/f_theme/Configuration/Sets/BaseSet/setup.typoscript`:
-  `config.admPanel` enabled by the user for the frontend button.
+  `config.admPanel = 0`; it wins over the opinion site set, which is a
+  dependency of the theme set and loaded before it. Not to be changed for now
+  (user decision 2026-10-20).
 
 ## Checks
 
@@ -93,8 +108,8 @@ To clean up there once it requires the extension from this repository:
 
 ```bash
 Build/Scripts/runTests.sh -s composerUpdate
-Build/Scripts/runTests.sh -s unit                    # 65 tests
-Build/Scripts/runTests.sh -s functional              # 55 tests
+Build/Scripts/runTests.sh -s unit                    # 75 tests
+Build/Scripts/runTests.sh -s functional              # 57 tests
 Build/Scripts/runTests.sh -s functional -d mariadb
 Build/Scripts/runTests.sh -s phpstan
 Build/Scripts/runTests.sh -s cgl -n
