@@ -32,6 +32,8 @@ State of 2026-10-20. Read this first when picking the work up again.
 | Screenshot annotation (v2) | rectangle, arrow, black out, undo; burnt into the image. Tested by the user in Chrome, frontend and backend, 2026-10-13 |
 | Review fixes (2026-10-20) | no error after a failed status update, URL parameter denylist `deniedUrlParameters`, fetch timeout, counter without live region, strict browser test. Tested by the user in Chrome, 2026-10-20 |
 | Site set `vkemeter/opinion` | sets `config.admPanel` via the setting `opinion.adminPanel.enable`. Tested by the user, 2026-10-20 |
+| Deliver again | `opinion:redeliver` (`--min-age`, `--dry-run`, `redeliverMaxAttempts` default 5), button "Deliver again" in the detail view of the admin module, `delivery_attempts` column. Tested by the user, 2026-10-20 |
+| Rate limit | `rateLimit` valid submissions per backend user and hour (default 10), `429` with `Retry-After`. Tested by the user, 2026-10-20 |
 
 ## Added beyond the original plan
 
@@ -50,8 +52,6 @@ All on request after the plan (T1–T12) was finished:
 ## Open
 
 - From the external review (2026-10-20), agreed with the user:
-  - next branch: command `opinion:redeliver` for failed/pending deliveries
-    (open: limit of attempts?), per-user rate limit on the submit route
   - cleanup: drop `public: true` where not needed, replace `$GLOBALS` where a
     request is available, ESLint, move the planning files before a TER release
   - kept on purpose: `ConfigurationProviderInterface` and
@@ -62,7 +62,11 @@ All on request after the plan (T1–T12) was finished:
 - Manual check: setting up the cleanup task in the Scheduler.
 - Firefox and Safari are not tested; not needed for now (user decision
   2026-10-13), Chrome is the browser in use.
-- Possible next steps, not requested yet: ticket system delivery channel.
+- Possible next steps, not requested yet: ticket system delivery channel;
+  own sender (`senderAddress`/`senderName`) instead of the system sender,
+  offered 2026-10-20 (the From of the mails is
+  `defaultMailFromAddress`, the backend user is reply-to on purpose);
+  "Deliver again" for already sent feedback (deliberately left out).
   A delete action in the admin module is not needed, `opinion:cleanup` covers it.
 
 ## Standalone setup (2026-10-13)
@@ -108,8 +112,8 @@ To clean up there once it requires the extension from this repository:
 
 ```bash
 Build/Scripts/runTests.sh -s composerUpdate
-Build/Scripts/runTests.sh -s unit                    # 75 tests
-Build/Scripts/runTests.sh -s functional              # 57 tests
+Build/Scripts/runTests.sh -s unit                    # 76 tests
+Build/Scripts/runTests.sh -s functional              # 71 tests
 Build/Scripts/runTests.sh -s functional -d mariadb
 Build/Scripts/runTests.sh -s phpstan
 Build/Scripts/runTests.sh -s cgl -n
