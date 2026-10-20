@@ -71,6 +71,26 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         $record = $repository->findByUid($uid);
         self::assertSame('failed', $record['delivery_status'] ?? null);
         self::assertSame('email: Connection refused', $record['delivery_log'] ?? null);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
+
+        $repository->updateDeliveryStatus($uid, DeliveryStatus::Sent, 'email: OK');
+        self::assertSame(2, (int)($repository->findByUid($uid)['delivery_attempts'] ?? 0));
+    }
+
+    #[Test]
+    public function findUndeliveredUidsHonoursStatusAgeAndAttempts(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $pending = $repository->add($this->createSubmission(), null);
+        $failedTwice = $repository->add($this->createSubmission(), null);
+        $repository->updateDeliveryStatus($failedTwice, DeliveryStatus::Failed, '');
+        $repository->updateDeliveryStatus($failedTwice, DeliveryStatus::Failed, '');
+        $sent = $repository->add($this->createSubmission(), null);
+        $repository->updateDeliveryStatus($sent, DeliveryStatus::Sent, '');
+
+        self::assertSame([$pending, $failedTwice], $repository->findUndeliveredUids(1791561429, 0));
+        self::assertSame([$pending], $repository->findUndeliveredUids(1791561429, 2));
+        self::assertSame([], $repository->findUndeliveredUids(1791561428, 0), 'created at 1791561428, not before');
     }
 
     #[Test]

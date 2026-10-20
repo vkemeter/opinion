@@ -4,8 +4,14 @@ recipients =
 # cat=email; type=string; label=opinion.messages:extconf.subjectPrefix
 subjectPrefix = [Opinion]
 
+# cat=email; type=int+; label=opinion.messages:extconf.redeliverMaxAttempts
+redeliverMaxAttempts = 5
+
 # cat=storage; type=int+; label=opinion.messages:extconf.retentionDays
 retentionDays = 180
+
+# cat=basic; type=int+; label=opinion.messages:extconf.rateLimit
+rateLimit = 10
 
 # cat=basic; type=boolean; label=opinion.messages:extconf.enabled
 enabled = 1

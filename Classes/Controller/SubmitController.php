@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Log\Channel;
 use Vkemeter\Opinion\Access\AccessChecker;
+use Vkemeter\Opinion\Access\SubmissionRateLimiter;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Exception\ScreenshotStorageException;
@@ -30,6 +31,7 @@ final readonly class SubmitController
         private SubmissionFactory $submissionFactory,
         private SubmissionProcessor $submissionProcessor,
         private LanguageServiceFactory $languageServiceFactory,
+        private SubmissionRateLimiter $rateLimiter,
         #[Channel('opinion')]
         private LoggerInterface $logger,
     ) {}
@@ -57,8 +59,16 @@ final readonly class SubmitController
             return $this->createResponse($languageService, 422, false, 'response.invalid', ['errors' => $errors]);
         }
 
+        $configuration = $this->configurationProvider->getConfiguration();
+        // Counted after the validation, so correcting field errors does not use up the limit
+        $retryAfter = $this->rateLimiter->consume($backendUser, $configuration);
+        if ($retryAfter !== null) {
+            return $this->createResponse($languageService, 429, false, 'response.rateLimited')
+                ->withHeader('Retry-After', (string)max(1, $retryAfter->getTimestamp() - time()));
+        }
+
         try {
-            $result = $this->submissionProcessor->process($submission, $this->configurationProvider->getConfiguration());
+            $result = $this->submissionProcessor->process($submission, $configuration);
         } catch (ScreenshotStorageException $exception) {
             $this->logger->error('Feedback with screenshot could not be stored: {message}', ['message' => $exception->getMessage()]);
 

@@ -1,5 +1,6 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:layout name="Module" />
 
@@ -30,9 +31,27 @@
 						partial="FeedbackModule/Badges"
 						section="Delivery"
 						arguments="{status: record.delivery_status}" />
+					<span class="text-body-secondary ms-2"
+						>{f:translate(domain: 'opinion.messages', key: 'module.show.attempts', arguments: {count: record.delivery_attempts})}</span
+					>
 				</p>
 				<f:if condition="{record.delivery_log}">
 					<pre class="text-wrap">{record.delivery_log}</pre>
+				</f:if>
+				<f:if condition="{canRedeliver}">
+					<form
+						method="post"
+						action="{be:moduleLink(route: 'opinion_feedback.redeliver')}">
+						<input
+							type="hidden"
+							name="uid"
+							value="{record.uid}" />
+						<button
+							type="submit"
+							class="btn btn-default">
+							{f:translate(domain: 'opinion.messages', key: 'module.show.redeliver')}
+						</button>
+					</form>
 				</f:if>
 			</div>
 

@@ -30,6 +30,18 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationReadsRedeliveryAndRateLimit(): void
+    {
+        $configuration = $this->createSubject(['redeliverMaxAttempts' => '0', 'rateLimit' => '-3'])->getConfiguration();
+        self::assertSame(0, $configuration->redeliverMaxAttempts);
+        self::assertSame(0, $configuration->rateLimit);
+
+        $defaults = $this->createSubject([])->getConfiguration();
+        self::assertSame(5, $defaults->redeliverMaxAttempts);
+        self::assertSame(10, $defaults->rateLimit);
+    }
+
+    #[Test]
     public function getConfigurationDropsInvalidRecipients(): void
     {
         $configuration = $this->createSubject(['recipients' => 'not-an-email, team@example.com, '])->getConfiguration();

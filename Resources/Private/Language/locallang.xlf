@@ -325,6 +325,36 @@
             <trans-unit id="module.show.openScreenshot">
                 <source>Open screenshot in full size</source>
             </trans-unit>
+            <trans-unit id="extconf.redeliverMaxAttempts">
+                <source>Maximum delivery attempts: the command opinion:redeliver gives up on feedback after this number of attempts (0 = no limit). A new attempt from the admin module is always possible.</source>
+            </trans-unit>
+            <trans-unit id="extconf.rateLimit">
+                <source>Feedback per backend user and hour (0 = no limit)</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.delivery_attempts">
+                <source>Delivery attempts</source>
+            </trans-unit>
+            <trans-unit id="response.rateLimited">
+                <source>You have sent a lot of feedback in a short time. Please try again later.</source>
+            </trans-unit>
+            <trans-unit id="module.show.attempts">
+                <source>{count} attempt(s)</source>
+            </trans-unit>
+            <trans-unit id="module.show.redeliver">
+                <source>Deliver again</source>
+            </trans-unit>
+            <trans-unit id="module.redeliver.title">
+                <source>Delivery</source>
+            </trans-unit>
+            <trans-unit id="module.redeliver.sent">
+                <source>The feedback has been delivered.</source>
+            </trans-unit>
+            <trans-unit id="module.redeliver.failed">
+                <source>The delivery failed again, see the delivery log.</source>
+            </trans-unit>
+            <trans-unit id="module.redeliver.impossible">
+                <source>This feedback cannot be delivered again.</source>
+            </trans-unit>
             <trans-unit id="module.show.noScreenshot">
                 <source>No screenshot attached.</source>
             </trans-unit>

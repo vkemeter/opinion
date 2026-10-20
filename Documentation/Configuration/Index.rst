@@ -35,6 +35,26 @@ Extension configuration
     severity and the beginning of the message, for example
     `[Opinion] [bug/high] The teaser image is cropped`.
 
+..  confval:: redeliverMaxAttempts
+    :name: extconf-redelivermaxattempts
+    :type: int
+    :default: 5
+
+    Delivery attempts, counting the first one, after which
+    :ref:`opinion:redeliver <administration-redeliver>` gives up on a
+    feedback. `0` retries without limit. :guilabel:`Deliver again` in the
+    admin module is always possible.
+
+..  confval:: rateLimit
+    :name: extconf-ratelimit
+    :type: int
+    :default: 10
+
+    Feedback a backend user may send per hour, administrators included. Only
+    valid submissions count. Above the limit the dialog shows a notice and the
+    endpoint answers `429` with a `Retry-After` header. `0` switches the limit
+    off.
+
 ..  confval:: retentionDays
     :name: extconf-retentiondays
     :type: int

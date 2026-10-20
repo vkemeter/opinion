@@ -18,6 +18,10 @@ return [
             'show' => [
                 'target' => FeedbackModuleController::class . '::showAction',
             ],
+            'redeliver' => [
+                'target' => FeedbackModuleController::class . '::redeliverAction',
+                'methods' => ['POST'],
+            ],
         ],
     ],
 ];

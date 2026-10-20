@@ -52,21 +52,31 @@ final readonly class SubmissionProcessor
             throw $exception;
         }
 
+        return $this->deliverStored($feedbackUid, $submission, $screenshot, $configuration);
+    }
+
+    /**
+     * Delivers an already stored feedback through all channels and records the result.
+     *
+     * @param string|null $previousLog log of the earlier attempts when delivering again; the new results are appended with a timestamp
+     */
+    public function deliverStored(int $feedbackUid, Submission $submission, ?File $screenshot, OpinionConfiguration $configuration, ?string $previousLog = null): ProcessingResult
+    {
         $results = [];
         foreach ($this->deliveryChannels as $channel) {
             $results[] = $this->deliver($channel, $submission, $screenshot, $configuration, $feedbackUid);
         }
 
         $status = $this->determineStatus($results);
+        $log = implode("\n", array_map(
+            static fn(DeliveryResult $result): string => sprintf('%s: %s %s', $result->channel, $result->success ? 'OK' : 'FAILED', $result->message),
+            $results,
+        ));
+        if ($previousLog !== null) {
+            $log = ltrim($previousLog . "\n" . sprintf('[%s] ', date('Y-m-d H:i')) . ($log !== '' ? $log : 'no delivery channel'));
+        }
         try {
-            $this->feedbackRepository->updateDeliveryStatus(
-                $feedbackUid,
-                $status,
-                implode("\n", array_map(
-                    static fn(DeliveryResult $result): string => sprintf('%s: %s %s', $result->channel, $result->success ? 'OK' : 'FAILED', $result->message),
-                    $results,
-                )),
-            );
+            $this->feedbackRepository->updateDeliveryStatus($feedbackUid, $status, $log);
         } catch (\Throwable $exception) {
             // The feedback is stored and delivered already; an error here would make the user send it again
             $this->logger->error('Delivery status {status} of feedback {uid} could not be stored: {message}', [

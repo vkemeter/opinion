@@ -35,7 +35,7 @@ return [
         1 => [
             'showitem' => 'source,category,severity,be_user,message,screenshot,
             --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context,
-            --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_log',
+            --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
         ],
     ],
     'columns' => [
@@ -113,6 +113,14 @@ return [
                 'renderType' => 'selectSingle',
                 'items' => $enumItems('deliveryStatus', DeliveryStatus::cases()),
                 'default' => DeliveryStatus::Pending->value,
+                'readOnly' => true,
+            ],
+        ],
+        'delivery_attempts' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.delivery_attempts',
+            'config' => [
+                'type' => 'number',
+                'default' => 0,
                 'readOnly' => true,
             ],
         ],

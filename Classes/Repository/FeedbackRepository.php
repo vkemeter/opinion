@@ -44,6 +44,7 @@ final readonly class FeedbackRepository
                 'context' => $submission->context,
                 'delivery_status' => DeliveryStatus::Pending->value,
                 'delivery_log' => '',
+                'delivery_attempts' => 0,
             ], [
                 'client_info' => Types::JSON,
                 'system_info' => Types::JSON,
@@ -68,13 +69,48 @@ final readonly class FeedbackRepository
         });
     }
 
+    /**
+     * Stores the result of a delivery attempt and counts the attempt.
+     */
     public function updateDeliveryStatus(int $uid, DeliveryStatus $status, string $log): void
     {
-        $this->connectionPool->getConnectionForTable(self::TABLE)->update(
-            self::TABLE,
-            ['delivery_status' => $status->value, 'delivery_log' => $log, 'tstamp' => time()],
-            ['uid' => $uid],
-        );
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder
+            ->update(self::TABLE)
+            ->set('delivery_status', $status->value)
+            ->set('delivery_log', $log)
+            ->set('tstamp', time())
+            ->set('delivery_attempts', $queryBuilder->quoteIdentifier('delivery_attempts') . ' + 1', false)
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
+            ->executeStatement();
+    }
+
+    /**
+     * Feedback whose delivery failed or never finished, oldest first.
+     *
+     * @param int $maxAttempts only records with fewer attempts, 0 = all
+     * @return list<int>
+     */
+    public function findUndeliveredUids(int $createdBefore, int $maxAttempts): array
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
+        $queryBuilder
+            ->select('uid')
+            ->from(self::TABLE)
+            ->where(
+                $queryBuilder->expr()->in('delivery_status', $queryBuilder->createNamedParameter(
+                    [DeliveryStatus::Pending->value, DeliveryStatus::Failed->value],
+                    Connection::PARAM_STR_ARRAY,
+                )),
+                $queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($createdBefore, Connection::PARAM_INT)),
+            )
+            ->orderBy('uid');
+        if ($maxAttempts > 0) {
+            $queryBuilder->andWhere($queryBuilder->expr()->lt('delivery_attempts', $queryBuilder->createNamedParameter($maxAttempts, Connection::PARAM_INT)));
+        }
+
+        return array_map(intval(...), $queryBuilder->executeQuery()->fetchFirstColumn());
     }
 
     /**

@@ -16,8 +16,12 @@ List
     the message, a screenshot marker and the delivery status.
 
 Detail view
-    The full message, the delivery status and log, the screenshot (click to
-    open it in full size) and all collected details.
+    The full message, the delivery status, the number of delivery attempts
+    and the log, the screenshot (click to open it in full size) and all
+    collected details. For feedback that is *Failed* or *Pending*, the button
+    :guilabel:`Deliver again` starts a new delivery attempt right away; it
+    ignores :confval:`extconf-redelivermaxattempts`. The result is shown as a
+    message and appended to the log.
 
 The records live on the root level (`pid = 0`), are read-only and are not
 shown in the :guilabel:`List` module.
@@ -26,6 +30,36 @@ Delivery status
     *Sent* when every delivery channel succeeded, *Failed* when one failed
     (the log tells why, for example a missing recipient or a mail transport
     error), *Pending* when no channel ran.
+
+..  _administration-redeliver:
+
+Deliver feedback again
+======================
+
+A feedback stays *Failed* or *Pending* when its delivery did not succeed,
+for example while the mail server was down. The console command
+`opinion:redeliver` delivers these records again, oldest first, through all
+delivery channels.
+
+..  code-block:: bash
+
+    # Failed or pending feedback older than 10 minutes
+    vendor/bin/typo3 opinion:redeliver
+
+    # Include feedback of the last minutes as well
+    vendor/bin/typo3 opinion:redeliver --min-age=0
+
+    # Only report what would be delivered
+    vendor/bin/typo3 opinion:redeliver --dry-run
+
+Feedback younger than `--min-age` minutes (default 10) is skipped, its first
+delivery may still be running. Records that reached
+:confval:`extconf-redelivermaxattempts` attempts, counting the first one, are
+skipped too. The command exits with a non-zero code when a record is still
+undelivered afterwards.
+
+To retry regularly, add a Scheduler task :guilabel:`Execute console commands`
+with the command `opinion:redeliver`, for example every 30 minutes.
 
 ..  _administration-cleanup:
 
@@ -59,7 +93,7 @@ Data and privacy
 ================
 
 *   Feedback is only accepted from logged-in backend users who may send
-    feedback.
+    feedback, at most :confval:`extconf-ratelimit` per user and hour.
 *   Screenshots are stored in a non-public file storage below `var/opinion/`,
     outside the web root. TYPO3 serves them through its file dump URL only,
     and only to requests with an administrator session.

@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\UploadedFile;
@@ -127,6 +128,30 @@ final class SubmitControllerTest extends FunctionalTestCase
 
         self::assertSame(503, $response->getStatusCode());
         self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
+    public function submissionsAboveTheRateLimitAreRejected(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['rateLimit'] = '2';
+        // The limiter state survives between the tests of this class
+        $this->get(CacheManager::class)->getCache('ratelimiter')->flush();
+        $this->setUpBackendUser(3);
+
+        self::assertSame(200, $this->submit($this->validFields())->getStatusCode());
+        self::assertSame(422, $this->submit(['message' => ''] + $this->validFields())->getStatusCode(), 'invalid submissions do not count');
+        self::assertSame(200, $this->submit($this->validFields())->getStatusCode());
+        $response = $this->submit($this->validFields());
+
+        self::assertSame(429, $response->getStatusCode());
+        self::assertFalse($this->decode($response)['success']);
+        self::assertStringContainsString('try again later', (string)$this->decode($response)['message']);
+        self::assertGreaterThan(0, (int)$response->getHeaderLine('Retry-After'));
+        self::assertSame(2, $this->countFeedback());
+
+        // The limit is per user
+        $this->setUpBackendUser(1);
+        self::assertSame(200, $this->submit($this->validFields())->getStatusCode());
     }
 
     #[Test]

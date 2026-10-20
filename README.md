@@ -49,6 +49,8 @@ Admin Tools → Settings → Extension Configuration → `opinion`:
 | `recipients` | – | Comma-separated email addresses. Invalid ones are ignored. |
 | `subjectPrefix` | `[Opinion]` | Prefix of the email subject |
 | `retentionDays` | `180` | Age after which `opinion:cleanup` deletes feedback |
+| `redeliverMaxAttempts` | `5` | Attempts after which `opinion:redeliver` gives up, `0` = no limit |
+| `rateLimit` | `10` | Feedback per backend user and hour, `0` = no limit |
 | `enabled` | `1` | `0` hides the triggers and rejects submissions |
 
 Without valid recipients the feedback is still stored, its delivery status is
@@ -96,6 +98,21 @@ For the frontend button the admin panel itself must be shown:
   group records.
 
 The "Feedback" tab only appears for users who may send feedback.
+
+### Deliver again
+
+Failed or pending feedback (e.g. the mail server was down) is delivered again
+by
+
+```bash
+vendor/bin/typo3 opinion:redeliver               # older than 10 minutes
+vendor/bin/typo3 opinion:redeliver --min-age=0
+vendor/bin/typo3 opinion:redeliver --dry-run
+```
+
+It skips records with `redeliverMaxAttempts` attempts and can run as a
+Scheduler task. In the admin module, the detail view of an undelivered
+feedback has a button "Deliver again" for a single record.
 
 ### Cleanup
 

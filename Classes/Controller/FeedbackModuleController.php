@@ -11,12 +11,20 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Resource\FileRepository;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
+use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 /**
- * Admin module "Feedback": list of all submissions and a detail view.
+ * Admin module "Feedback": list of all submissions, a detail view and a
+ * new delivery attempt for feedback that was not delivered.
  */
 #[AsController]
 final readonly class FeedbackModuleController
@@ -30,6 +38,9 @@ final readonly class FeedbackModuleController
         private DataFlattener $dataFlattener,
         private UriBuilder $uriBuilder,
         private ComponentFactory $componentFactory,
+        private Redeliverer $redeliverer,
+        private ConfigurationProviderInterface $configurationProvider,
+        private FlashMessageService $flashMessageService,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -70,6 +81,7 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
+            'canRedeliver' => $this->redeliverer->isUndelivered($record),
             'sections' => [
                 'context' => $this->dataFlattener->flatten($this->decode($record['context'] ?? null)),
                 'clientInfo' => $this->dataFlattener->flatten($this->decode($record['client_info'] ?? null)),
@@ -78,6 +90,37 @@ final readonly class FeedbackModuleController
         ]);
 
         return $view->renderResponse('FeedbackModule/Show');
+    }
+
+    /**
+     * Delivers one feedback again, regardless of the attempt limit of opinion:redeliver.
+     */
+    public function redeliverAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
+        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid) : null;
+        if ($record === null) {
+            return new RedirectResponse($this->buildUri('opinion_feedback'));
+        }
+
+        $result = $this->redeliverer->isUndelivered($record)
+            ? $this->redeliverer->redeliver($uid, $this->configurationProvider->getConfiguration())
+            : null;
+        [$key, $severity] = match ($result?->status) {
+            DeliveryStatus::Sent => ['module.redeliver.sent', ContextualFeedbackSeverity::OK],
+            DeliveryStatus::Failed, DeliveryStatus::Pending => ['module.redeliver.failed', ContextualFeedbackSeverity::ERROR],
+            null => ['module.redeliver.impossible', ContextualFeedbackSeverity::WARNING],
+        };
+        $languageService = $this->getLanguageService();
+        $this->flashMessageService->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
+            $languageService->sL('opinion.messages:' . $key),
+            $languageService->sL('opinion.messages:module.redeliver.title'),
+            $severity,
+            true,
+        ));
+
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
     }
 
     /**
@@ -99,5 +142,10 @@ final readonly class FeedbackModuleController
         $decoded = is_string($json) && $json !== '' ? json_decode($json, true) : null;
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private function getLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
     }
 }

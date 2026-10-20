@@ -15,6 +15,8 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
 {
     private const string DEFAULT_SUBJECT_PREFIX = '[Opinion]';
     private const int DEFAULT_RETENTION_DAYS = 180;
+    private const int DEFAULT_REDELIVER_MAX_ATTEMPTS = 5;
+    private const int DEFAULT_RATE_LIMIT = 10;
     public const string DEFAULT_DENIED_URL_PARAMETERS = 'ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login';
 
     public function __construct(
@@ -42,6 +44,8 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
                 static fn(CollectableField $field): bool => !(bool)($settings[$field->getConfigurationKey()] ?? true),
             )),
             deniedUrlParameters: GeneralUtility::trimExplode(',', (string)($settings['deniedUrlParameters'] ?? self::DEFAULT_DENIED_URL_PARAMETERS), true),
+            redeliverMaxAttempts: max(0, (int)($settings['redeliverMaxAttempts'] ?? self::DEFAULT_REDELIVER_MAX_ATTEMPTS)),
+            rateLimit: max(0, (int)($settings['rateLimit'] ?? self::DEFAULT_RATE_LIMIT)),
         );
     }
 

@@ -432,6 +432,46 @@
                 <source>Open screenshot in full size</source>
                 <target>Screenshot in voller Größe öffnen</target>
             </trans-unit>
+            <trans-unit id="extconf.redeliverMaxAttempts">
+                <source>Maximum delivery attempts: the command opinion:redeliver gives up on feedback after this number of attempts (0 = no limit). A new attempt from the admin module is always possible.</source>
+                <target>Maximale Zustellversuche: Der Befehl opinion:redeliver gibt Feedback nach so vielen Versuchen auf (0 = unbegrenzt). Ein neuer Versuch aus dem Admin-Modul ist immer möglich.</target>
+            </trans-unit>
+            <trans-unit id="extconf.rateLimit">
+                <source>Feedback per backend user and hour (0 = no limit)</source>
+                <target>Feedback pro Backend-Benutzer und Stunde (0 = unbegrenzt)</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.delivery_attempts">
+                <source>Delivery attempts</source>
+                <target>Zustellversuche</target>
+            </trans-unit>
+            <trans-unit id="response.rateLimited">
+                <source>You have sent a lot of feedback in a short time. Please try again later.</source>
+                <target>Sie haben in kurzer Zeit sehr viel Feedback gesendet. Bitte versuchen Sie es später noch einmal.</target>
+            </trans-unit>
+            <trans-unit id="module.show.attempts">
+                <source>{count} attempt(s)</source>
+                <target>{count} Versuch(e)</target>
+            </trans-unit>
+            <trans-unit id="module.show.redeliver">
+                <source>Deliver again</source>
+                <target>Erneut zustellen</target>
+            </trans-unit>
+            <trans-unit id="module.redeliver.title">
+                <source>Delivery</source>
+                <target>Zustellung</target>
+            </trans-unit>
+            <trans-unit id="module.redeliver.sent">
+                <source>The feedback has been delivered.</source>
+                <target>Das Feedback wurde zugestellt.</target>
+            </trans-unit>
+            <trans-unit id="module.redeliver.failed">
+                <source>The delivery failed again, see the delivery log.</source>
+                <target>Die Zustellung ist erneut fehlgeschlagen, siehe Zustellprotokoll.</target>
+            </trans-unit>
+            <trans-unit id="module.redeliver.impossible">
+                <source>This feedback cannot be delivered again.</source>
+                <target>Dieses Feedback kann nicht erneut zugestellt werden.</target>
+            </trans-unit>
             <trans-unit id="module.show.noScreenshot">
                 <source>No screenshot attached.</source>
                 <target>Kein Screenshot angehängt.</target>
