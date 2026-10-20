@@ -30,7 +30,7 @@ Opinion
 
 ..  image:: /Images/Opinion-Logo.svg
     :alt: Opinion
-    :width: 212px
+    :width: 200px
     :class: mb-4
 
 Editors report problems on the page they are looking at: a short description,

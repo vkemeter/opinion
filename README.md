@@ -1,4 +1,4 @@
-<img src="Resources/Public/Images/Opinion-Logo.svg" alt="Opinion" width="250">
+<img src="Resources/Public/Images/Opinion-Logo.svg" alt="Opinion" width="200">
 
 # TYPO3 extension `opinion`
 
