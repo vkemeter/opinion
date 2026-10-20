@@ -28,6 +28,11 @@ Opinion
 
 ----
 
+..  image:: /Images/Opinion-Logo.svg
+    :alt: Opinion
+    :width: 212px
+    :class: mb-4
+
 Editors report problems on the page they are looking at: a short description,
 a category and severity, an optional screenshot of the current browser tab that
 can be marked up, and details about browser, page and TYPO3. Every submission is
