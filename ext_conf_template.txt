@@ -14,6 +14,10 @@ enabled = 1
 # customsubcategory=client=opinion.messages:extconf.collect.client
 # customsubcategory=system=opinion.messages:extconf.collect.system
 # customsubcategory=context=opinion.messages:extconf.collect.context
+# customsubcategory=url=opinion.messages:extconf.collect.url
+
+# cat=collect/url/001; type=string; label=opinion.messages:extconf.deniedUrlParameters
+deniedUrlParameters = ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login
 
 # cat=collect/client/101; type=boolean; label=opinion.messages:extconf.collect_client_url
 collect_client_url = 1

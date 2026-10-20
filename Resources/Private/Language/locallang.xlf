@@ -212,7 +212,10 @@
                 <source>The feedback could not be sent. Please try again later.</source>
             </trans-unit>
             <trans-unit id="dialog.sessionExpired">
-                <source>Your backend session has expired. Please log in again and resend the feedback.</source>
+                <source>Your backend session has expired or this page is outdated. Please reload the page, log in again if asked, and resend the feedback.</source>
+            </trans-unit>
+            <trans-unit id="dialog.timeout">
+                <source>The server did not answer in time. Please try again.</source>
             </trans-unit>
             <trans-unit id="dialog.screenshot">
                 <source>Screenshot</source>
@@ -336,6 +339,12 @@
             </trans-unit>
             <trans-unit id="extconf.collect.context">
                 <source>Page and module</source>
+            </trans-unit>
+            <trans-unit id="extconf.collect.url">
+                <source>URLs</source>
+            </trans-unit>
+            <trans-unit id="extconf.deniedUrlParameters">
+                <source>Query parameters removed from the page and module URL: comma-separated, case-insensitive, a trailing * matches a prefix (ADMCMD_*). The backend request token is always removed.</source>
             </trans-unit>
             <trans-unit id="extconf.collect_client_url">
                 <source>Page URL</source>

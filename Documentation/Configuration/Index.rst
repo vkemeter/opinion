@@ -182,6 +182,27 @@ like in the admin panel itself.
     *   -   `collect_context_imagesOnPage`
         -   Images on the page (admin panel)
 
+..  _configuration-collected-details-url:
+
+URLs
+----
+
+..  confval:: deniedUrlParameters
+    :name: extconf-deniedurlparameters
+    :type: string
+    :default: `ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login`
+
+    Query parameters that are removed from the page URL (browser) and the
+    module URL (backend) before the feedback is stored and sent, so preview,
+    login or session parameters do not end up in the email. Comma-separated
+    and case-insensitive; a trailing `*` matches a prefix, `ADMCMD_*` covers
+    all preview parameters. For an array parameter like
+    `tx_felogin_login[hash]` the base name `tx_felogin_login` is matched. All
+    other parameters and the fragment are kept as sent.
+
+    The request token of backend URLs (`token`) is always removed. An empty
+    value removes nothing else.
+
 ..  _configuration-access:
 
 Who may send feedback

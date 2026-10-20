@@ -60,6 +60,14 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationReadsDeniedUrlParameters(): void
+    {
+        self::assertSame(['ADMCMD_*', 'session'], $this->createSubject(['deniedUrlParameters' => ' ADMCMD_* , session,'])->getConfiguration()->deniedUrlParameters);
+        self::assertSame([], $this->createSubject(['deniedUrlParameters' => ''])->getConfiguration()->deniedUrlParameters);
+        self::assertContains('ADMCMD_*', $this->createSubject([])->getConfiguration()->deniedUrlParameters);
+    }
+
+    #[Test]
     public function getConfigurationReadsDisabledSwitch(): void
     {
         self::assertFalse($this->createSubject(['enabled' => '0'])->getConfiguration()->enabled);

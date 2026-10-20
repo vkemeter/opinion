@@ -15,6 +15,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
 {
     private const string DEFAULT_SUBJECT_PREFIX = '[Opinion]';
     private const int DEFAULT_RETENTION_DAYS = 180;
+    public const string DEFAULT_DENIED_URL_PARAMETERS = 'ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login';
 
     public function __construct(
         private ExtensionConfiguration $extensionConfiguration,
@@ -40,6 +41,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
                 CollectableField::cases(),
                 static fn(CollectableField $field): bool => !(bool)($settings[$field->getConfigurationKey()] ?? true),
             )),
+            deniedUrlParameters: GeneralUtility::trimExplode(',', (string)($settings['deniedUrlParameters'] ?? self::DEFAULT_DENIED_URL_PARAMETERS), true),
         );
     }
 

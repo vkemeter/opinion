@@ -59,13 +59,15 @@ async function scenario(name, args, fn) {
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  // Chromium logs the 4xx answers the scenarios mock for the endpoint as errors, they are expected
+  page.on('console', (m) => m.type() === 'error' && !m.location().url.includes('/typo3/ajax/opinion/submit') && errors.push(m.text()));
   await page.route(`${BASE}/harness.html`, (route) => route.fulfill({ contentType: 'text/html', body: html }));
   try {
     await page.goto(`${BASE}/harness.html`);
     await page.click('#open');
     await fn(page);
-    console.log(`PASS ${name}${errors.length ? ' (page errors: ' + errors.join(' | ') + ')' : ''}`);
+    assert(errors.length === 0, 'unexpected page errors');
+    console.log(`PASS ${name}`);
   } catch (e) {
     failures++;
     console.log(`FAIL ${name}: ${e.message.split('\n')[0]}${errors.length ? ' (page errors: ' + errors.join(' | ') + ')' : ''}`);
@@ -95,6 +97,7 @@ await scenario('text-only submit with field errors, then success', [], async (pa
   assert(await page.getByLabel('[category]').count() === 1, 'category has no label');
   await page.fill('textarea', 'short');
   assert((await page.textContent('.opinion-dialog__counter')).includes('4995'), 'counter wrong');
+  assert(await page.locator('.opinion-dialog__counter[aria-live]').count() === 0, 'counter announces every keystroke');
   await page.click('button[type=submit]');
   await page.waitForSelector('[data-error-for="message"]:not([hidden])');
   assert(await page.textContent('[data-error-for="message"]') === 'Too short!', 'field error not shown');

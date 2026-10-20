@@ -42,10 +42,8 @@ final readonly class BackendContextProvider implements ContextProviderInterface
             $path = (string)parse_url($url, PHP_URL_PATH);
             $query = (string)parse_url($url, PHP_URL_QUERY);
             if (str_starts_with($path, '/')) {
-                // The request token of the module URL is not needed for reproducing the problem
-                parse_str($query, $parameters);
-                unset($parameters['token']);
-                $result['url'] = $path . ($parameters !== [] ? '?' . http_build_query($parameters) : '');
+                // Parameters like the request token are removed by the UrlParameterFilter
+                $result['url'] = $path . ($query !== '' ? '?' . $query : '');
             }
         }
 

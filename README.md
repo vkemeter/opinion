@@ -63,6 +63,11 @@ switched-off detail is not collected by the browser and is removed on the
 server, even if a request sends it. The sender (name, username, email) is
 always kept.
 
+`deniedUrlParameters` in the same tab lists query parameters that are removed
+from the page and module URL (default
+`ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login`; a trailing `*`
+matches a prefix). The backend request token is always removed.
+
 The sender address is `$GLOBALS['TYPO3_CONF_VARS']['MAIL']['defaultMailFromAddress']`;
 the sending backend user becomes reply-to.
 

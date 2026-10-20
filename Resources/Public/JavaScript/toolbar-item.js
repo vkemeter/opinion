@@ -31,7 +31,13 @@ document.addEventListener('click', (event) => {
     return;
   }
   event.preventDefault();
-  const config = JSON.parse(button.dataset.opinionToolbarConfig);
+  let config;
+  try {
+    config = JSON.parse(button.dataset.opinionToolbarConfig);
+  } catch (error) {
+    console.error('Opinion: the feedback dialog could not be opened.', error);
+    return;
+  }
   const enabled = config.collect?.context;
   const context = Object.fromEntries(
     Object.entries(collectBackendContext()).filter(([key]) => !enabled || enabled.includes(key === 'pageUid' ? 'page' : key)),

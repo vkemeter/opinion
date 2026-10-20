@@ -3,8 +3,13 @@
   const dialogModuleUrl = new URL('opinion-dialog.js', document.currentScript.src).href;
 
   const openDialog = async (button) => {
-    const { openOpinionDialog } = await import(dialogModuleUrl);
-    openOpinionDialog(JSON.parse(button.dataset.opinionConfig));
+    try {
+      const { openOpinionDialog } = await import(dialogModuleUrl);
+      openOpinionDialog(JSON.parse(button.dataset.opinionConfig));
+    } catch (error) {
+      // Without the dialog there are no labels for a message, the console at least tells why nothing opens
+      console.error('Opinion: the feedback dialog could not be opened.', error);
+    }
   };
 
   // A click on "Feedback" in the admin panel bar opens the dialog right away instead of the

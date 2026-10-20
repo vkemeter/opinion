@@ -58,14 +58,23 @@ final readonly class SubmissionProcessor
         }
 
         $status = $this->determineStatus($results);
-        $this->feedbackRepository->updateDeliveryStatus(
-            $feedbackUid,
-            $status,
-            implode("\n", array_map(
-                static fn(DeliveryResult $result): string => sprintf('%s: %s %s', $result->channel, $result->success ? 'OK' : 'FAILED', $result->message),
-                $results,
-            )),
-        );
+        try {
+            $this->feedbackRepository->updateDeliveryStatus(
+                $feedbackUid,
+                $status,
+                implode("\n", array_map(
+                    static fn(DeliveryResult $result): string => sprintf('%s: %s %s', $result->channel, $result->success ? 'OK' : 'FAILED', $result->message),
+                    $results,
+                )),
+            );
+        } catch (\Throwable $exception) {
+            // The feedback is stored and delivered already; an error here would make the user send it again
+            $this->logger->error('Delivery status {status} of feedback {uid} could not be stored: {message}', [
+                'uid' => $feedbackUid,
+                'status' => $status->value,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
         return new ProcessingResult($feedbackUid, $status, $results);
     }

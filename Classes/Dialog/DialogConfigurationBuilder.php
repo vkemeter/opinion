@@ -35,6 +35,7 @@ final readonly class DialogConfigurationBuilder
         'close' => 'dialog.close',
         'error' => 'dialog.error',
         'sessionExpired' => 'dialog.sessionExpired',
+        'timeout' => 'dialog.timeout',
         'screenshot' => 'dialog.screenshot',
         'screenshotHint' => 'dialog.screenshotHint',
         'screenshotTake' => 'dialog.screenshotTake',

@@ -6,6 +6,8 @@ namespace Vkemeter\Opinion\Tests\Functional\Processing;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -68,6 +70,32 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame('failed', $record['delivery_status'] ?? null);
         self::assertStringContainsString('mail: FAILED Connection refused', (string)($record['delivery_log'] ?? ''));
         self::assertStringContainsString('test: OK', (string)($record['delivery_log'] ?? ''));
+    }
+
+    #[Test]
+    public function failingStatusUpdateAfterDeliveryStillReturnsTheResult(): void
+    {
+        $database = new \ArrayObject(['down' => false]);
+        $realConnectionPool = $this->get(ConnectionPool::class);
+        $connectionPool = self::createStub(ConnectionPool::class);
+        $connectionPool->method('getConnectionForTable')->willReturnCallback(
+            static function (string $table) use ($database, $realConnectionPool): Connection {
+                if ($database['down'] === true) {
+                    throw new \RuntimeException('Server has gone away', 1792483201);
+                }
+                return $realConnectionPool->getConnectionForTable($table);
+            },
+        );
+        $channel = $this->createChannel('test', static function () use ($database): DeliveryResult {
+            $database['down'] = true;
+            return DeliveryResult::success('test');
+        });
+
+        $result = new SubmissionProcessor(new FeedbackRepository($connectionPool), $this->get(ScreenshotStorage::class), [$channel], new NullLogger())
+            ->process($this->createSubmission(), $this->configuration());
+
+        self::assertSame(DeliveryStatus::Sent, $result->status);
+        self::assertSame('pending', $this->get(FeedbackRepository::class)->findByUid($result->feedbackUid)['delivery_status'] ?? null);
     }
 
     #[Test]

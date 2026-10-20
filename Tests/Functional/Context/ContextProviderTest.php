@@ -80,13 +80,13 @@ final class ContextProviderTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function backendContextKeepsRegisteredModulePageAndUrlWithoutToken(): void
+    public function backendContextKeepsRegisteredModulePageAndPathAndQueryOfTheUrl(): void
     {
         $provider = $this->get(BackendContextProvider::class);
 
         self::assertTrue($provider->supports(Source::Backend));
         self::assertSame(
-            ['module' => 'web_layout', 'pageUid' => 12, 'pageTitle' => 'Teaser page', 'url' => '/typo3/module/web/layout?id=12'],
+            ['module' => 'web_layout', 'pageUid' => 12, 'pageTitle' => 'Teaser page', 'url' => '/typo3/module/web/layout?token=0123456789abcdef&id=12'],
             $provider->resolve([
                 'module' => 'web_layout',
                 'pageUid' => '12',

@@ -11,6 +11,7 @@ final readonly class OpinionConfiguration
     /**
      * @param list<string> $recipients
      * @param list<CollectableField> $disabledFields details that are not collected
+     * @param list<string> $deniedUrlParameters query parameters removed from collected URLs
      */
     public function __construct(
         public bool $enabled,
@@ -18,6 +19,7 @@ final readonly class OpinionConfiguration
         public string $subjectPrefix,
         public int $retentionDays,
         public array $disabledFields = [],
+        public array $deniedUrlParameters = [],
     ) {}
 
     public function collects(CollectableField $field): bool

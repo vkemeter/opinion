@@ -2,6 +2,9 @@ import { collectClientInfo } from './client-info.js';
 import { el } from './dom.js';
 import { ScreenshotControl } from './screenshot-control.js';
 
+// Generous, the request can carry a screenshot of up to 10 MB
+const SUBMIT_TIMEOUT_MS = 60000;
+
 /**
  * Opens the feedback dialog. The configuration is built on the server by
  * \Vkemeter\Opinion\Dialog\DialogConfigurationBuilder.
@@ -90,7 +93,8 @@ class OpinionDialog {
       maxlength: String(this.config.messageMaxLength),
       'aria-describedby': `${this.id}-message-hint ${this.id}-message-counter ${this.id}-message-error`,
     });
-    this.counter = el('span', { class: 'opinion-dialog__counter', id: `${this.id}-message-counter`, 'aria-live': 'polite' });
+    // No live region: it would announce every keystroke, the textarea references the counter instead
+    this.counter = el('span', { class: 'opinion-dialog__counter', id: `${this.id}-message-counter` });
     this.message.addEventListener('input', () => this.updateCounter());
     this.updateCounter();
 
@@ -179,7 +183,7 @@ class OpinionDialog {
 
     this.setBusy(true);
     try {
-      const response = await fetch(this.config.endpoint, { method: 'POST', body, credentials: 'same-origin' });
+      const response = await fetch(this.config.endpoint, { method: 'POST', body, credentials: 'same-origin', signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS) });
       if (response.status === 401) {
         this.showStatus(this.labels.sessionExpired, true);
         return;
@@ -193,8 +197,8 @@ class OpinionDialog {
         this.showErrors(result.errors);
       }
       this.showStatus(result.message || this.labels.error, true);
-    } catch {
-      this.showStatus(this.labels.error, true);
+    } catch (error) {
+      this.showStatus(error?.name === 'TimeoutError' ? this.labels.timeout : this.labels.error, true);
     } finally {
       this.setBusy(false);
     }

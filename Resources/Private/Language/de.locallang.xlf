@@ -281,8 +281,12 @@
                 <target>Das Feedback konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.</target>
             </trans-unit>
             <trans-unit id="dialog.sessionExpired">
-                <source>Your backend session has expired. Please log in again and resend the feedback.</source>
-                <target>Ihre Backend-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an und senden Sie das Feedback noch einmal.</target>
+                <source>Your backend session has expired or this page is outdated. Please reload the page, log in again if asked, and resend the feedback.</source>
+                <target>Ihre Backend-Sitzung ist abgelaufen oder die Seite ist veraltet. Bitte laden Sie die Seite neu, melden Sie sich bei Bedarf erneut an und senden Sie das Feedback noch einmal.</target>
+            </trans-unit>
+            <trans-unit id="dialog.timeout">
+                <source>The server did not answer in time. Please try again.</source>
+                <target>Der Server hat nicht rechtzeitig geantwortet. Bitte versuchen Sie es noch einmal.</target>
             </trans-unit>
             <trans-unit id="dialog.screenshot">
                 <source>Screenshot</source>
@@ -447,6 +451,14 @@
             <trans-unit id="extconf.collect.context">
                 <source>Page and module</source>
                 <target>Seite und Modul</target>
+            </trans-unit>
+            <trans-unit id="extconf.collect.url">
+                <source>URLs</source>
+                <target>URLs</target>
+            </trans-unit>
+            <trans-unit id="extconf.deniedUrlParameters">
+                <source>Query parameters removed from the page and module URL: comma-separated, case-insensitive, a trailing * matches a prefix (ADMCMD_*). The backend request token is always removed.</source>
+                <target>Query-Parameter, die aus der Seiten- und Modul-URL entfernt werden: kommagetrennt, ohne Beachtung der Groß-/Kleinschreibung, ein * am Ende passt auf einen Präfix (ADMCMD_*). Das Request-Token des Backends wird immer entfernt.</target>
             </trans-unit>
             <trans-unit id="extconf.collect_client_url">
                 <source>Page URL</source>

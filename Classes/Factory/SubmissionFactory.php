@@ -12,7 +12,9 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use Vkemeter\Opinion\Collection\CollectionFilter;
 use Vkemeter\Opinion\Collector\ClientInfoSanitizer;
 use Vkemeter\Opinion\Collector\SystemInfoCollector;
+use Vkemeter\Opinion\Collector\UrlParameterFilter;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
+use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Context\ContextProviderInterface;
 use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
@@ -32,6 +34,7 @@ final readonly class SubmissionFactory
         private ClockInterface $clock,
         private ConfigurationProviderInterface $configurationProvider,
         private CollectionFilter $collectionFilter,
+        private UrlParameterFilter $urlParameterFilter,
         #[AutowireIterator('opinion.context_provider')]
         private iterable $contextProviders,
     ) {}
@@ -62,11 +65,24 @@ final readonly class SubmissionFactory
             source: $result->source,
             backendUserUid: (int)($backendUser->user['uid'] ?? 0),
             createdAt: $createdAt,
-            clientInfo: $this->collectionFilter->filter('client', $this->clientInfoSanitizer->sanitize($result->clientInfo), $configuration),
+            clientInfo: $this->filterUrl($this->collectionFilter->filter('client', $this->clientInfoSanitizer->sanitize($result->clientInfo), $configuration), $configuration),
             systemInfo: $this->collectionFilter->filter('system', $this->systemInfoCollector->collect($backendUser, $request, $createdAt), $configuration),
-            context: $this->collectionFilter->filter('context', $this->resolveContext($result->source, $result->context, $request), $configuration),
+            context: $this->filterUrl($this->collectionFilter->filter('context', $this->resolveContext($result->source, $result->context, $request), $configuration), $configuration),
             screenshot: $result->screenshot,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $details
+     * @return array<string, mixed>
+     */
+    private function filterUrl(array $details, OpinionConfiguration $configuration): array
+    {
+        if (is_string($details['url'] ?? null)) {
+            $details['url'] = $this->urlParameterFilter->filter($details['url'], $configuration->deniedUrlParameters);
+        }
+
+        return $details;
     }
 
     /**

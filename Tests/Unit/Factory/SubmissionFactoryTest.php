@@ -16,6 +16,7 @@ use Vkemeter\Opinion\Collection\CollectionFilter;
 use Vkemeter\Opinion\Collector\ClientInfoSanitizer;
 use Vkemeter\Opinion\Collector\SchemaSanitizer;
 use Vkemeter\Opinion\Collector\SystemInfoCollector;
+use Vkemeter\Opinion\Collector\UrlParameterFilter;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Context\ContextProviderInterface;
@@ -127,6 +128,23 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame(['siteIdentifier' => 'default'], $submission->context);
     }
 
+    #[Test]
+    public function createFromRequestRemovesDeniedParametersFromBothUrls(): void
+    {
+        $contextProvider = self::createStub(ContextProviderInterface::class);
+        $contextProvider->method('supports')->willReturn(true);
+        $contextProvider->method('resolve')->willReturn(['url' => '/typo3/module/web/layout?token=abc&id=12']);
+        $request = $this->createRequest([
+            ...$this->validFields(),
+            'clientInfo' => '{"url":"https://example.com/news?ADMCMD_prev=abc&id=12&adMcmd_simTime=1#c42"}',
+        ]);
+
+        $submission = $this->createSubject([$contextProvider])->createFromRequest($request, $this->createBackendUser());
+
+        self::assertSame('https://example.com/news?id=12#c42', $submission->clientInfo['url']);
+        self::assertSame('/typo3/module/web/layout?id=12', $submission->context['url']);
+    }
+
     /**
      * @param list<ContextProviderInterface> $contextProviders
      * @param list<CollectableField> $disabledFields
@@ -136,7 +154,7 @@ final class SubmissionFactoryTest extends UnitTestCase
         $clock = self::createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable('2026-10-09T12:00:00+00:00'));
         $configurationProvider = self::createStub(ConfigurationProviderInterface::class);
-        $configurationProvider->method('getConfiguration')->willReturn(new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180, $disabledFields));
+        $configurationProvider->method('getConfiguration')->willReturn(new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180, $disabledFields, ['ADMCMD_*']));
 
         return new SubmissionFactory(
             new SubmissionValidator(),
@@ -145,6 +163,7 @@ final class SubmissionFactoryTest extends UnitTestCase
             $clock,
             $configurationProvider,
             new CollectionFilter(),
+            new UrlParameterFilter(),
             $contextProviders,
         );
     }
