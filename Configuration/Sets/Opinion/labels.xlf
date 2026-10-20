@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff
+    xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" original="EXT:opinion/Configuration/Sets/Opinion/labels.xlf" datatype="plaintext" product-name="opinion" date="2026-10-20T12:00:00Z">
+        <header/>
+        <body>
+            <trans-unit id="label">
+                <source>Opinion: editor feedback</source>
+            </trans-unit>
+            <trans-unit id="categories.opinion">
+                <source>Feedback (Opinion)</source>
+            </trans-unit>
+            <trans-unit id="settings.opinion.adminPanel.enable">
+                <source>Show the admin panel</source>
+            </trans-unit>
+            <trans-unit id="settings.description.opinion.adminPanel.enable">
+                <source>Sets config.admPanel, so the "Feedback" entry appears in the admin panel bar. Which modules a backend user sees is still decided by user TSconfig.</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

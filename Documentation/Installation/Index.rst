@@ -67,11 +67,20 @@ Frontend: enable the admin panel
 The frontend entry point lives in the admin panel, which has to be shown for
 the user:
 
-*   TypoScript of the site:
+*   The site set :guilabel:`Opinion: editor feedback` (`vkemeter/opinion`)
+    sets `config.admPanel = 1`. Add it to the site, in the site configuration
+    or in :file:`config/sites/<site>/config.yaml`:
 
-    ..  code-block:: typoscript
+    ..  code-block:: yaml
+        :caption: config/sites/<site>/config.yaml
 
-        config.admPanel = 1
+        dependencies:
+          - vkemeter/opinion
+
+    The site setting :guilabel:`Show the admin panel`
+    (`opinion.adminPanel.enable`, default on) switches it off again for a
+    single site. Without the set, add `config.admPanel = 1` to the TypoScript
+    of the site yourself.
 
 *   User TSconfig with at least one enabled admin panel module. Administrators
     get `admPanel.enable.all = 1` from the core, other users need for example:
@@ -79,3 +88,7 @@ the user:
     ..  code-block:: typoscript
 
         admPanel.enable.opinion = 1
+
+    Site sets cannot provide user TSconfig, so this and
+    :ref:`options.opinion.enable <configuration-access>` stay in the user or
+    group records.

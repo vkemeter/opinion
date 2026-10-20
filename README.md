@@ -86,10 +86,14 @@ submissions as well.
 
 For the frontend button the admin panel itself must be shown:
 
-- TypoScript `config.admPanel = 1` on the site
+- the site set `vkemeter/opinion` ("Opinion: editor feedback") added to the
+  site, which sets `config.admPanel = 1` (site setting
+  `opinion.adminPanel.enable`, default on); without it, add
+  `config.admPanel = 1` to the TypoScript yourself
 - user TSconfig with at least one enabled admin panel module, e.g.
   `admPanel.enable.opinion = 1` (admins get `admPanel.enable.all = 1` from the
-  core)
+  core). Site sets cannot provide user TSconfig, so this stays in the user or
+  group records.
 
 The "Feedback" tab only appears for users who may send feedback.
 

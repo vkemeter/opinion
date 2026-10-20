@@ -1,0 +1,2 @@
+# The frontend entry point of the feedback dialog lives in the admin panel
+config.admPanel = {$opinion.adminPanel.enable}

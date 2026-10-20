@@ -1,0 +1,8 @@
+categories:
+  opinion: ~
+
+settings:
+  opinion.adminPanel.enable:
+    default: true
+    type: bool
+    category: opinion
