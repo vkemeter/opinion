@@ -51,7 +51,7 @@ Requirements
 ============
 
 *   TYPO3 v14.3
-*   PHP 8.4
+*   PHP 8.4 or 8.5
 *   HTTPS for screenshots: browsers allow screen capture in secure contexts only
 *   A configured mail transport for the email delivery
 

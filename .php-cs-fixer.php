@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
-    ->exclude(['.Build', 'Build/node_modules', 'Documentation-GENERATED-temp', 'var']);
+    ->exclude(['.Build', 'Build/node_modules', 'Documentation-GENERATED-temp', 'var'])
+    // Parsed by the TER, kept as plain array file without strict types
+    ->notName('ext_emconf.php');
 
 $config = new PhpCsFixer\Config();
 $config

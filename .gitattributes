@@ -7,3 +7,4 @@
 /.gitignore export-ignore
 /.php-cs-fixer.php export-ignore
 /Makefile export-ignore
+/.codegraph export-ignore

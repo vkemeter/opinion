@@ -29,7 +29,7 @@ details.
 
 ## Requirements
 
-- TYPO3 v14.3, PHP 8.4
+- TYPO3 v14.3, PHP 8.4 or 8.5
 - HTTPS for screenshots (`getDisplayMedia()` needs a secure context)
 
 ## Installation
@@ -38,6 +38,10 @@ details.
 composer require vkemeter/opinion
 vendor/bin/typo3 extension:setup
 ```
+
+Without Composer, install it from the
+[TYPO3 Extension Repository](https://extensions.typo3.org/extension/opinion).
+Changes are listed in the [changelog](CHANGELOG.md).
 
 `extension:setup` creates the table `tx_opinion_feedback` and the file storage
 "Opinion screenshots" (see below).

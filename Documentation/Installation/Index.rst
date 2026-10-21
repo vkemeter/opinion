@@ -13,8 +13,23 @@ Install with Composer
 
     composer require vkemeter/opinion
 
-The extension is not available in the TYPO3 Extension Repository (TER), only
-with Composer.
+..  _installation-ter:
+
+Install from the TER
+====================
+
+Without Composer, install the extension from the
+`TYPO3 Extension Repository <https://extensions.typo3.org/extension/opinion>`__
+in :guilabel:`Admin Tools > Extensions`. Activating it creates the table and
+the screenshot storage, the next section is not needed then.
+
+..  warning::
+
+    Without Composer, the TYPO3 `var/` directory is :file:`typo3temp/var/`
+    inside the web root, and the screenshots are stored in
+    :file:`typo3temp/var/opinion/`. The `.htaccess` shipped with TYPO3 denies
+    access to :file:`typo3temp/var/` on Apache; on other web servers such as
+    nginx, deny it in the server configuration.
 
 ..  _installation-setup:
 
