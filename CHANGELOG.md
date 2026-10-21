@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 – unreleased
+## 1.0.0 – 2026-10-21
 
 First public release for TYPO3 v14.3 and PHP 8.4/8.5.
 
