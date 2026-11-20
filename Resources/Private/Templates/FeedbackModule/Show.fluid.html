@@ -54,6 +54,9 @@
 								name="uid"
 								value="{record.uid}" />
 							<f:render
+								section="FilterFields"
+								arguments="{filterParameters: filterParameters}" />
+							<f:render
 								partial="FeedbackModule/Badges"
 								section="Status"
 								arguments="{status: record.status}" />
@@ -115,6 +118,9 @@
 								type="hidden"
 								name="uid"
 								value="{record.uid}" />
+							<f:render
+								section="FilterFields"
+								arguments="{filterParameters: filterParameters}" />
 							<button
 								type="submit"
 								class="btn btn-default">
@@ -169,6 +175,18 @@
 					</table>
 				</div>
 			</f:if>
+		</f:for>
+	</f:section>
+
+	<f:section name="FilterFields">
+		<f:for
+			each="{filterParameters}"
+			key="name"
+			as="value">
+			<input
+				type="hidden"
+				name="filter[{name}]"
+				value="{value}" />
 		</f:for>
 	</f:section>
 </html>

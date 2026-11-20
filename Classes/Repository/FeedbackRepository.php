@@ -7,6 +7,7 @@ namespace Vkemeter\Opinion\Repository;
 use Doctrine\DBAL\Types\Types;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\File;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
@@ -174,6 +175,48 @@ final readonly class FeedbackRepository
     }
 
     /**
+     * The list query without select, shared by countAll() and findPage() so total and page agree.
+     */
+    private function createListQuery(?int $senderUid, ?FeedbackFilter $filter): QueryBuilder
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
+        $queryBuilder
+            ->from(self::TABLE, 'feedback')
+            ->leftJoin('feedback', 'be_users', 'sender', $queryBuilder->expr()->eq('sender.uid', $queryBuilder->quoteIdentifier('feedback.be_user')));
+        if ($senderUid !== null) {
+            $queryBuilder->andWhere($queryBuilder->expr()->eq('feedback.be_user', $queryBuilder->createNamedParameter($senderUid, Connection::PARAM_INT)));
+        }
+        if ($filter === null) {
+            return $queryBuilder;
+        }
+
+        foreach (['status' => $filter->status, 'category' => $filter->category, 'severity' => $filter->severity, 'source' => $filter->source, 'delivery_status' => $filter->deliveryStatus] as $field => $value) {
+            if ($value !== null) {
+                $queryBuilder->andWhere($queryBuilder->expr()->eq('feedback.' . $field, $queryBuilder->createNamedParameter($value->value)));
+            }
+        }
+        if ($filter->search !== null) {
+            // JSON columns may hold the term escaped ("\/", "\u00fc"), so both spellings are searched there
+            // Backslash is the LIKE escape character and part of the escaped spelling, so it is escaped as well
+            $pattern = static fn(string $term): string => '%' . addcslashes($term, '\\%_') . '%';
+            $plain = $queryBuilder->createNamedParameter($pattern($filter->search));
+            $escaped = $queryBuilder->createNamedParameter($pattern(substr(json_encode($filter->search, JSON_THROW_ON_ERROR), 1, -1)));
+            $queryBuilder->andWhere($queryBuilder->expr()->or(
+                $queryBuilder->expr()->like('feedback.message', $plain),
+                $queryBuilder->expr()->like('sender.realName', $plain),
+                $queryBuilder->expr()->like('sender.username', $plain),
+                $queryBuilder->expr()->like('feedback.context', $plain),
+                $queryBuilder->expr()->like('feedback.context', $escaped),
+                $queryBuilder->expr()->like('feedback.client_info', $plain),
+                $queryBuilder->expr()->like('feedback.client_info', $escaped),
+            ));
+        }
+
+        return $queryBuilder;
+    }
+
+    /**
      * Sender (be_user) of the feedback that references the screenshot file.
      */
     public function findSenderUidOfScreenshot(int $fileUid): ?int
@@ -207,9 +250,12 @@ final readonly class FeedbackRepository
     /**
      * @param int|null $senderUid only feedback of this backend user, null = all
      */
-    public function countAll(?int $senderUid = null): int
+    public function countAll(?int $senderUid = null, ?FeedbackFilter $filter = null): int
     {
-        return $this->connectionPool->getConnectionForTable(self::TABLE)->count('*', self::TABLE, $senderUid !== null ? ['be_user' => $senderUid] : []);
+        return (int)$this->createListQuery($senderUid, $filter)
+            ->count('feedback.uid')
+            ->executeQuery()
+            ->fetchOne();
     }
 
     /**
@@ -218,18 +264,10 @@ final readonly class FeedbackRepository
      * @param int|null $senderUid only feedback of this backend user, null = all
      * @return list<array<string, mixed>>
      */
-    public function findPage(int $limit, int $offset, ?int $senderUid = null): array
+    public function findPage(int $limit, int $offset, ?int $senderUid = null, ?FeedbackFilter $filter = null): array
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
-        $queryBuilder->getRestrictions()->removeAll();
-        if ($senderUid !== null) {
-            $queryBuilder->where($queryBuilder->expr()->eq('feedback.be_user', $queryBuilder->createNamedParameter($senderUid, Connection::PARAM_INT)));
-        }
-
-        return $queryBuilder
+        return $this->createListQuery($senderUid, $filter)
             ->select('feedback.*', 'sender.username AS sender_username', 'sender.realName AS sender_name')
-            ->from(self::TABLE, 'feedback')
-            ->leftJoin('feedback', 'be_users', 'sender', $queryBuilder->expr()->eq('sender.uid', $queryBuilder->quoteIdentifier('feedback.be_user')))
             ->orderBy('feedback.crdate', 'DESC')
             ->addOrderBy('feedback.uid', 'DESC')
             ->setMaxResults($limit)

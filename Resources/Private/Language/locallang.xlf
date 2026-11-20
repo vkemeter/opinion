@@ -319,6 +319,21 @@
             <trans-unit id="adminpanel.description">
                 <source>Found a problem on this page or have an idea? Send it to the team, optionally with a screenshot.</source>
             </trans-unit>
+            <trans-unit id="module.filter.search">
+                <source>Search</source>
+            </trans-unit>
+            <trans-unit id="module.filter.all">
+                <source>All</source>
+            </trans-unit>
+            <trans-unit id="module.filter.submit">
+                <source>Filter</source>
+            </trans-unit>
+            <trans-unit id="module.filter.reset">
+                <source>Reset</source>
+            </trans-unit>
+            <trans-unit id="module.list.noMatches">
+                <source>No feedback matches the search and filter.</source>
+            </trans-unit>
             <trans-unit id="module.list.email">
                 <source>Email address</source>
             </trans-unit>

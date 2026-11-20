@@ -312,6 +312,68 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function listCanBeFilteredAndKeepsTheFilterInItsLinks(): void
+    {
+        $this->addFeedback('Teaser is cropped', '2026-10-01 10:00');
+        $closed = $this->addFeedback('Old bug', '2026-10-02 10:00');
+        $this->get(FeedbackRepository::class)->updateStatus($closed, FeedbackStatus::Closed);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['status' => 'closed', 'search' => '<b>bug</b>', 'category' => 'nonsense']))->getBody();
+
+        self::assertStringContainsString('No feedback matches the search and filter.', $html, 'the search term matches nothing');
+        self::assertStringContainsString('value="&lt;b&gt;bug&lt;/b&gt;"', $html);
+        self::assertStringNotContainsString('<b>bug</b>', $html);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['status' => 'closed', 'category' => 'nonsense']))->getBody();
+        self::assertStringContainsString('1 feedback entries', $html);
+        self::assertStringContainsString('Old bug', $html);
+        self::assertStringNotContainsString('Teaser is cropped', $html);
+        self::assertMatchesRegularExpression('#href="[^"]*opinion/feedback/show[^"]*uid=' . $closed . '[^"]*status=closed#', $html, 'detail link keeps the filter');
+        self::assertStringNotContainsString('category=nonsense', $html, 'invalid value ignored');
+        self::assertMatchesRegularExpression('#<input\s+type="hidden"\s+name="token"#', $html, 'GET form keeps the route token');
+        self::assertStringContainsString('Reset', $html);
+    }
+
+    #[Test]
+    public function pagingKeepsTheFilter(): void
+    {
+        for ($i = 0; $i < 51; $i++) {
+            $this->addFeedback('Bug ' . $i, '2026-10-01 10:00');
+        }
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['search' => 'Bug']))->getBody();
+
+        self::assertMatchesRegularExpression('#href="[^"]*page=2[^"]*search=Bug#', $html);
+    }
+
+    #[Test]
+    public function editorSearchFindsOwnFeedbackOnly(): void
+    {
+        $this->addFeedback('Teaser of the admin', '2026-10-01 10:00');
+        $this->addFeedback('Teaser of the reporter', '2026-10-02 10:00', 3);
+        $this->setUpBackendUser(3);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['search' => 'Teaser']))->getBody();
+
+        self::assertStringContainsString('Teaser of the reporter', $html);
+        self::assertStringNotContainsString('Teaser of the admin', $html);
+        self::assertStringNotContainsString('opinion-filter-deliveryStatus', $html);
+    }
+
+    #[Test]
+    public function statusChangeReturnsWithTheFilter(): void
+    {
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+
+        $response = $this->get(FeedbackModuleController::class)->statusAction(
+            $this->createRequest('opinion_feedback.status')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'status' => 'closed', 'filter' => ['search' => 'Feed', 'status' => 'bogus']]),
+        );
+
+        self::assertStringContainsString('search=Feed', $response->getHeaderLine('Location'));
+        self::assertStringNotContainsString('bogus', $response->getHeaderLine('Location'));
+    }
+
+    #[Test]
     public function showRedirectsToListForUnknownFeedback(): void
     {
         $response = $this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => '999']));

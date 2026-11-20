@@ -20,11 +20,15 @@ use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
+use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
+use Vkemeter\Opinion\Domain\Severity;
+use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
+use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 /**
@@ -55,24 +59,40 @@ final readonly class FeedbackModuleController
             return $this->accessDenied();
         }
         $senderUid = $this->getSenderFilter();
-        $total = $this->feedbackRepository->countAll($senderUid);
+        $filter = FeedbackFilter::fromQueryParameters($request->getQueryParams());
+        $filterParameters = $filter->toQueryParameters();
+        $total = $this->feedbackRepository->countAll($senderUid, $filter);
         $pages = max(1, (int)ceil($total / self::ITEMS_PER_PAGE));
         $currentPage = min($pages, max(1, (int)($request->getQueryParams()['page'] ?? 1)));
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->assignMultiple([
             'items' => array_map(
-                // The address at submission time, also for senders deleted since
-                fn(array $item): array => [...$item, 'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null))],
-                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid),
+                fn(array $item): array => [
+                    ...$item,
+                    // The address at submission time, also for senders deleted since
+                    'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null)),
+                    'show_url' => $this->buildUri('opinion_feedback.show', ['uid' => (int)$item['uid'], ...$filterParameters]),
+                ],
+                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid, $filter),
             ),
             'total' => $total,
             'isAdmin' => $this->isAdmin(),
+            'filter' => $filterParameters,
+            'filterActive' => $filter->isActive(),
+            'filterForm' => $this->buildGetForm('opinion_feedback'),
+            'filterOptions' => [
+                'status' => array_map(static fn(FeedbackStatus $case): string => $case->value, FeedbackStatus::cases()),
+                'category' => array_map(static fn(Category $case): string => $case->value, Category::cases()),
+                'severity' => array_map(static fn(Severity $case): string => $case->value, Severity::cases()),
+                'source' => array_map(static fn(Source $case): string => $case->value, Source::cases()),
+                'deliveryStatus' => array_map(static fn(DeliveryStatus $case): string => $case->value, DeliveryStatus::cases()),
+            ],
             'pagination' => [
                 'current' => $currentPage,
                 'pages' => $pages,
-                'previous' => $currentPage > 1 ? $this->buildUri('opinion_feedback', ['page' => $currentPage - 1]) : '',
-                'next' => $currentPage < $pages ? $this->buildUri('opinion_feedback', ['page' => $currentPage + 1]) : '',
+                'previous' => $currentPage > 1 ? $this->buildUri('opinion_feedback', ['page' => $currentPage - 1, ...$filterParameters]) : '',
+                'next' => $currentPage < $pages ? $this->buildUri('opinion_feedback', ['page' => $currentPage + 1, ...$filterParameters]) : '',
             ],
         ]);
 
@@ -97,12 +117,15 @@ final readonly class FeedbackModuleController
         $clientInfo = $this->decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
-        $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback')));
+        $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams())->toQueryParameters();
+        $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback', $filterParameters)));
         $view->assignMultiple([
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
             'isAdmin' => $this->isAdmin(),
+            // Passed through the forms, so the way back to the list keeps the filter
+            'filterParameters' => $filterParameters,
             'canRedeliver' => $this->isAdmin() && $this->redeliverer->isUndelivered($record),
             'statuses' => array_map(static fn(FeedbackStatus $status): string => $status->value, FeedbackStatus::cases()),
             'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, true),
@@ -143,7 +166,7 @@ final readonly class FeedbackModuleController
         };
         $this->addFlashMessage($key, 'module.redeliver.title', $severity);
 
-        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
     }
 
     /**
@@ -168,7 +191,30 @@ final readonly class FeedbackModuleController
             $this->addFlashMessage('module.status.saved', 'module.status.title', ContextualFeedbackSeverity::OK);
         }
 
-        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getPostedFilterParameters(mixed $body): array
+    {
+        $filter = is_array($body) && is_array($body['filter'] ?? null) ? $body['filter'] : [];
+
+        return FeedbackFilter::fromQueryParameters($filter)->toQueryParameters();
+    }
+
+    /**
+     * A GET form replaces the query of its action, so the route token goes into hidden fields.
+     *
+     * @return array{action: string, hidden: array<array-key, mixed>}
+     */
+    private function buildGetForm(string $route): array
+    {
+        $uri = $this->buildUri($route);
+        parse_str((string)parse_url($uri, PHP_URL_QUERY), $hidden);
+
+        return ['action' => (string)parse_url($uri, PHP_URL_PATH), 'hidden' => $hidden];
     }
 
     /**

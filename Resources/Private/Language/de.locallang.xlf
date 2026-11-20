@@ -424,6 +424,26 @@
                 <source>Found a problem on this page or have an idea? Send it to the team, optionally with a screenshot.</source>
                 <target>Ein Problem auf dieser Seite gefunden oder eine Idee? Senden Sie es an das Team, auf Wunsch mit Screenshot.</target>
             </trans-unit>
+            <trans-unit id="module.filter.search">
+                <source>Search</source>
+                <target>Suche</target>
+            </trans-unit>
+            <trans-unit id="module.filter.all">
+                <source>All</source>
+                <target>Alle</target>
+            </trans-unit>
+            <trans-unit id="module.filter.submit">
+                <source>Filter</source>
+                <target>Filtern</target>
+            </trans-unit>
+            <trans-unit id="module.filter.reset">
+                <source>Reset</source>
+                <target>Zurücksetzen</target>
+            </trans-unit>
+            <trans-unit id="module.list.noMatches">
+                <source>No feedback matches the search and filter.</source>
+                <target>Kein Feedback passt zu Suche und Filter.</target>
+            </trans-unit>
             <trans-unit id="module.list.email">
                 <source>Email address</source>
                 <target>E-Mail-Adresse</target>

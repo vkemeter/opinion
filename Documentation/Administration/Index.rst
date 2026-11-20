@@ -20,6 +20,15 @@ List
     email address, the start of the message, a screenshot marker, the
     status and the delivery status.
 
+Search and filter
+    Above the list, the search finds feedback whose message, sender name or
+    username, reported URL or page title contains the term. Filters for
+    status, category, severity, source and, for administrators, delivery
+    status narrow the list further. Search and filter stay in the URL, so they
+    survive paging and the way back from the detail view, and can be
+    bookmarked. :guilabel:`Reset` shows all feedback again. Editors search
+    their own feedback only.
+
 Detail view
     The full message, the status, the delivery status, the number of delivery attempts
     and the log, the screenshot (click to open it in full size) and all

@@ -53,7 +53,8 @@ confirms when it is stored; if the email could not be sent, it says so — the
 feedback is stored nevertheless.
 
 Your feedback appears in the module :guilabel:`Feedback` together with its
-status, if the module is granted to you.
+status, if the module is granted to you. Search and filter above the list
+help to find it again.
 
 ..  _usage-screenshot:
 

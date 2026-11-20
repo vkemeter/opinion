@@ -1,20 +1,24 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 – 2026-11-20
 
 - **Breaking:** the module "Feedback" moved from Admin Tools to its own entry in
   the module menu. Editors with `options.opinion.enable = 1` and the module
   granted in their backend group see their own feedback there (message,
   screenshot, details, status); delivery details and actions stay with
   administrators. Screenshots are served to administrators and the sender
-
+- Added: processing status `new`, `in_progress` or `closed` per feedback,
+  shown in the list and set by administrators in the detail view. Needs a
+  database schema update (`extension:setup`); existing feedback becomes `new`
+- Added: search (message, sender, reported URL, page title) and filters for
+  status, category, severity, source and delivery status in the module list;
+  they stay in the URL when paging and returning from the detail view
 - Added: the detail view and the email show the reported URL once as link,
   instead of twice as text in the tables of collected details
 - Added: the list shows the sender's email address (as at submission time) as
   mailto link
-- Added: processing status `new`, `in_progress` or `closed` per feedback,
-  shown in the list and set by administrators in the detail view. Needs a
-  database schema update; existing feedback becomes `new`
+- Changed (internal): `AdminRequestCheckerInterface::isAdminRequest()` is
+  replaced by `getAuthenticatedBackendUser()`
 
 ## 1.1.0 – 2026-11-20
 

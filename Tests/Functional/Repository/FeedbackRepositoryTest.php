@@ -13,6 +13,7 @@ use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
@@ -75,6 +76,40 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertNull($repository->findByUid($foreign, 7));
         self::assertNotNull($repository->findByUid($own, 7));
         self::assertNotNull($repository->findByUid($foreign));
+    }
+
+    #[Test]
+    public function listCanBeFilteredAndSearched(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $repository = $this->get(FeedbackRepository::class);
+        $teaser = $repository->add(new Submission('Teaser is cropped', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable(), ['url' => 'https://example.com/produkte/über'], [], ['pageTitle' => 'Produkte']), null);
+        $idea = $repository->add(new Submission('Add a 100% better search', Category::Idea, Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
+        $closed = $repository->add(new Submission('Old bug', Category::Bug, Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
+        $repository->updateStatus($closed, FeedbackStatus::Closed);
+        $repository->updateDeliveryStatus($closed, DeliveryStatus::Failed, '');
+
+        $find = static fn(FeedbackFilter $filter, ?int $senderUid = null): array => array_map(
+            static fn(array $record): int => (int)$record['uid'],
+            $repository->findPage(50, 0, $senderUid, $filter),
+        );
+
+        self::assertEqualsCanonicalizing([$teaser, $closed], $find(new FeedbackFilter(category: Category::Bug)));
+        self::assertSame([$closed], $find(new FeedbackFilter(status: FeedbackStatus::Closed)));
+        self::assertSame([$closed], $find(new FeedbackFilter(category: Category::Bug, severity: Severity::Low)));
+        self::assertSame([$closed], $find(new FeedbackFilter(deliveryStatus: DeliveryStatus::Failed)));
+        self::assertSame([$teaser], $find(new FeedbackFilter(source: Source::Frontend)));
+        self::assertSame(2, $repository->countAll(null, new FeedbackFilter(category: Category::Bug)));
+
+        self::assertSame([$teaser], $find(new FeedbackFilter(search: 'cropped')), 'message');
+        self::assertSame([$teaser], $find(new FeedbackFilter(search: '/produkte/über')), 'URL with escaped slashes and umlaut');
+        self::assertSame([$teaser], $find(new FeedbackFilter(search: 'Produkte')), 'page title');
+        self::assertEqualsCanonicalizing([$idea, $closed], $find(new FeedbackFilter(search: 'Rita')), 'sender name');
+        self::assertSame([$idea], $find(new FeedbackFilter(search: '100%')), 'wildcard escaped');
+        self::assertSame([], $find(new FeedbackFilter(search: '_')), 'wildcard escaped');
+
+        self::assertSame([$closed], $find(new FeedbackFilter(search: 'bug'), 3), 'sender restriction kept');
+        self::assertSame(1, $repository->countAll(3, new FeedbackFilter(category: Category::Bug)));
     }
 
     #[Test]

@@ -8,6 +8,67 @@
 	<f:section name="Content">
 		<h1>{f:translate(domain: 'opinion.module', key: 'title')}</h1>
 
+		<form
+			method="get"
+			action="{filterForm.action}"
+			class="row row-cols-auto g-2 align-items-end mb-3"
+			role="search">
+			<f:for
+				each="{filterForm.hidden}"
+				key="name"
+				as="value">
+				<input
+					type="hidden"
+					name="{name}"
+					value="{value}" />
+			</f:for>
+			<div class="col">
+				<label
+					class="form-label"
+					for="opinion-filter-search">
+					{f:translate(domain: 'opinion.messages', key: 'module.filter.search')}
+				</label>
+				<input
+					type="search"
+					id="opinion-filter-search"
+					name="search"
+					class="form-control"
+					maxlength="100"
+					value="{filter.search}" />
+			</div>
+			<f:render
+				section="Select"
+				arguments="{name: 'status', label: 'tx_opinion_feedback.status', prefix: 'status', options: filterOptions.status, value: filter.status}" />
+			<f:render
+				section="Select"
+				arguments="{name: 'category', label: 'tx_opinion_feedback.category', prefix: 'category', options: filterOptions.category, value: filter.category}" />
+			<f:render
+				section="Select"
+				arguments="{name: 'severity', label: 'tx_opinion_feedback.severity', prefix: 'severity', options: filterOptions.severity, value: filter.severity}" />
+			<f:render
+				section="Select"
+				arguments="{name: 'source', label: 'tx_opinion_feedback.source', prefix: 'source', options: filterOptions.source, value: filter.source}" />
+			<f:if condition="{isAdmin}">
+				<f:render
+					section="Select"
+					arguments="{name: 'deliveryStatus', label: 'tx_opinion_feedback.delivery_status', prefix: 'deliveryStatus', options: filterOptions.deliveryStatus, value: filter.deliveryStatus}" />
+			</f:if>
+			<div class="col">
+				<button
+					type="submit"
+					class="btn btn-default">
+					{f:translate(domain: 'opinion.messages', key: 'module.filter.submit')}
+				</button>
+				<f:if condition="{filterActive}">
+					<a
+						class="btn btn-link"
+						href="{be:moduleLink(route: 'opinion_feedback')}"
+						>{f:translate(domain: 'opinion.messages', key: 'module.filter.reset')}</a
+					>
+				</f:if>
+			</div>
+		</form>
+
 		<f:if condition="{items}">
 			<f:then>
 				<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.list.total', arguments: {count: total})}</p>
@@ -44,7 +105,7 @@
 									</td>
 									<td>
 										<a
-											href="{be:moduleLink(route: 'opinion_feedback.show', arguments: {uid: item.uid})}"
+											href="{item.show_url}"
 											title="{f:translate(domain: 'opinion.messages', key: 'module.list.show')}">
 											{item.message -> f:format.crop(maxCharacters: 90)}
 										</a>
@@ -105,8 +166,35 @@
 				</f:if>
 			</f:then>
 			<f:else>
-				<f:be.infobox state="-1">{f:translate(domain: 'opinion.messages', key: 'module.list.empty')}</f:be.infobox>
+				<f:be.infobox state="-1"
+					>{f:translate(domain: 'opinion.messages', key: '{f:if(condition: filterActive, then: \'module.list.noMatches\', else: \'module.list.empty\')}')}</f:be.infobox
+				>
 			</f:else>
 		</f:if>
+	</f:section>
+
+	<f:section name="Select">
+		<div class="col">
+			<label
+				class="form-label"
+				for="opinion-filter-{name}">
+				{f:translate(domain: 'opinion.messages', key: label)}
+			</label>
+			<select
+				id="opinion-filter-{name}"
+				name="{name}"
+				class="form-select">
+				<option value="">{f:translate(domain: 'opinion.messages', key: 'module.filter.all')}</option>
+				<f:for
+					each="{options}"
+					as="option">
+					<option
+						value="{option}"
+						{f:if(condition: '{option} == {value}', then: 'selected')}>
+						{f:translate(domain: 'opinion.messages', key: '{prefix}.{option}')}
+					</option>
+				</f:for>
+			</select>
+		</div>
 	</f:section>
 </html>
