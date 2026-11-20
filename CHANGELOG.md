@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 – 2026-11-20
 
 - Fixed: `opinion:redeliver` and "Deliver again" count a feedback record that
   cannot be rebuilt (unknown category, severity or source) as a failed
