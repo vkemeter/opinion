@@ -45,13 +45,18 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function moduleIsRegisteredForAdminsOnly(): void
+    public function moduleIsAStandaloneUserModule(): void
     {
-        $moduleProvider = $this->get(ModuleProvider::class);
+        $module = $this->get(ModuleProvider::class)->getModule('opinion_feedback');
 
-        self::assertTrue($moduleProvider->isModuleRegistered('opinion_feedback'));
-        self::assertTrue($moduleProvider->accessGranted('opinion_feedback', $this->setUpBackendUser(1)));
-        self::assertFalse($moduleProvider->accessGranted('opinion_feedback', $this->setUpBackendUser(3)));
+        self::assertNotNull($module);
+        self::assertTrue($module->isStandalone());
+        self::assertFalse($module->hasParentModule());
+        self::assertSame('user', $module->getAccess());
+        self::assertSame('/module/opinion/feedback', $module->getPath());
+        self::assertTrue($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(1)));
+        // Editors need the module granted in their group
+        self::assertFalse($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(3)));
     }
 
     #[Test]
@@ -236,6 +241,77 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function editorSeesOnlyOwnFeedbackWithoutDeliveryDetails(): void
+    {
+        $this->addFeedback('Feedback of the admin', '2026-10-01 10:00');
+        $own = $this->addFeedback('Feedback of the reporter', '2026-10-02 10:00', 3);
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($own, DeliveryStatus::Failed, 'email: FAILED team@example.com');
+        $this->setUpBackendUser(3);
+        $controller = $this->get(FeedbackModuleController::class);
+
+        $list = (string)$controller->listAction($this->createRequest('opinion_feedback'))->getBody();
+        self::assertStringContainsString('1 feedback entries', $list);
+        self::assertStringContainsString('Feedback of the reporter', $list);
+        self::assertStringNotContainsString('Feedback of the admin', $list);
+        self::assertStringNotContainsString('Delivery status', $list);
+
+        $detail = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$own]))->getBody();
+        self::assertStringContainsString('Feedback of the reporter', $detail);
+        self::assertStringContainsString('>New</span>', $detail);
+        self::assertStringNotContainsString('team@example.com', $detail);
+        self::assertStringNotContainsString('Deliver again', $detail);
+        self::assertStringNotContainsString('opinion/feedback/status', $detail);
+    }
+
+    #[Test]
+    public function editorGetsNoForeignFeedback(): void
+    {
+        $foreign = $this->addFeedback('Feedback of the admin', '2026-10-01 10:00');
+        $this->setUpBackendUser(3);
+
+        $response = $this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$foreign]));
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function editorCannotDeliverAgainOrChangeTheStatus(): void
+    {
+        $own = $this->addFeedback('Feedback of the reporter', '2026-10-02 10:00', 3);
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($own, DeliveryStatus::Failed, 'email: FAILED');
+        $this->setUpBackendUser(3);
+
+        $response = $this->get(FeedbackModuleController::class)->redeliverAction(
+            $this->createRequest('opinion_feedback.redeliver')->withMethod('POST')->withParsedBody(['uid' => (string)$own]),
+        );
+
+        self::assertSame(403, $response->getStatusCode());
+        self::assertSame(403, $this->postStatus($own, 'closed')->getStatusCode());
+        $record = $this->get(FeedbackRepository::class)->findByUid($own);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
+        self::assertSame('new', $record['status'] ?? null);
+    }
+
+    #[Test]
+    public function moduleNeedsTheFeedbackPermission(): void
+    {
+        $this->setUpBackendUser(2);
+
+        self::assertSame(403, $this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getStatusCode());
+    }
+
+    #[Test]
+    public function disabledExtensionClosesTheModuleForEditorsOnly(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['enabled'] = '0';
+        $controller = $this->get(FeedbackModuleController::class);
+
+        self::assertSame(200, $controller->listAction($this->createRequest('opinion_feedback'))->getStatusCode());
+        $this->setUpBackendUser(3);
+        self::assertSame(403, $controller->listAction($this->createRequest('opinion_feedback'))->getStatusCode());
+    }
+
+    #[Test]
     public function showRedirectsToListForUnknownFeedback(): void
     {
         $response = $this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => '999']));
@@ -268,14 +344,14 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         return $request;
     }
 
-    private function addFeedback(string $message, string $date): int
+    private function addFeedback(string $message, string $date, int $senderUid = 1): int
     {
         return $this->get(FeedbackRepository::class)->add(new Submission(
             message: $message,
             category: Category::Bug,
             severity: Severity::High,
             source: Source::Frontend,
-            backendUserUid: 1,
+            backendUserUid: $senderUid,
             createdAt: new \DateTimeImmutable($date),
             clientInfo: ['screen' => ['width' => 2560]],
             systemInfo: ['typo3Version' => '14.3.0', 'backendUser' => ['username' => 'admin', 'realName' => 'Ada Admin', 'email' => 'admin@example.com']],

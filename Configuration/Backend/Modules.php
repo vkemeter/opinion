@@ -6,8 +6,10 @@ use Vkemeter\Opinion\Controller\FeedbackModuleController;
 
 return [
     'opinion_feedback' => [
-        'parent' => 'admin',
-        'access' => 'admin',
+        // Own entry in the module menu, for administrators and editors who are granted the module
+        'standalone' => true,
+        'position' => ['after' => 'site'],
+        'access' => 'user',
         'path' => '/module/opinion/feedback',
         'iconIdentifier' => 'opinion-feedback',
         'labels' => 'opinion.module',

@@ -19,19 +19,17 @@ final class AdminRequestCheckerTest extends UnitTestCase
     }
 
     #[Test]
-    public function requestWithoutBackendCookieIsNoAdminRequest(): void
+    public function requestWithoutBackendCookieHasNoBackendUser(): void
     {
-        self::assertFalse(new AdminRequestChecker()->isAdminRequest(new ServerRequest('https://example.com/')));
+        self::assertNull(new AdminRequestChecker()->getAuthenticatedBackendUser(new ServerRequest('https://example.com/')));
     }
 
     #[Test]
-    public function authenticatedGlobalBackendUserDecides(): void
+    public function authenticatedGlobalBackendUserIsReturned(): void
     {
-        $GLOBALS['BE_USER'] = $this->createBackendUser(true);
-        self::assertTrue(new AdminRequestChecker()->isAdminRequest(new ServerRequest('https://example.com/')));
-
         $GLOBALS['BE_USER'] = $this->createBackendUser(false);
-        self::assertFalse(new AdminRequestChecker()->isAdminRequest(new ServerRequest('https://example.com/')));
+
+        self::assertSame($GLOBALS['BE_USER'], new AdminRequestChecker()->getAuthenticatedBackendUser(new ServerRequest('https://example.com/')));
     }
 
     private function createBackendUser(bool $isAdmin): BackendUserAuthentication

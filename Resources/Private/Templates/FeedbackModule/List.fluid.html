@@ -23,7 +23,9 @@
 								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.email')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</th>
-								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
+								<f:if condition="{isAdmin}">
+									<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
+								</f:if>
 								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</span></th>
 							</tr>
 						</thead>
@@ -58,12 +60,14 @@
 											section="Status"
 											arguments="{status: item.status}" />
 									</td>
-									<td>
-										<f:render
-											partial="FeedbackModule/Badges"
-											section="Delivery"
-											arguments="{status: item.delivery_status}" />
-									</td>
+									<f:if condition="{isAdmin}">
+										<td>
+											<f:render
+												partial="FeedbackModule/Badges"
+												section="Delivery"
+												arguments="{status: item.delivery_status}" />
+										</td>
+									</f:if>
 									<td>
 										<f:if condition="{item.screenshot}">
 											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasScreenshot')}">

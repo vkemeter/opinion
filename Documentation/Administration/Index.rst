@@ -6,10 +6,14 @@ Administration
 
 ..  _administration-module:
 
-Admin module "Feedback"
-=======================
+Module "Feedback"
+=================
 
-Administrators find all feedback in :guilabel:`Admin Tools > Feedback`.
+The module :guilabel:`Feedback` has its own entry in the module menu.
+Administrators see all feedback there. Editors who may send feedback and have
+the module granted (see :ref:`configuration-access`) see only the feedback
+they sent themselves, with message, screenshot, collected details and the
+status; delivery details and all actions stay with administrators.
 
 List
     Newest first, with date, category, severity, source, sender and their
@@ -114,7 +118,8 @@ Data and privacy
     feedback, at most :confval:`extconf-ratelimit` per user and hour.
 *   Screenshots are stored in a non-public file storage below `var/opinion/`,
     outside the web root. TYPO3 serves them through its file dump URL only,
-    and only to requests with an administrator session.
+    and only to requests with the session of an administrator or of the
+    sender of the feedback.
 *   Blacked-out areas are burnt into the screenshot in the browser; the
     original capture never leaves the page.
 *   The browser sends a fixed set of details only, the server drops every

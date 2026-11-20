@@ -488,6 +488,10 @@
                 <source>Deliver again</source>
                 <target>Erneut zustellen</target>
             </trans-unit>
+            <trans-unit id="module.accessDenied">
+                <source>You have no access to the feedback module.</source>
+                <target>Sie haben keinen Zugriff auf das Feedback-Modul.</target>
+            </trans-unit>
             <trans-unit id="module.status.title">
                 <source>Status</source>
                 <target>Status</target>

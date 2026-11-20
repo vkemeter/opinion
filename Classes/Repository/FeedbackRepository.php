@@ -124,12 +124,13 @@ final readonly class FeedbackRepository
     }
 
     /**
+     * @param int|null $senderUid only feedback of this backend user, null = all
      * @return array<string, mixed>|null
      */
-    public function findByUid(int $uid): ?array
+    public function findByUid(int $uid, ?int $senderUid = null): ?array
     {
         $record = $this->connectionPool->getConnectionForTable(self::TABLE)
-            ->select(['*'], self::TABLE, ['uid' => $uid])
+            ->select(['*'], self::TABLE, ['uid' => $uid, ...($senderUid !== null ? ['be_user' => $senderUid] : [])])
             ->fetchAssociative();
 
         return $record === false ? null : $record;
@@ -172,6 +173,28 @@ final readonly class FeedbackRepository
             ->fetchFirstColumn());
     }
 
+    /**
+     * Sender (be_user) of the feedback that references the screenshot file.
+     */
+    public function findSenderUidOfScreenshot(int $fileUid): ?int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_file_reference');
+        $queryBuilder->getRestrictions()->removeAll();
+        $senderUid = $queryBuilder
+            ->select('feedback.be_user')
+            ->from('sys_file_reference', 'reference')
+            ->join('reference', self::TABLE, 'feedback', $queryBuilder->expr()->eq('feedback.uid', $queryBuilder->quoteIdentifier('reference.uid_foreign')))
+            ->where(
+                $queryBuilder->expr()->eq('reference.tablenames', $queryBuilder->createNamedParameter(self::TABLE)),
+                $queryBuilder->expr()->eq('reference.fieldname', $queryBuilder->createNamedParameter('screenshot')),
+                $queryBuilder->expr()->eq('reference.uid_local', $queryBuilder->createNamedParameter($fileUid, Connection::PARAM_INT)),
+            )
+            ->executeQuery()
+            ->fetchOne();
+
+        return $senderUid === false ? null : (int)$senderUid;
+    }
+
     public function remove(int $uid): void
     {
         $this->connectionPool->getConnectionForTable('sys_file_reference')->delete(
@@ -181,20 +204,27 @@ final readonly class FeedbackRepository
         $this->connectionPool->getConnectionForTable(self::TABLE)->delete(self::TABLE, ['uid' => $uid]);
     }
 
-    public function countAll(): int
+    /**
+     * @param int|null $senderUid only feedback of this backend user, null = all
+     */
+    public function countAll(?int $senderUid = null): int
     {
-        return $this->connectionPool->getConnectionForTable(self::TABLE)->count('*', self::TABLE, []);
+        return $this->connectionPool->getConnectionForTable(self::TABLE)->count('*', self::TABLE, $senderUid !== null ? ['be_user' => $senderUid] : []);
     }
 
     /**
      * Newest first, with the sender's name from be_users.
      *
+     * @param int|null $senderUid only feedback of this backend user, null = all
      * @return list<array<string, mixed>>
      */
-    public function findPage(int $limit, int $offset): array
+    public function findPage(int $limit, int $offset, ?int $senderUid = null): array
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
         $queryBuilder->getRestrictions()->removeAll();
+        if ($senderUid !== null) {
+            $queryBuilder->where($queryBuilder->expr()->eq('feedback.be_user', $queryBuilder->createNamedParameter($senderUid, Connection::PARAM_INT)));
+        }
 
         return $queryBuilder
             ->select('feedback.*', 'sender.username AS sender_username', 'sender.realName AS sender_name')

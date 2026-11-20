@@ -252,6 +252,12 @@ triggers to the user and accepts their submissions:
 
     options.opinion.enable = 1
 
+To see their own feedback in the module :guilabel:`Feedback`, these users also
+need the module granted in their backend group (:guilabel:`Access Rights >
+Modules > Feedback`). Without the TSconfig option the module stays closed even
+when it is granted; with :confval:`extconf-enabled` switched off only
+administrators can open it.
+
 Sending feedback also needs a valid email address in the user account, so the
 team can answer. Users without one still see the trigger, but get a note with
 a link to their user settings instead of the form; the endpoint rejects their

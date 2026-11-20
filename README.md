@@ -23,9 +23,9 @@ an area with a rectangle, point at something with an arrow, or black out
 personal data. The markings are burnt into the image; only the marked-up image
 is sent.
 
-Admins find all feedback in the module **Admin Tools → Feedback**: a list,
-newest first, and a detail view with message, screenshot and all collected
-details.
+Admins find all feedback in the module **Feedback**: a list, newest first,
+and a detail view with message, screenshot and all collected details. Editors
+who may send feedback see their own feedback there.
 
 ## Requirements
 

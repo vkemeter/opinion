@@ -367,6 +367,9 @@
             <trans-unit id="module.show.redeliver">
                 <source>Deliver again</source>
             </trans-unit>
+            <trans-unit id="module.accessDenied">
+                <source>You have no access to the feedback module.</source>
+            </trans-unit>
             <trans-unit id="module.status.title">
                 <source>Status</source>
             </trans-unit>

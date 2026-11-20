@@ -13,7 +13,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Authentication\FrontendBackendUserAuthentication;
 
 /**
- * Tells whether a request carries the session of a fully authenticated admin.
+ * Resolves the fully authenticated backend user of a request, e.g. to decide
+ * who may read a screenshot.
  *
  * The file dump (eID "dumpFile") runs before the frontend authenticates the
  * backend user, so the session is resolved here the same way
@@ -23,27 +24,29 @@ use TYPO3\CMS\Frontend\Authentication\FrontendBackendUserAuthentication;
 #[AsAlias(AdminRequestCheckerInterface::class)]
 final readonly class AdminRequestChecker implements AdminRequestCheckerInterface
 {
-    public function isAdminRequest(ServerRequestInterface $request): bool
+    public function getAuthenticatedBackendUser(ServerRequestInterface $request): ?BackendUserAuthentication
     {
         $globalBackendUser = $GLOBALS['BE_USER'] ?? null;
         if ($globalBackendUser instanceof BackendUserAuthentication && is_array($globalBackendUser->user)) {
-            return $globalBackendUser->isAdmin();
+            return $globalBackendUser;
         }
 
         if (!isset($request->getCookieParams()[BackendUserAuthentication::getCookieName()])) {
-            return false;
+            return null;
         }
 
         $backendUser = GeneralUtility::makeInstance(FrontendBackendUserAuthentication::class);
         try {
             $backendUser->start($request);
         } catch (MfaRequiredException) {
-            return false;
+            return null;
         }
 
-        if ((int)($backendUser->user['uid'] ?? 0) <= 0 || !$backendUser->isAdmin()) {
-            return false;
+        if ((int)($backendUser->user['uid'] ?? 0) <= 0) {
+            return null;
         }
+        // User TSconfig decides whether a non-admin may still use the feedback
+        $backendUser->fetchGroupData();
 
         $normalizedParams = $request->getAttribute('normalizedParams');
         if (!$normalizedParams instanceof NormalizedParams) {
@@ -51,12 +54,12 @@ final readonly class AdminRequestChecker implements AdminRequestCheckerInterface
         }
         $ipMask = trim((string)($GLOBALS['TYPO3_CONF_VARS']['BE']['IPmaskList'] ?? ''));
         if ($ipMask !== '' && !GeneralUtility::cmpIP($normalizedParams->getRemoteAddress(), $ipMask)) {
-            return false;
+            return null;
         }
         if ((bool)($GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'] ?? false) && !$normalizedParams->isHttps()) {
-            return false;
+            return null;
         }
 
-        return $backendUser->backendCheckLogin($request);
+        return $backendUser->backendCheckLogin($request) ? $backendUser : null;
     }
 }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Breaking:** the module "Feedback" moved from Admin Tools to its own entry in
+  the module menu. Editors with `options.opinion.enable = 1` and the module
+  granted in their backend group see their own feedback there (message,
+  screenshot, details, status); delivery details and actions stay with
+  administrators. Screenshots are served to administrators and the sender
+
 - Added: the detail view and the email show the reported URL once as link,
   instead of twice as text in the tables of collected details
 - Added: the list shows the sender's email address (as at submission time) as

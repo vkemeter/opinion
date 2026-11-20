@@ -63,6 +63,21 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function queriesCanBeRestrictedToOneSender(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $foreign = $repository->add($this->createSubmission(), null);
+        $own = $repository->add(new Submission('Own', Category::Bug, Severity::Low, Source::Backend, 7, new \DateTimeImmutable()), null);
+
+        self::assertSame(2, $repository->countAll());
+        self::assertSame(1, $repository->countAll(7));
+        self::assertSame([$own], array_map(static fn(array $record): int => (int)$record['uid'], $repository->findPage(50, 0, 7)));
+        self::assertNull($repository->findByUid($foreign, 7));
+        self::assertNotNull($repository->findByUid($own, 7));
+        self::assertNotNull($repository->findByUid($foreign));
+    }
+
+    #[Test]
     public function updateStatusLeavesTheDeliveryAlone(): void
     {
         $repository = $this->get(FeedbackRepository::class);

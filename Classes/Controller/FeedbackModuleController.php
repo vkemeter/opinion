@@ -18,6 +18,7 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
@@ -27,8 +28,8 @@ use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 /**
- * Admin module "Feedback": list of all submissions, a detail view and a
- * new delivery attempt for feedback that was not delivered.
+ * Module "Feedback": administrators see all submissions and manage delivery
+ * and status, other users who may send feedback see their own submissions.
  */
 #[AsController]
 final readonly class FeedbackModuleController
@@ -45,11 +46,16 @@ final readonly class FeedbackModuleController
         private Redeliverer $redeliverer,
         private ConfigurationProviderInterface $configurationProvider,
         private FlashMessageService $flashMessageService,
+        private AccessChecker $accessChecker,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
     {
-        $total = $this->feedbackRepository->countAll();
+        if (!$this->hasModuleAccess()) {
+            return $this->accessDenied();
+        }
+        $senderUid = $this->getSenderFilter();
+        $total = $this->feedbackRepository->countAll($senderUid);
         $pages = max(1, (int)ceil($total / self::ITEMS_PER_PAGE));
         $currentPage = min($pages, max(1, (int)($request->getQueryParams()['page'] ?? 1)));
 
@@ -58,9 +64,10 @@ final readonly class FeedbackModuleController
             'items' => array_map(
                 // The address at submission time, also for senders deleted since
                 fn(array $item): array => [...$item, 'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null))],
-                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE),
+                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid),
             ),
             'total' => $total,
+            'isAdmin' => $this->isAdmin(),
             'pagination' => [
                 'current' => $currentPage,
                 'pages' => $pages,
@@ -74,8 +81,12 @@ final readonly class FeedbackModuleController
 
     public function showAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->hasModuleAccess()) {
+            return $this->accessDenied();
+        }
         $uid = (int)($request->getQueryParams()['uid'] ?? 0);
-        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid) : null;
+        // Another user's feedback is treated like an unknown uid
+        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
         if ($record === null) {
             return new RedirectResponse($this->buildUri('opinion_feedback'));
         }
@@ -91,7 +102,8 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
-            'canRedeliver' => $this->redeliverer->isUndelivered($record),
+            'isAdmin' => $this->isAdmin(),
+            'canRedeliver' => $this->isAdmin() && $this->redeliverer->isUndelivered($record),
             'statuses' => array_map(static fn(FeedbackStatus $status): string => $status->value, FeedbackStatus::cases()),
             'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, true),
             // The URLs are shown once as reportedUrl
@@ -110,6 +122,9 @@ final readonly class FeedbackModuleController
      */
     public function redeliverAction(ServerRequestInterface $request): ResponseInterface
     {
+        if (!$this->isAdmin()) {
+            return $this->accessDenied();
+        }
         $body = $request->getParsedBody();
         $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
         $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid) : null;
@@ -132,13 +147,12 @@ final readonly class FeedbackModuleController
     }
 
     /**
-     * Sets the processing status; administrators only, also once editors can open the module.
+     * Sets the processing status; administrators only.
      */
     public function statusAction(ServerRequestInterface $request): ResponseInterface
     {
-        $backendUser = $GLOBALS['BE_USER'] ?? null;
-        if (!$backendUser instanceof BackendUserAuthentication || !$backendUser->isAdmin()) {
-            return new HtmlResponse('', 403);
+        if (!$this->isAdmin()) {
+            return $this->accessDenied();
         }
         $body = $request->getParsedBody();
         $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
@@ -155,6 +169,39 @@ final readonly class FeedbackModuleController
         }
 
         return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
+    }
+
+    /**
+     * Administrators always, also with the extension disabled; others only while they may send feedback.
+     */
+    private function hasModuleAccess(): bool
+    {
+        return $this->isAdmin() || $this->accessChecker->hasAccess($this->getBackendUser());
+    }
+
+    private function isAdmin(): bool
+    {
+        return $this->getBackendUser()?->isAdmin() ?? false;
+    }
+
+    /**
+     * @return int|null uid of the current user for non-admins, null = all feedback
+     */
+    private function getSenderFilter(): ?int
+    {
+        return $this->isAdmin() ? null : (int)($this->getBackendUser()?->user['uid'] ?? 0);
+    }
+
+    private function accessDenied(): ResponseInterface
+    {
+        return new HtmlResponse($this->getLanguageService()->sL('opinion.messages:module.accessDenied'), 403);
+    }
+
+    private function getBackendUser(): ?BackendUserAuthentication
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+
+        return $backendUser instanceof BackendUserAuthentication ? $backendUser : null;
     }
 
     private function addFlashMessage(string $key, string $titleKey, ContextualFeedbackSeverity $severity): void
