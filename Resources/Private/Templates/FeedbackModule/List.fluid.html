@@ -20,6 +20,7 @@
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.email')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
 								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</span></th>
@@ -46,6 +47,9 @@
 										</a>
 									</td>
 									<td>{item.sender_name -> f:or(alternative: item.sender_username)}</td>
+									<td class="text-break">
+										<f:if condition="{item.sender_email}"><a href="mailto:{item.sender_email}">{item.sender_email}</a></f:if>
+									</td>
 									<td>{f:translate(domain: 'opinion.messages', key: 'source.{item.source}')}</td>
 									<td>
 										<f:render

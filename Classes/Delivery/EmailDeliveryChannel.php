@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\Utility\MailUtility;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Link\ReportedUrl;
 
 final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
 {
@@ -48,9 +49,11 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
             ->assignMultiple([
                 'submission' => $submission,
                 'sender' => $sender,
-                'clientInfo' => $this->dataFlattener->flatten($submission->clientInfo),
+                'reportedUrl' => ReportedUrl::fromDetails($submission->clientInfo, $submission->context, false),
+                // The URLs are shown once as reportedUrl
+                'clientInfo' => $this->dataFlattener->flatten(array_diff_key($submission->clientInfo, ['url' => true])),
                 'systemInfo' => $this->dataFlattener->flatten(array_diff_key($submission->systemInfo, ['backendUser' => true])),
-                'context' => $this->dataFlattener->flatten($submission->context),
+                'context' => $this->dataFlattener->flatten(array_diff_key($submission->context, ['url' => true])),
                 'hasScreenshot' => $screenshot instanceof File,
             ]);
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added: the detail view and the email show the reported URL once as link,
+  instead of twice as text in the tables of collected details
+- Added: the list shows the sender's email address (as at submission time) as
+  mailto link
+
 ## 1.1.0 – 2026-11-20
 
 - Added: extension configuration `disabledDeliveryChannels` switches delivery

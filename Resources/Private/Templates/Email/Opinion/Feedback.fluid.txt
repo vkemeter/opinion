@@ -4,7 +4,8 @@
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}: {f:translate(domain: 'opinion.messages', key: 'severity.{submission.severity.value}')}
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}: {f:translate(domain: 'opinion.messages', key: 'source.{submission.source.value}')}
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}: {sender.realName -> f:format.raw()} ({sender.username -> f:format.raw()}) {sender.email -> f:format.raw()}
-
+<f:if condition="{reportedUrl}">{f:translate(domain: 'opinion.messages', key: 'reportedUrl')}: {reportedUrl.url -> f:format.raw()}
+</f:if>
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}:
 {submission.message -> f:format.raw()}
 <f:for each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">

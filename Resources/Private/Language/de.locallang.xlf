@@ -228,6 +228,10 @@
                 <source>New feedback</source>
                 <target>Neues Feedback</target>
             </trans-unit>
+            <trans-unit id="reportedUrl">
+                <source>Reported URL</source>
+                <target>Gemeldete URL</target>
+            </trans-unit>
             <trans-unit id="email.section.context">
                 <source>Context</source>
                 <target>Kontext</target>
@@ -403,6 +407,10 @@
             <trans-unit id="adminpanel.description">
                 <source>Found a problem on this page or have an idea? Send it to the team, optionally with a screenshot.</source>
                 <target>Ein Problem auf dieser Seite gefunden oder eine Idee? Senden Sie es an das Team, auf Wunsch mit Screenshot.</target>
+            </trans-unit>
+            <trans-unit id="module.list.email">
+                <source>Email address</source>
+                <target>E-Mail-Adresse</target>
             </trans-unit>
             <trans-unit id="module.list.empty">
                 <source>No feedback has been sent yet.</source>

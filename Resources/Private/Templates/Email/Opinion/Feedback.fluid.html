@@ -43,6 +43,16 @@
 			</tr>
 		</table>
 
+		<f:if condition="{reportedUrl}">
+			<p style="word-break: break-all">
+				{f:translate(domain: 'opinion.messages', key: 'reportedUrl')}:
+				<f:if condition="{reportedUrl.linked}">
+					<f:then><a href="{reportedUrl.url}">{reportedUrl.url}</a></f:then>
+					<f:else>{reportedUrl.url}</f:else>
+				</f:if>
+			</p>
+		</f:if>
+
 		<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</h4>
 		<p>{submission.message -> f:format.nl2br()}</p>
 

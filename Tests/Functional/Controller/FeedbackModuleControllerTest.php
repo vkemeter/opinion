@@ -65,6 +65,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert(1)</script>', $html);
         self::assertStringContainsString('Ada Admin', $html);
+        self::assertStringContainsString('<a href="mailto:admin@example.com">admin@example.com</a>', $html);
         self::assertStringContainsString('opinion/feedback/show', $html);
     }
 
@@ -79,6 +80,27 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('pageInfo.imagesOnPage.total', $html);
         self::assertStringContainsString('screen.width', $html);
         self::assertStringContainsString('No screenshot attached.', $html);
+    }
+
+    #[Test]
+    public function showLinksTheReportedUrlOnce(): void
+    {
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission(
+            message: 'Wrong teaser',
+            category: Category::Bug,
+            severity: Severity::High,
+            source: Source::Backend,
+            backendUserUid: 1,
+            createdAt: new \DateTimeImmutable('2026-10-01 10:00'),
+            clientInfo: ['url' => 'https://example.com/typo3/module/web/layout?id=1'],
+            context: ['pageUid' => 1, 'url' => '/typo3/module/web/layout?id=1'],
+        ), null);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertStringContainsString('Reported URL', $html);
+        self::assertMatchesRegularExpression('#href="https://example.com/typo3/module/web/layout\?id=1"\s+target="_blank"#', $html);
+        self::assertSame(2, substr_count($html, '/typo3/module/web/layout?id=1'), 'Once as href and once as text, not in the tables');
     }
 
     #[Test]

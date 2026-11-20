@@ -172,6 +172,9 @@
             <trans-unit id="email.headline">
                 <source>New feedback</source>
             </trans-unit>
+            <trans-unit id="reportedUrl">
+                <source>Reported URL</source>
+            </trans-unit>
             <trans-unit id="email.section.context">
                 <source>Context</source>
             </trans-unit>
@@ -303,6 +306,9 @@
             </trans-unit>
             <trans-unit id="adminpanel.description">
                 <source>Found a problem on this page or have an idea? Send it to the team, optionally with a screenshot.</source>
+            </trans-unit>
+            <trans-unit id="module.list.email">
+                <source>Email address</source>
             </trans-unit>
             <trans-unit id="module.list.empty">
                 <source>No feedback has been sent yet.</source>

@@ -76,6 +76,31 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function reportedUrlIsSentOnce(): void
+    {
+        $submission = $this->createSubmission();
+        $submission = new Submission(
+            $submission->message,
+            $submission->category,
+            $submission->severity,
+            Source::Backend,
+            $submission->backendUserUid,
+            $submission->createdAt,
+            ['url' => 'https://example.com/typo3/module/web/layout?id=1'],
+            $submission->systemInfo,
+            ['pageUid' => 1, 'url' => '/typo3/module/web/layout?id=1'],
+        );
+
+        $this->get(EmailDeliveryChannel::class)->deliver($submission, null, $this->configuration());
+
+        $email = $this->getSentEmail();
+        $html = (string)$email->getHtmlBody();
+        self::assertStringContainsString('<a href="https://example.com/typo3/module/web/layout?id=1">', $html);
+        self::assertSame(2, substr_count($html, '/typo3/module/web/layout?id=1'), 'Once as href and once as text, not in the tables');
+        self::assertSame(1, substr_count((string)$email->getTextBody(), '/typo3/module/web/layout?id=1'));
+    }
+
+    #[Test]
     public function brokenTransportThrows(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';

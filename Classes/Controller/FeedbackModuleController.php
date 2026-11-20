@@ -19,6 +19,7 @@ use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
@@ -51,7 +52,11 @@ final readonly class FeedbackModuleController
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->assignMultiple([
-            'items' => $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE),
+            'items' => array_map(
+                // The address at submission time, also for senders deleted since
+                fn(array $item): array => [...$item, 'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null))],
+                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE),
+            ),
             'total' => $total,
             'pagination' => [
                 'current' => $currentPage,
@@ -74,6 +79,8 @@ final readonly class FeedbackModuleController
 
         $screenshots = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid);
         $systemInfo = $this->decode($record['system_info'] ?? null);
+        $context = $this->decode($record['context'] ?? null);
+        $clientInfo = $this->decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback')));
@@ -82,9 +89,11 @@ final readonly class FeedbackModuleController
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
             'canRedeliver' => $this->redeliverer->isUndelivered($record),
+            'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, true),
+            // The URLs are shown once as reportedUrl
             'sections' => [
-                'context' => $this->dataFlattener->flatten($this->decode($record['context'] ?? null)),
-                'clientInfo' => $this->dataFlattener->flatten($this->decode($record['client_info'] ?? null)),
+                'context' => $this->dataFlattener->flatten(array_diff_key($context, ['url' => true])),
+                'clientInfo' => $this->dataFlattener->flatten(array_diff_key($clientInfo, ['url' => true])),
                 'systemInfo' => $this->dataFlattener->flatten(array_diff_key($systemInfo, ['backendUser' => true])),
             ],
         ]);
@@ -130,6 +139,16 @@ final readonly class FeedbackModuleController
     private function buildUri(string $route, array $parameters = []): string
     {
         return (string)$this->uriBuilder->buildUriFromRoute($route, $parameters);
+    }
+
+    /**
+     * @param array<string, mixed> $systemInfo
+     */
+    private function getSenderEmail(array $systemInfo): string
+    {
+        $sender = $systemInfo['backendUser'] ?? null;
+
+        return is_array($sender) && is_string($sender['email'] ?? null) ? $sender['email'] : '';
     }
 
     /**

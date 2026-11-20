@@ -12,8 +12,9 @@ Admin module "Feedback"
 Administrators find all feedback in :guilabel:`Admin Tools > Feedback`.
 
 List
-    Newest first, with date, category, severity, source, sender, the start of
-    the message, a screenshot marker and the delivery status.
+    Newest first, with date, category, severity, source, sender and their
+    email address, the start of the message, a screenshot marker and the
+    delivery status.
 
 Detail view
     The full message, the delivery status, the number of delivery attempts
@@ -22,6 +23,12 @@ Detail view
     :guilabel:`Deliver again` starts a new delivery attempt right away; it
     ignores :confval:`extconf-redelivermaxattempts`. The result is shown as a
     message and appended to the log.
+
+Reported URL
+    The detail view and the email show the URL the feedback was sent from
+    once, below the sender: the browser URL, or the backend module URL when
+    the browser URL is not collected. It is linked only when it starts with
+    `http://` or `https://`; in the detail view it opens in a new tab.
 
 The records live on the root level (`pid = 0`), are read-only and are not
 shown in the :guilabel:`List` module.

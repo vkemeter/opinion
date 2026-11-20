@@ -17,6 +17,23 @@
 			-> f:or(alternative: sender.username)}
 			<f:if condition="{sender.email}"> (<a href="mailto:{sender.email}">{sender.email}</a>) </f:if>
 		</p>
+		<f:if condition="{reportedUrl}">
+			<p class="text-break">
+				{f:translate(domain: 'opinion.messages', key: 'reportedUrl')}:
+				<f:comment>New tab: backend URLs without token only open as top-level page</f:comment>
+				<f:if condition="{reportedUrl.linked}">
+					<f:then
+						><a
+							href="{reportedUrl.url}"
+							target="_blank"
+							rel="noopener noreferrer"
+							>{reportedUrl.url}</a
+						></f:then
+					>
+					<f:else>{reportedUrl.url}</f:else>
+				</f:if>
+			</p>
+		</f:if>
 
 		<div class="row g-4">
 			<div class="col-12 col-xl-6">
