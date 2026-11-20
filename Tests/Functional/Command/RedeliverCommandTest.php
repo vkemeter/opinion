@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Console\CommandRegistry;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
@@ -90,6 +91,20 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('Delivered 0 of 2 feedback record(s).', $tester->getDisplay());
         self::assertSame(2, (int)($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed'])['delivery_attempts'] ?? 0));
+    }
+
+    #[Test]
+    public function feedbackThatCannotBeRebuiltStopsFailingAtTheAttemptLimit(): void
+    {
+        $uid = $this->addFeedback('-1 hour', DeliveryStatus::Failed, 2);
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['category' => 'feature'], ['uid' => $uid]);
+
+        self::assertSame(Command::FAILURE, $this->runCommand([])->getStatusCode());
+        self::assertSame(3, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['delivery_attempts'] ?? 0));
+
+        // redeliverMaxAttempts = 3 reached, the record is skipped from now on
+        self::assertSame(Command::SUCCESS, $this->runCommand([])->getStatusCode());
+        self::assertSame(3, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['delivery_attempts'] ?? 0));
     }
 
     #[Test]

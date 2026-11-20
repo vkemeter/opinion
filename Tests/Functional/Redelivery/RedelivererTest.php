@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Redelivery;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -80,6 +81,33 @@ final class RedelivererTest extends FunctionalTestCase
         self::assertSame('sent', $record['delivery_status'] ?? null);
         self::assertSame(2, (int)($record['delivery_attempts'] ?? 0));
         self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] test: OK delivered$/', (string)($record['delivery_log'] ?? ''));
+    }
+
+    #[Test]
+    public function feedbackThatCannotBeRebuiltCountsAsFailedAttempt(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $uid = $repository->add(new Submission(
+            message: 'The teaser image is cropped.',
+            category: Category::Content,
+            severity: Severity::High,
+            source: Source::Backend,
+            backendUserUid: 3,
+            createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
+        ), null);
+        $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'test: FAILED Connection refused');
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['category' => 'feature'], ['uid' => $uid]);
+
+        $channel = self::createMock(DeliveryChannelInterface::class);
+        $channel->expects(self::never())->method('deliver');
+
+        $result = $this->createRedeliverer([$channel])->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
+
+        self::assertSame(DeliveryStatus::Failed, $result?->status);
+        $record = $repository->findByUid($uid);
+        self::assertSame('failed', $record['delivery_status'] ?? null);
+        self::assertSame(2, (int)($record['delivery_attempts'] ?? 0));
+        self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] cannot be delivered again: .*feature/', (string)($record['delivery_log'] ?? ''));
     }
 
     #[Test]

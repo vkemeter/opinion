@@ -29,7 +29,7 @@ final readonly class Redeliverer
     ) {}
 
     /**
-     * @return ProcessingResult|null null when the record does not exist or cannot be rebuilt
+     * @return ProcessingResult|null null when the record does not exist
      */
     public function redeliver(int $feedbackUid, OpinionConfiguration $configuration): ?ProcessingResult
     {
@@ -42,7 +42,11 @@ final readonly class Redeliverer
             $submission = $this->storedSubmissionFactory->createFromRecord($record);
         } catch (\ValueError $exception) {
             $this->logger->error('Feedback {uid} cannot be delivered again: {message}', ['uid' => $feedbackUid, 'message' => $exception->getMessage()]);
-            return null;
+            // Counted as attempt, so redeliverMaxAttempts ends the retries of a record that can never be delivered
+            $log = ltrim((string)($record['delivery_log'] ?? '') . "\n" . sprintf('[%s] cannot be delivered again: %s', date('Y-m-d H:i'), $exception->getMessage()));
+            $this->feedbackRepository->updateDeliveryStatus($feedbackUid, DeliveryStatus::Failed, $log);
+
+            return new ProcessingResult($feedbackUid, DeliveryStatus::Failed, []);
         }
         $screenshot = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $feedbackUid)[0] ?? null;
 

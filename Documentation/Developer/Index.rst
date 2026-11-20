@@ -161,9 +161,13 @@ configuration (`endpoint`).
     *   -   `401`
         -   No backend session (answered by the core)
     *   -   `403`
-        -   No access or extension disabled
+        -   No access, extension disabled or no valid email address of the
+            sender
     *   -   `422`
         -   Invalid input, `errors` holds a message per field
+    *   -   `429`
+        -   Rate limit exceeded, `Retry-After` holds the seconds until the
+            next submission is accepted
     *   -   `503`
         -   Screenshot storage unavailable
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: `opinion:redeliver` and "Deliver again" count a feedback record that
+  cannot be rebuilt (unknown category, severity or source) as a failed
+  attempt and note the reason in its log, so `redeliverMaxAttempts` ends its
+  retries instead of failing every run
+- Documentation: the endpoint answers `429` above the rate limit and `403`
+  without a valid email address of the sender
+
 ## 1.0.0 – 2026-10-21
 
 First public release for TYPO3 v14.3 and PHP 8.4/8.5.
