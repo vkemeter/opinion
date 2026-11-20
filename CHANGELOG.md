@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 – 2026-11-20
 
 - Added: extension configuration `disabledDeliveryChannels` switches delivery
   channels off by identifier, e.g. `email`, also custom channels

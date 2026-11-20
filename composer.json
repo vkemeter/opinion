@@ -61,7 +61,7 @@
 				"providesPackages": {}
 			},
 			"extension-key": "opinion",
-			"version": "1.0.1",
+			"version": "1.1.0",
 			"web-dir": ".Build/public"
 		}
 	},
