@@ -108,6 +108,31 @@ final class RedeliverCommandTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function skippedFeedbackIsNotDeliveredAgain(): void
+    {
+        $uid = $this->addFeedback('-1 hour', DeliveryStatus::Skipped, 1);
+
+        self::assertStringContainsString('Delivered 2 feedback record(s).', $this->runCommand([])->getDisplay());
+        $record = $this->get(FeedbackRepository::class)->findByUid($uid);
+        self::assertSame('skipped', $record['delivery_status'] ?? null);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
+    }
+
+    #[Test]
+    public function disabledEmailChannelSkipsTheFeedback(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['disabledDeliveryChannels'] = 'email';
+
+        $this->runCommand([]);
+
+        $record = $this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed']);
+        self::assertSame('skipped', $record['delivery_status'] ?? null);
+        self::assertStringEndsWith('no delivery channel enabled', (string)($record['delivery_log'] ?? ''));
+        // Not selected again by later runs
+        self::assertStringContainsString('Delivered 0 feedback record(s).', $this->runCommand([])->getDisplay());
+    }
+
+    #[Test]
     public function invalidMinAgeIsRejected(): void
     {
         self::assertSame(Command::INVALID, $this->runCommand(['--min-age' => 'soon'])->getStatusCode());

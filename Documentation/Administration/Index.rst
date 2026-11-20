@@ -29,7 +29,10 @@ shown in the :guilabel:`List` module.
 Delivery status
     *Sent* when every delivery channel succeeded, *Failed* when one failed
     (the log tells why, for example a missing recipient or a mail transport
-    error), *Pending* when no channel ran.
+    error), *Pending* while the delivery has not finished, *Not delivered*
+    when no delivery channel is enabled (see
+    :confval:`extconf-disableddeliverychannels`).
+    *Not delivered* feedback is never delivered again.
 
 ..  _administration-redeliver:
 
@@ -39,7 +42,7 @@ Deliver feedback again
 A feedback stays *Failed* or *Pending* when its delivery did not succeed,
 for example while the mail server was down. The console command
 `opinion:redeliver` delivers these records again, oldest first, through all
-delivery channels.
+enabled delivery channels.
 
 ..  code-block:: bash
 

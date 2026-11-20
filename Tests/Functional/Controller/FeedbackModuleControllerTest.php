@@ -97,6 +97,12 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('opinion/feedback/redeliver', $failedHtml);
         self::assertStringContainsString('1 attempt(s)', $failedHtml);
         self::assertStringNotContainsString('Deliver again', $sentHtml);
+
+        $skipped = $this->addFeedback('Skipped feedback', '2026-10-01 10:00');
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($skipped, DeliveryStatus::Skipped, 'no delivery channel enabled');
+        $skippedHtml = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$skipped]))->getBody();
+        self::assertStringNotContainsString('Deliver again', $skippedHtml);
+        self::assertStringContainsString('Not delivered (no channel enabled)', $skippedHtml);
     }
 
     #[Test]
@@ -131,6 +137,22 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(1, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['delivery_attempts'] ?? 0));
         $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessages();
         self::assertSame('This feedback cannot be delivered again.', ($messages[0] ?? null)?->getMessage());
+    }
+
+    #[Test]
+    public function redeliverWithoutEnabledChannelReportsSkipped(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['disabledDeliveryChannels'] = 'email';
+        $uid = $this->addFeedback('Failed feedback', '2026-10-01 10:00');
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'email: FAILED Connection refused');
+
+        $this->get(FeedbackModuleController::class)->redeliverAction(
+            $this->createRequest('opinion_feedback.redeliver')->withMethod('POST')->withParsedBody(['uid' => (string)$uid]),
+        );
+
+        self::assertSame('skipped', $this->get(FeedbackRepository::class)->findByUid($uid)['delivery_status'] ?? null);
+        $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessages();
+        self::assertSame('No delivery channel is enabled, the feedback has not been delivered.', ($messages[0] ?? null)?->getMessage());
     }
 
     #[Test]

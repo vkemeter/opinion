@@ -64,7 +64,9 @@ Add a delivery channel
 Implement :php:`\Vkemeter\Opinion\Delivery\DeliveryChannelInterface`, for
 example to create a ticket. Implementations are tagged automatically and run
 next to the email channel for every stored submission. Report failures through
-the result instead of throwing, they end up in the delivery log.
+the result instead of throwing, they end up in the delivery log. Administrators
+switch a channel off by its identifier in
+:confval:`extconf-disableddeliverychannels`.
 
 ..  code-block:: php
     :caption: EXT:my_sitepackage/Classes/Opinion/TicketDeliveryChannel.php

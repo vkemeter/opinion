@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added: extension configuration `disabledDeliveryChannels` switches delivery
+  channels off by identifier, e.g. `email`, also custom channels
+- Added: delivery status `skipped` ("Not delivered") when no channel is
+  enabled; such feedback is not delivered again. Without any channel feedback
+  previously stayed `pending` and was retried by `opinion:redeliver`
+
 ## 1.0.1 – 2026-11-20
 
 - Fixed: `opinion:redeliver` and "Deliver again" count a feedback record that

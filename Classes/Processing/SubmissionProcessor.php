@@ -56,24 +56,32 @@ final readonly class SubmissionProcessor
     }
 
     /**
-     * Delivers an already stored feedback through all channels and records the result.
+     * Delivers an already stored feedback through all enabled channels and records the result.
      *
      * @param string|null $previousLog log of the earlier attempts when delivering again; the new results are appended with a timestamp
      */
     public function deliverStored(int $feedbackUid, Submission $submission, ?File $screenshot, OpinionConfiguration $configuration, ?string $previousLog = null): ProcessingResult
     {
         $results = [];
+        $identifiers = [];
         foreach ($this->deliveryChannels as $channel) {
-            $results[] = $this->deliver($channel, $submission, $screenshot, $configuration, $feedbackUid);
+            $identifiers[] = $channel->getIdentifier();
+            if (!in_array($channel->getIdentifier(), $configuration->disabledDeliveryChannels, true)) {
+                $results[] = $this->deliver($channel, $submission, $screenshot, $configuration, $feedbackUid);
+            }
+        }
+        $unknownIdentifiers = array_diff($configuration->disabledDeliveryChannels, $identifiers);
+        if ($unknownIdentifiers !== []) {
+            $this->logger->warning('Unknown delivery channels in disabledDeliveryChannels: {identifiers}', ['identifiers' => implode(', ', $unknownIdentifiers)]);
         }
 
         $status = $this->determineStatus($results);
-        $log = implode("\n", array_map(
+        $log = $results === [] ? 'no delivery channel enabled' : implode("\n", array_map(
             static fn(DeliveryResult $result): string => sprintf('%s: %s %s', $result->channel, $result->success ? 'OK' : 'FAILED', $result->message),
             $results,
         ));
         if ($previousLog !== null) {
-            $log = ltrim($previousLog . "\n" . sprintf('[%s] ', date('Y-m-d H:i')) . ($log !== '' ? $log : 'no delivery channel'));
+            $log = ltrim($previousLog . "\n" . sprintf('[%s] ', date('Y-m-d H:i')) . $log);
         }
         try {
             $this->feedbackRepository->updateDeliveryStatus($feedbackUid, $status, $log);
@@ -114,7 +122,7 @@ final readonly class SubmissionProcessor
     private function determineStatus(array $results): DeliveryStatus
     {
         if ($results === []) {
-            return DeliveryStatus::Pending;
+            return DeliveryStatus::Skipped;
         }
         foreach ($results as $result) {
             if (!$result->success) {

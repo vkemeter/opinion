@@ -4,6 +4,9 @@
     <file source-language="en" original="messages" datatype="plaintext" product-name="opinion" date="2026-10-09T15:50:25Z">
         <header/>
         <body>
+            <trans-unit id="extconf.disabledDeliveryChannels">
+                <source>Disabled delivery channels: comma-separated identifiers of channels that do not deliver feedback, e.g. email or the identifier of a custom channel. Empty = all channels deliver.</source>
+            </trans-unit>
             <trans-unit id="extconf.recipients">
                 <source>Recipients: comma-separated email addresses that receive the feedback</source>
             </trans-unit>
@@ -99,6 +102,9 @@
             </trans-unit>
             <trans-unit id="deliveryStatus.failed">
                 <source>Failed</source>
+            </trans-unit>
+            <trans-unit id="deliveryStatus.skipped">
+                <source>Not delivered (no channel enabled)</source>
             </trans-unit>
             <trans-unit id="response.invalid">
                 <source>Please check your input.</source>
@@ -351,6 +357,9 @@
             </trans-unit>
             <trans-unit id="module.redeliver.failed">
                 <source>The delivery failed again, see the delivery log.</source>
+            </trans-unit>
+            <trans-unit id="module.redeliver.skipped">
+                <source>No delivery channel is enabled, the feedback has not been delivered.</source>
             </trans-unit>
             <trans-unit id="module.redeliver.impossible">
                 <source>This feedback cannot be delivered again.</source>

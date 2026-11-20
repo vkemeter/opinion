@@ -110,6 +110,7 @@ final readonly class FeedbackModuleController
         [$key, $severity] = match ($result?->status) {
             DeliveryStatus::Sent => ['module.redeliver.sent', ContextualFeedbackSeverity::OK],
             DeliveryStatus::Failed, DeliveryStatus::Pending => ['module.redeliver.failed', ContextualFeedbackSeverity::ERROR],
+            DeliveryStatus::Skipped => ['module.redeliver.skipped', ContextualFeedbackSeverity::WARNING],
             null => ['module.redeliver.impossible', ContextualFeedbackSeverity::WARNING],
         };
         $languageService = $this->getLanguageService();

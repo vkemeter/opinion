@@ -46,6 +46,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
             deniedUrlParameters: GeneralUtility::trimExplode(',', (string)($settings['deniedUrlParameters'] ?? self::DEFAULT_DENIED_URL_PARAMETERS), true),
             redeliverMaxAttempts: max(0, (int)($settings['redeliverMaxAttempts'] ?? self::DEFAULT_REDELIVER_MAX_ATTEMPTS)),
             rateLimit: max(0, (int)($settings['rateLimit'] ?? self::DEFAULT_RATE_LIMIT)),
+            disabledDeliveryChannels: GeneralUtility::trimExplode(',', (string)($settings['disabledDeliveryChannels'] ?? ''), true),
         );
     }
 

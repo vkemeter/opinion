@@ -77,7 +77,7 @@ final readonly class SubmitController
 
         return match ($result->status) {
             DeliveryStatus::Failed => $this->createResponse($languageService, 200, true, 'response.notDelivered', ['delivered' => false]),
-            DeliveryStatus::Pending => $this->createResponse($languageService, 200, true, 'response.saved', ['delivered' => false]),
+            DeliveryStatus::Pending, DeliveryStatus::Skipped => $this->createResponse($languageService, 200, true, 'response.saved', ['delivered' => false]),
             DeliveryStatus::Sent => $this->createResponse($languageService, 200, true, 'response.sent', ['delivered' => true]),
         };
     }

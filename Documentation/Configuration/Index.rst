@@ -17,6 +17,21 @@ Extension configuration
     :type:
     :default:
 
+..  confval:: disabledDeliveryChannels
+    :name: extconf-disableddeliverychannels
+    :type: string
+    :default: (empty)
+
+    Comma-separated identifiers of delivery channels that do not deliver
+    feedback. The email channel has the identifier `email`; a
+    :ref:`custom channel <developer-delivery-channel>` is switched off by the
+    identifier it returns from :php:`getIdentifier()`. Unknown identifiers are
+    ignored and logged as warning. Empty means every channel delivers.
+
+    With every channel switched off, feedback is only stored and gets the
+    delivery status "not delivered"; it is not delivered again later, also not
+    after a channel is switched on again.
+
 ..  confval:: recipients
     :name: extconf-recipients
     :type: string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Processing;
 
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -36,12 +37,41 @@ final class SubmissionProcessorTest extends FunctionalTestCase
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
     #[Test]
-    public function withoutDeliveryChannelsTheFeedbackStaysPending(): void
+    public function withoutDeliveryChannelsTheFeedbackIsSkipped(): void
     {
         $result = $this->createProcessor([])->process($this->createSubmission(), $this->configuration());
 
-        self::assertSame(DeliveryStatus::Pending, $result->status);
-        self::assertSame('pending', $this->get(FeedbackRepository::class)->findByUid($result->feedbackUid)['delivery_status'] ?? null);
+        $record = $this->get(FeedbackRepository::class)->findByUid($result->feedbackUid);
+        self::assertSame(DeliveryStatus::Skipped, $result->status);
+        self::assertSame('skipped', $record['delivery_status'] ?? null);
+        self::assertSame('no delivery channel enabled', $record['delivery_log'] ?? null);
+    }
+
+    #[Test]
+    public function disabledChannelsDoNotRun(): void
+    {
+        $email = $this->createChannel('email', static fn(): DeliveryResult => throw new \LogicException('email must not run', 1795000001));
+        $jira = $this->createChannel('jira', static fn(): DeliveryResult => DeliveryResult::success('jira'));
+
+        $result = $this->createProcessor([$email, $jira])->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['email']));
+        self::assertSame(DeliveryStatus::Sent, $result->status);
+        self::assertSame(['jira'], array_map(static fn(DeliveryResult $result): string => $result->channel, $result->deliveryResults));
+
+        $result = $this->createProcessor([$email, $jira])->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['email', 'jira']));
+        self::assertSame(DeliveryStatus::Skipped, $result->status);
+    }
+
+    #[Test]
+    public function unknownDisabledChannelIsLoggedAndAllChannelsRun(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('warning')->with(self::anything(), ['identifiers' => 'emial']);
+        $channel = $this->createChannel('email', static fn(): DeliveryResult => DeliveryResult::success('email'));
+
+        $result = new SubmissionProcessor($this->get(FeedbackRepository::class), $this->get(ScreenshotStorage::class), [$channel], $logger)
+            ->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['emial']));
+
+        self::assertSame(DeliveryStatus::Sent, $result->status);
     }
 
     #[Test]
@@ -163,8 +193,11 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         );
     }
 
-    private function configuration(): OpinionConfiguration
+    /**
+     * @param list<string> $disabledDeliveryChannels
+     */
+    private function configuration(array $disabledDeliveryChannels = []): OpinionConfiguration
     {
-        return new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180);
+        return new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180, disabledDeliveryChannels: $disabledDeliveryChannels);
     }
 }

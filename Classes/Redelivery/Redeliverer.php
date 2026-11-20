@@ -66,6 +66,6 @@ final readonly class Redeliverer
      */
     public function isUndelivered(array $record): bool
     {
-        return DeliveryStatus::tryFrom((string)($record['delivery_status'] ?? '')) !== DeliveryStatus::Sent;
+        return !in_array(DeliveryStatus::tryFrom((string)($record['delivery_status'] ?? '')), [DeliveryStatus::Sent, DeliveryStatus::Skipped], true);
     }
 }

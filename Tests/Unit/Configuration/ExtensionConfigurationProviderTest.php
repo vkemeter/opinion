@@ -80,6 +80,13 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationReadsDisabledDeliveryChannels(): void
+    {
+        self::assertSame(['email', 'jira'], $this->createSubject(['disabledDeliveryChannels' => ' email , jira,'])->getConfiguration()->disabledDeliveryChannels);
+        self::assertSame([], $this->createSubject([])->getConfiguration()->disabledDeliveryChannels);
+    }
+
+    #[Test]
     public function getConfigurationReadsDisabledSwitch(): void
     {
         self::assertFalse($this->createSubject(['enabled' => '0'])->getConfiguration()->enabled);

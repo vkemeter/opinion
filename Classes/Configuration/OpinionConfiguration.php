@@ -14,6 +14,7 @@ final readonly class OpinionConfiguration
      * @param list<string> $deniedUrlParameters query parameters removed from collected URLs
      * @param int $redeliverMaxAttempts delivery attempts after which opinion:redeliver gives up, 0 = no limit
      * @param int $rateLimit submissions per backend user and hour, 0 = no limit
+     * @param list<string> $disabledDeliveryChannels identifiers of delivery channels that do not run
      */
     public function __construct(
         public bool $enabled,
@@ -24,6 +25,7 @@ final readonly class OpinionConfiguration
         public array $deniedUrlParameters = [],
         public int $redeliverMaxAttempts = 0,
         public int $rateLimit = 0,
+        public array $disabledDeliveryChannels = [],
     ) {}
 
     public function collects(CollectableField $field): bool

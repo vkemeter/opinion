@@ -1,3 +1,6 @@
+# cat=email; type=string; label=opinion.messages:extconf.disabledDeliveryChannels
+disabledDeliveryChannels =
+
 # cat=email; type=string; label=opinion.messages:extconf.recipients
 recipients =
 
