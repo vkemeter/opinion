@@ -23,3 +23,7 @@ Resources/Public/JavaScript/*.map
 
 # Local planning documents (specs, status, tasks), not part of the package
 /planning/
+/openspec/
+
+# Talk slides (Marp), local only
+/presentation/
