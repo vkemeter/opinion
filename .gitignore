@@ -21,9 +21,9 @@ Resources/Public/JavaScript/*.map
 
 /Documentation-GENERATED-temp
 
-# Local planning documents (specs, status, tasks), not part of the package
-/planning/
+# Local OpenSpec specs, changes and project notes, not part of the package
 /openspec/
 
 # Talk slides (Marp), local only
 /presentation/
+.claude
