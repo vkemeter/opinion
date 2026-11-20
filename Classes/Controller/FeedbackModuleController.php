@@ -10,6 +10,8 @@ use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -18,6 +20,7 @@ use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
@@ -89,6 +92,7 @@ final readonly class FeedbackModuleController
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
             'canRedeliver' => $this->redeliverer->isUndelivered($record),
+            'statuses' => array_map(static fn(FeedbackStatus $status): string => $status->value, FeedbackStatus::cases()),
             'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, true),
             // The URLs are shown once as reportedUrl
             'sections' => [
@@ -122,15 +126,46 @@ final readonly class FeedbackModuleController
             DeliveryStatus::Skipped => ['module.redeliver.skipped', ContextualFeedbackSeverity::WARNING],
             null => ['module.redeliver.impossible', ContextualFeedbackSeverity::WARNING],
         };
+        $this->addFlashMessage($key, 'module.redeliver.title', $severity);
+
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
+    }
+
+    /**
+     * Sets the processing status; administrators only, also once editors can open the module.
+     */
+    public function statusAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication || !$backendUser->isAdmin()) {
+            return new HtmlResponse('', 403);
+        }
+        $body = $request->getParsedBody();
+        $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
+        if ($uid <= 0 || $this->feedbackRepository->findByUid($uid) === null) {
+            return new RedirectResponse($this->buildUri('opinion_feedback'));
+        }
+
+        $status = FeedbackStatus::tryFrom((string)(is_array($body) ? ($body['status'] ?? '') : ''));
+        if ($status === null) {
+            $this->addFlashMessage('module.status.invalid', 'module.status.title', ContextualFeedbackSeverity::ERROR);
+        } else {
+            $this->feedbackRepository->updateStatus($uid, $status);
+            $this->addFlashMessage('module.status.saved', 'module.status.title', ContextualFeedbackSeverity::OK);
+        }
+
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
+    }
+
+    private function addFlashMessage(string $key, string $titleKey, ContextualFeedbackSeverity $severity): void
+    {
         $languageService = $this->getLanguageService();
         $this->flashMessageService->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
             $languageService->sL('opinion.messages:' . $key),
-            $languageService->sL('opinion.messages:module.redeliver.title'),
+            $languageService->sL('opinion.messages:' . $titleKey),
             $severity,
             true,
         ));
-
-        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid]));
     }
 
     /**

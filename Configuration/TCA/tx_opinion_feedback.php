@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 
@@ -33,12 +34,22 @@ return [
     ],
     'types' => [
         1 => [
-            'showitem' => 'source,category,severity,be_user,message,screenshot,
+            'showitem' => 'status,source,category,severity,be_user,message,screenshot,
             --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context,
             --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
         ],
     ],
     'columns' => [
+        'status' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.status',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => $enumItems('status', FeedbackStatus::cases()),
+                'default' => FeedbackStatus::New->value,
+                'readOnly' => true,
+            ],
+        ],
         'source' => [
             'label' => 'opinion.messages:tx_opinion_feedback.source',
             'config' => [

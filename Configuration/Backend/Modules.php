@@ -22,6 +22,10 @@ return [
                 'target' => FeedbackModuleController::class . '::redeliverAction',
                 'methods' => ['POST'],
             ],
+            'status' => [
+                'target' => FeedbackModuleController::class . '::statusAction',
+                'methods' => ['POST'],
+            ],
         ],
     ],
 ];

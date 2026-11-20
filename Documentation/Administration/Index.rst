@@ -13,16 +13,24 @@ Administrators find all feedback in :guilabel:`Admin Tools > Feedback`.
 
 List
     Newest first, with date, category, severity, source, sender and their
-    email address, the start of the message, a screenshot marker and the
-    delivery status.
+    email address, the start of the message, a screenshot marker, the
+    status and the delivery status.
 
 Detail view
-    The full message, the delivery status, the number of delivery attempts
+    The full message, the status, the delivery status, the number of delivery attempts
     and the log, the screenshot (click to open it in full size) and all
     collected details. For feedback that is *Failed* or *Pending*, the button
     :guilabel:`Deliver again` starts a new delivery attempt right away; it
     ignores :confval:`extconf-redelivermaxattempts`. The result is shown as a
     message and appended to the log.
+
+Status
+    Every feedback starts as *New*. Administrators set it to *New*,
+    *In progress* or *Closed* in the detail view with
+    :guilabel:`Save status`. The status is independent of the delivery: it
+    neither starts nor changes a delivery. Feedback stored before version 1.2
+    gets the status *New* when the database schema is updated
+    (:bash:`vendor/bin/typo3 extension:setup` or the database analyzer).
 
 Reported URL
     The detail view and the email show the URL the feedback was sent from

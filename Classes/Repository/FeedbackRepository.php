@@ -9,6 +9,7 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Submission;
 
 /**
@@ -83,6 +84,15 @@ final readonly class FeedbackRepository
             ->set('delivery_attempts', $queryBuilder->quoteIdentifier('delivery_attempts') . ' + 1', false)
             ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
             ->executeStatement();
+    }
+
+    public function updateStatus(int $uid, FeedbackStatus $status): void
+    {
+        $this->connectionPool->getConnectionForTable(self::TABLE)->update(
+            self::TABLE,
+            ['status' => $status->value, 'tstamp' => time()],
+            ['uid' => $uid],
+        );
     }
 
     /**

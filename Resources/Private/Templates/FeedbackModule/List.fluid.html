@@ -22,6 +22,7 @@
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.email')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}</th>
+								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
 								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</span></th>
 							</tr>
@@ -51,6 +52,12 @@
 										<f:if condition="{item.sender_email}"><a href="mailto:{item.sender_email}">{item.sender_email}</a></f:if>
 									</td>
 									<td>{f:translate(domain: 'opinion.messages', key: 'source.{item.source}')}</td>
+									<td>
+										<f:render
+											partial="FeedbackModule/Badges"
+											section="Status"
+											arguments="{status: item.status}" />
+									</td>
 									<td>
 										<f:render
 											partial="FeedbackModule/Badges"

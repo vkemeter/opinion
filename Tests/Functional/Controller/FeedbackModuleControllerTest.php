@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Route;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
 use TYPO3\CMS\Backend\Routing\Router;
@@ -17,6 +18,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\FeedbackModuleController;
 use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -57,10 +59,13 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         $this->addFeedback('First <script>alert(1)</script> feedback text', '2026-10-01 10:00');
         $this->addFeedback('Second feedback text', '2026-10-02 10:00');
+        $this->get(FeedbackRepository::class)->updateStatus($this->addFeedback('Third feedback text', '2026-10-03 10:00'), FeedbackStatus::InProgress);
 
         $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
 
-        self::assertStringContainsString('2 feedback entries', $html);
+        self::assertStringContainsString('3 feedback entries', $html);
+        self::assertStringContainsString('>In progress</span>', $html);
+        self::assertStringContainsString('>New</span>', $html);
         self::assertLessThan(strpos($html, 'First'), strpos($html, 'Second feedback text'));
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringNotContainsString('<script>alert(1)</script>', $html);
@@ -80,6 +85,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('pageInfo.imagesOnPage.total', $html);
         self::assertStringContainsString('screen.width', $html);
         self::assertStringContainsString('No screenshot attached.', $html);
+        self::assertStringContainsString('opinion/feedback/status', $html);
+        self::assertMatchesRegularExpression('#<option\s+value="new"\s+selected>\s*New\s*</option>#', $html);
+        self::assertMatchesRegularExpression('#<option\s+value="closed"\s*>#', $html);
     }
 
     #[Test]
@@ -178,12 +186,53 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function redeliverRouteOnlyAcceptsPost(): void
+    public function postRoutesOnlyAcceptPost(): void
     {
-        $route = $this->get(Router::class)->getRoute('opinion_feedback.redeliver');
+        foreach (['opinion_feedback.redeliver', 'opinion_feedback.status'] as $identifier) {
+            $route = $this->get(Router::class)->getRoute($identifier);
+            self::assertInstanceOf(Route::class, $route);
+            self::assertSame(['POST'], $route->getMethods(), $identifier);
+        }
+    }
 
-        self::assertInstanceOf(Route::class, $route);
-        self::assertSame(['POST'], $route->getMethods());
+    #[Test]
+    public function statusActionChangesTheStatusOnly(): void
+    {
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'email: FAILED');
+
+        $response = $this->postStatus($uid, 'closed');
+
+        self::assertSame(302, $response->getStatusCode());
+        self::assertStringContainsString('uid=' . $uid, $response->getHeaderLine('Location'));
+        $record = $this->get(FeedbackRepository::class)->findByUid($uid);
+        self::assertSame('closed', $record['status'] ?? null);
+        self::assertSame('failed', $record['delivery_status'] ?? null);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
+        $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessages();
+        self::assertSame('The status has been saved.', ($messages[0] ?? null)?->getMessage());
+    }
+
+    #[Test]
+    public function statusActionRejectsInvalidValues(): void
+    {
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+
+        $this->postStatus($uid, 'done');
+
+        self::assertSame('new', $this->get(FeedbackRepository::class)->findByUid($uid)['status'] ?? null);
+        $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessages();
+        self::assertSame('The status is invalid and has not been changed.', ($messages[0] ?? null)?->getMessage());
+    }
+
+    #[Test]
+    public function statusActionRejectsNonAdmins(): void
+    {
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+        $this->setUpBackendUser(2);
+
+        self::assertSame(403, $this->postStatus($uid, 'closed')->getStatusCode());
+        self::assertSame('new', $this->get(FeedbackRepository::class)->findByUid($uid)['status'] ?? null);
     }
 
     #[Test]
@@ -192,6 +241,13 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $response = $this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => '999']));
 
         self::assertSame(302, $response->getStatusCode());
+    }
+
+    private function postStatus(int $uid, string $status): ResponseInterface
+    {
+        return $this->get(FeedbackModuleController::class)->statusAction(
+            $this->createRequest('opinion_feedback.status')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'status' => $status]),
+        );
     }
 
     /**

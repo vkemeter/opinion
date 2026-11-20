@@ -6,6 +6,9 @@
   instead of twice as text in the tables of collected details
 - Added: the list shows the sender's email address (as at submission time) as
   mailto link
+- Added: processing status `new`, `in_progress` or `closed` per feedback,
+  shown in the list and set by administrators in the detail view. Needs a
+  database schema update; existing feedback becomes `new`
 
 ## 1.1.0 – 2026-11-20
 

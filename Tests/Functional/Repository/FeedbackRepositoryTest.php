@@ -9,6 +9,7 @@ use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -42,6 +43,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(['typo3Version' => '14.3.0'], json_decode((string)$record['system_info'], true));
         self::assertSame(['pageUid' => 12], json_decode((string)$record['context'], true));
         self::assertSame('pending', $record['delivery_status']);
+        self::assertSame('new', $record['status']);
         self::assertSame(0, (int)$record['screenshot']);
         self::assertSame(1791561428, (int)$record['crdate']);
     }
@@ -58,6 +60,21 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertCount(1, $references);
         self::assertSame($file->getUid(), $references[0]->getOriginalFile()->getUid());
         self::assertSame(1, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['screenshot'] ?? 0));
+    }
+
+    #[Test]
+    public function updateStatusLeavesTheDeliveryAlone(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $uid = $repository->add($this->createSubmission(), null);
+        $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'email: Connection refused');
+
+        $repository->updateStatus($uid, FeedbackStatus::Closed);
+
+        $record = $repository->findByUid($uid);
+        self::assertSame('closed', $record['status'] ?? null);
+        self::assertSame('failed', $record['delivery_status'] ?? null);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
     }
 
     #[Test]

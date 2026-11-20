@@ -61,6 +61,9 @@
             <trans-unit id="tx_opinion_feedback.context">
                 <source>Context</source>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.status">
+                <source>Status</source>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.delivery_status">
                 <source>Delivery status</source>
             </trans-unit>
@@ -93,6 +96,15 @@
             </trans-unit>
             <trans-unit id="severity.high">
                 <source>High</source>
+            </trans-unit>
+            <trans-unit id="status.new">
+                <source>New</source>
+            </trans-unit>
+            <trans-unit id="status.in_progress">
+                <source>In progress</source>
+            </trans-unit>
+            <trans-unit id="status.closed">
+                <source>Closed</source>
             </trans-unit>
             <trans-unit id="deliveryStatus.pending">
                 <source>Pending</source>
@@ -354,6 +366,18 @@
             </trans-unit>
             <trans-unit id="module.show.redeliver">
                 <source>Deliver again</source>
+            </trans-unit>
+            <trans-unit id="module.status.title">
+                <source>Status</source>
+            </trans-unit>
+            <trans-unit id="module.status.saved">
+                <source>The status has been saved.</source>
+            </trans-unit>
+            <trans-unit id="module.status.invalid">
+                <source>The status is invalid and has not been changed.</source>
+            </trans-unit>
+            <trans-unit id="module.status.submit">
+                <source>Save status</source>
             </trans-unit>
             <trans-unit id="module.redeliver.title">
                 <source>Delivery</source>

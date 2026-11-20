@@ -80,6 +80,10 @@
                 <source>Context</source>
                 <target>Kontext</target>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.status">
+                <source>Status</source>
+                <target>Status</target>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.delivery_status">
                 <source>Delivery status</source>
                 <target>Zustellstatus</target>
@@ -123,6 +127,18 @@
             <trans-unit id="severity.high">
                 <source>High</source>
                 <target>Hoch</target>
+            </trans-unit>
+            <trans-unit id="status.new">
+                <source>New</source>
+                <target>Neu</target>
+            </trans-unit>
+            <trans-unit id="status.in_progress">
+                <source>In progress</source>
+                <target>In Bearbeitung</target>
+            </trans-unit>
+            <trans-unit id="status.closed">
+                <source>Closed</source>
+                <target>Abgeschlossen</target>
             </trans-unit>
             <trans-unit id="deliveryStatus.pending">
                 <source>Pending</source>
@@ -471,6 +487,22 @@
             <trans-unit id="module.show.redeliver">
                 <source>Deliver again</source>
                 <target>Erneut zustellen</target>
+            </trans-unit>
+            <trans-unit id="module.status.title">
+                <source>Status</source>
+                <target>Status</target>
+            </trans-unit>
+            <trans-unit id="module.status.saved">
+                <source>The status has been saved.</source>
+                <target>Der Status wurde gespeichert.</target>
+            </trans-unit>
+            <trans-unit id="module.status.invalid">
+                <source>The status is invalid and has not been changed.</source>
+                <target>Der Status ist ungültig und wurde nicht geändert.</target>
+            </trans-unit>
+            <trans-unit id="module.status.submit">
+                <source>Save status</source>
+                <target>Status speichern</target>
             </trans-unit>
             <trans-unit id="module.redeliver.title">
                 <source>Delivery</source>
