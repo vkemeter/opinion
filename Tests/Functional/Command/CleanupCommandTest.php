@@ -46,7 +46,7 @@ final class CleanupCommandTest extends FunctionalTestCase
         $this->get(ScreenshotStorageInstaller::class)->install();
         foreach (['old' => '-40 days', 'recent' => '-10 days'] as $key => $age) {
             $createdAt = new \DateTimeImmutable($age);
-            $file = $this->get(ScreenshotStorage::class)->store((string)base64_decode(self::PNG_BASE64, true), 'png', $createdAt);
+            $file = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', $createdAt);
             $this->feedbackUids[$key] = $this->get(FeedbackRepository::class)->add($this->createSubmission($createdAt), $file);
             $this->screenshotPaths[$key] = Environment::getVarPath() . '/opinion' . $file->getIdentifier();
         }

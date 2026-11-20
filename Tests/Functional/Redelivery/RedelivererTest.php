@@ -38,7 +38,7 @@ final class RedelivererTest extends FunctionalTestCase
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
         $createdAt = new \DateTimeImmutable('2026-10-09 12:00:00');
-        $screenshot = $this->get(ScreenshotStorage::class)->store((string)base64_decode(self::PNG_BASE64, true), 'png', $createdAt);
+        $screenshot = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', $createdAt);
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission(
             message: 'The teaser image is cropped.',

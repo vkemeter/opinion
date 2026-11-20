@@ -95,6 +95,6 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
 
     private static function png(): string
     {
-        return (string)base64_decode(self::PNG_BASE64, true);
+        return base64_decode(self::PNG_BASE64, true);
     }
 }

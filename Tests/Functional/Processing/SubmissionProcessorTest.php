@@ -159,7 +159,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             source: Source::Frontend,
             backendUserUid: 1,
             createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
-            screenshot: $withScreenshot ? new Screenshot((string)base64_decode(self::PNG_BASE64, true), ScreenshotType::Png) : null,
+            screenshot: $withScreenshot ? new Screenshot(base64_decode(self::PNG_BASE64, true), ScreenshotType::Png) : null,
         );
     }
 

@@ -38,7 +38,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     public function deliverSendsMailWithAllDetailsAndScreenshot(): void
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
-        $screenshot = $this->get(ScreenshotStorage::class)->store((string)base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
+        $screenshot = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
 
         $result = $this->get(EmailDeliveryChannel::class)->deliver($this->createSubmission(), $screenshot, $this->configuration());
 

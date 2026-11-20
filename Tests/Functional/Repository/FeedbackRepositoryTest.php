@@ -50,7 +50,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     public function addReferencesScreenshot(): void
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
-        $file = $this->get(ScreenshotStorage::class)->store((string)base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
+        $file = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
 
         $uid = $this->get(FeedbackRepository::class)->add($this->createSubmission(), $file);
 

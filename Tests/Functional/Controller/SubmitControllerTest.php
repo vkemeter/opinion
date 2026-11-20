@@ -124,7 +124,7 @@ final class SubmitControllerTest extends FunctionalTestCase
     {
         $this->setUpBackendUser(1);
 
-        $response = $this->submit($this->validFields(), (string)base64_decode(self::PNG_BASE64, true));
+        $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
 
         self::assertSame(503, $response->getStatusCode());
         self::assertSame(0, $this->countFeedback());
