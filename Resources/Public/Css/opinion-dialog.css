@@ -116,6 +116,30 @@
   font: inherit;
 }
 
+/*
+ * Unread counter on the module menu entry "Feedback", added by toolbar-item.js.
+ * The entry is a size container with overflow hidden: collapsed (icon only) the badge sits on the
+ * corner of the icon, from 60px on (the Core shows the module name there) at the end of the entry.
+ */
+.opinion-modulemenu-badge {
+  position: absolute;
+  top: 1px;
+  inset-inline-end: 1px;
+  min-width: 1rem;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+@container (min-width: 60px) {
+  .opinion-modulemenu-badge {
+    position: static;
+    margin-inline-start: auto;
+    padding: 0.25em 0.5em;
+    font-size: 0.75rem;
+  }
+}
+
 .opinion-dialog__textarea {
   min-height: 8rem;
   resize: vertical;

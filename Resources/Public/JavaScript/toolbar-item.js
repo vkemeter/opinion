@@ -1,4 +1,26 @@
+import { el } from './dom.js';
 import { openOpinionDialog } from './opinion-dialog.js';
+
+const MODULE_IDENTIFIER = 'opinion_feedback';
+const BADGE_CLASS = 'opinion-modulemenu-badge';
+
+/**
+ * Shows the number of feedback entries with unread messages on the module menu entry "Feedback".
+ * The Core has no API for module menu badges, so the entry is found by its data attribute.
+ * shortcut: relies on the Core markup data-modulemenu-identifier, check it on TYPO3 updates
+ */
+function showUnreadInModuleMenu() {
+  const source = document.querySelector('[data-opinion-unread]');
+  const unread = Number(source?.dataset.opinionUnread) || 0;
+  const entry = document.querySelector(`[data-modulemenu-identifier="${MODULE_IDENTIFIER}"]`);
+  if (unread === 0 || !entry || entry.querySelector(`.${BADGE_CLASS}`)) {
+    return;
+  }
+  entry.append(
+    el('span', { class: `${BADGE_CLASS} badge rounded-pill text-bg-info`, 'aria-hidden': 'true' }, String(unread)),
+    el('span', { class: 'visually-hidden' }, source.dataset.opinionUnreadLabel ?? ''),
+  );
+}
 
 /**
  * Adds the module the editor is working in to the dialog context. Module,
@@ -44,3 +66,7 @@ document.addEventListener('click', (event) => {
   );
   openOpinionDialog({ ...config, context: { ...config.context, ...context } });
 });
+
+showUnreadInModuleMenu();
+// The backend re-renders the module menu, for example after switching the workspace
+new MutationObserver(showUnreadInModuleMenu).observe(document.body, { childList: true, subtree: true });

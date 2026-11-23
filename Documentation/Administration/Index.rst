@@ -18,7 +18,8 @@ status; delivery details and all actions stay with administrators.
 List
     Newest first, with date, category, severity, source, sender and their
     email address, the start of the message, a screenshot marker, the
-    status and the delivery status.
+    status, the conversation (number of messages, *New* when there are
+    messages you have not read yet) and the delivery status.
 
 Search and filter
     Above the list, the search finds feedback whose message, sender name or
@@ -44,6 +45,21 @@ Status
     neither starts nor changes a delivery. Feedback stored before version 1.2
     gets the status *New* when the database schema is updated
     (:bash:`vendor/bin/typo3 extension:setup` or the database analyzer).
+
+Conversation
+    Below the message of the feedback, administrators and the sender write
+    messages to each other: plain text, oldest first, with author and time.
+    Administrators write in every conversation, editors in the conversations
+    of their own feedback. Messages cannot be edited or deleted. No email is
+    sent for them; the email for new feedback stays as it is. When the sender
+    answers a *Closed* feedback, its status changes to *In progress*; a
+    message of an administrator does not change the status.
+
+Unread messages
+    Opening the detail view marks its messages as read for you only; another
+    administrator still sees them as unread. The module menu entry
+    :guilabel:`Feedback` shows the number of feedback entries with unread
+    messages as a badge, as of the last backend load.
 
 Reported URL
     The detail view and the email show the URL the feedback was sent from
@@ -98,8 +114,8 @@ Clean up old feedback
 =====================
 
 The console command `opinion:cleanup` deletes feedback records older than
-:confval:`extconf-retentiondays`, including their file references and
-screenshot files.
+:confval:`extconf-retentiondays`, including their file references,
+screenshot files, conversation messages and read state.
 
 ..  code-block:: bash
 
@@ -136,4 +152,9 @@ Data and privacy
 *   Every detail except the sender can be switched off, see
     :ref:`configuration-collected-details`.
 *   The IP address is stored anonymised.
+*   Conversation messages may contain personal data. They are shown only to
+    administrators and the sender of the feedback, are never sent by email
+    and are deleted with their feedback by `opinion:cleanup`. Messages of a
+    backend user deleted since stay and are shown with the author "Deleted
+    user".
 *   `opinion:cleanup` enforces the retention period.

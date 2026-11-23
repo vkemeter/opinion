@@ -55,10 +55,11 @@ final class CleanupCommand extends Command
         }
 
         $io->success(sprintf(
-            '%s %d feedback record(s) and %d screenshot(s) created before %s.',
+            '%s %d feedback record(s), %d screenshot(s) and %d message(s) created before %s.',
             $dryRun ? 'Would delete' : 'Deleted',
             $result->records,
             $result->screenshots,
+            $result->messages,
             $createdBefore->format('Y-m-d H:i'),
         ));
 

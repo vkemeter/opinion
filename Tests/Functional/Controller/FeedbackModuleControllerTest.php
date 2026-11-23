@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Routing\Route;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
 use TYPO3\CMS\Backend\Routing\Router;
@@ -13,6 +14,7 @@ use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\FeedbackModuleController;
@@ -22,6 +24,7 @@ use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
@@ -300,6 +303,98 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function showRendersTheConversationOldestFirstEscapedAndMarksItReadForTheViewer(): void
+    {
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $conversation = $this->get(ConversationRepository::class);
+        $conversation->add($uid, 3, "First <script>alert(1)</script>\nsecond line", new \DateTimeImmutable('2026-10-02 09:00'));
+        $conversation->add($uid, 1, 'Answer of the admin', new \DateTimeImmutable('2026-10-02 10:00'));
+        $conversation->add($uid, 99, 'Message of a deleted user', new \DateTimeImmutable('2026-10-02 11:00'));
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertStringContainsString('First &lt;script&gt;alert(1)&lt;/script&gt;<br />', $html);
+        self::assertStringNotContainsString('<script>alert(1)', $html);
+        self::assertLessThan(strpos($html, 'Answer of the admin'), strpos($html, 'First &lt;script'), 'oldest first');
+        self::assertStringContainsString('Rita Reporter', $html);
+        self::assertStringContainsString('Deleted user', $html);
+        self::assertStringContainsString('02.10.2026 10:00', $html);
+        self::assertStringContainsString('opinion/feedback/message', $html);
+        self::assertSame([], $conversation->findUnreadFeedbackUids(1, null), 'read for the viewer');
+        self::assertSame([$uid], $conversation->findUnreadFeedbackUids(4, null), 'still unread for the other admin');
+    }
+
+    #[Test]
+    public function senderAndAdminWriteMessagesWithoutEmail(): void
+    {
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+        $container = $this->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->set(MailerInterface::class, $mailer);
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+
+        $this->setUpBackendUser(3);
+        $response = $this->postMessage($uid, "  Any news?\n ");
+        self::assertSame(302, $response->getStatusCode());
+        $this->setUpBackendUser(1);
+        $this->postMessage($uid, 'We are on it.');
+
+        $messages = $this->get(ConversationRepository::class)->findByFeedback($uid);
+        self::assertSame(['Any news?', 'We are on it.'], array_column($messages, 'message'));
+        self::assertSame([3, 1], array_map(intval(...), array_column($messages, 'be_user')));
+        self::assertSame('The message was sent.', $this->getFlashMessages()[0] ?? null);
+    }
+
+    #[Test]
+    public function invalidOrForeignMessagesAreRejected(): void
+    {
+        $foreign = $this->addFeedback('Feedback of the admin', '2026-10-01 10:00');
+        $own = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->setUpBackendUser(3);
+
+        $this->postMessage($foreign, 'Not mine');
+        $this->postMessage($own, "   \n  ");
+        $this->postMessage($own, str_repeat('a', 5001));
+
+        self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($foreign));
+        self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($own));
+        self::assertSame('Please enter a message of 1 to 5000 characters.', $this->getFlashMessages()[0] ?? null);
+
+        $this->setUpBackendUser(2);
+        self::assertSame(403, $this->postMessage($own, 'Without access')->getStatusCode());
+    }
+
+    #[Test]
+    public function replyOfTheSenderReopensClosedFeedbackAndOneOfTheAdminDoesNot(): void
+    {
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, FeedbackStatus::Closed);
+
+        $this->postMessage($uid, 'Fixed.');
+        self::assertSame('closed', $this->statusOf($uid), 'admin');
+
+        $this->setUpBackendUser(3);
+        $this->postMessage($uid, 'Still broken.');
+        self::assertSame('in_progress', $this->statusOf($uid), 'sender');
+    }
+
+    #[Test]
+    public function listMarksFeedbackWithUnreadMessages(): void
+    {
+        $answered = $this->addFeedback('Answered feedback', '2026-10-01 10:00', 3);
+        $this->addFeedback('Quiet feedback', '2026-10-02 10:00', 3);
+        $this->postMessage($answered, 'Can you send a screenshot?');
+        $this->postMessage($answered, 'Or the URL?');
+        $this->setUpBackendUser(3);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
+
+        self::assertSame(1, preg_match_all('#>New<span class="visually-hidden"\s*>: New messages</span#', $html), 'new badge');
+        self::assertSame(1, preg_match_all('#<span class="visually-hidden">2 messages</span>#', $html), 'message count');
+    }
+
+    #[Test]
     public function editorGetsNoForeignFeedback(): void
     {
         $foreign = $this->addFeedback('Feedback of the admin', '2026-10-01 10:00');
@@ -440,6 +535,31 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $GLOBALS['TYPO3_REQUEST'] = $request;
 
         return $request;
+    }
+
+    private function statusOf(int $uid): ?string
+    {
+        $status = $this->get(FeedbackRepository::class)->findByUid($uid)['status'] ?? null;
+
+        return is_string($status) ? $status : null;
+    }
+
+    private function postMessage(int $uid, string $message): ResponseInterface
+    {
+        return $this->get(FeedbackModuleController::class)->messageAction(
+            $this->createRequest('opinion_feedback.message')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'message' => $message]),
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getFlashMessages(): array
+    {
+        return array_values(array_map(
+            static fn($message): string => $message->getMessage(),
+            $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessagesAndFlush(),
+        ));
     }
 
     private function requestScreenshot(int $uid): ResponseInterface

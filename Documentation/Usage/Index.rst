@@ -25,6 +25,11 @@ Backend: toolbar
 In the backend, click the speech-bubble button in the toolbar. The current
 module, the module URL and the selected page are attached.
 
+When an administrator answers your feedback and you have access to the module
+:guilabel:`Feedback`, its entry in the module menu shows a badge with the
+number of feedback entries with new messages. Answer in the detail view of the
+feedback, below the message (see :ref:`administration-module`).
+
 ..  _usage-dialog:
 
 The feedback dialog

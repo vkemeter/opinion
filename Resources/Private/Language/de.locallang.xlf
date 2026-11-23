@@ -728,6 +728,94 @@
                 <source>Open user settings</source>
                 <target>Benutzereinstellungen öffnen</target>
             </trans-unit>
+            <trans-unit id="tx_opinion_message">
+                <source>Feedback message</source>
+                <target>Feedback-Nachricht</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.feedback">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.be_user">
+                <source>Author</source>
+                <target>Verfasser</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.message">
+                <source>Message</source>
+                <target>Nachricht</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read">
+                <source>Feedback read state</source>
+                <target>Lesestatus Feedback</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.feedback">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.be_user">
+                <source>Backend user</source>
+                <target>Backend-Benutzer</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.last_message">
+                <source>Last read message</source>
+                <target>Zuletzt gelesene Nachricht</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.title">
+                <source>Conversation</source>
+                <target>Unterhaltung</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.empty">
+                <source>No messages yet.</source>
+                <target>Noch keine Nachrichten.</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.deletedUser">
+                <source>Deleted user</source>
+                <target>Gelöschter Benutzer</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.message">
+                <source>Your message</source>
+                <target>Ihre Nachricht</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.hint">
+                <source>Visible to the administrators and the sender of the feedback. No email is sent.</source>
+                <target>Sichtbar für die Administratoren und den Absender des Feedbacks. Es wird keine E-Mail verschickt.</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.send">
+                <source>Send message</source>
+                <target>Nachricht senden</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.flashTitle">
+                <source>Conversation</source>
+                <target>Unterhaltung</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.saved">
+                <source>The message was sent.</source>
+                <target>Die Nachricht wurde gesendet.</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.reopened">
+                <source>The message was sent and the feedback is in progress again.</source>
+                <target>Die Nachricht wurde gesendet und das Feedback ist wieder in Bearbeitung.</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.invalid">
+                <source>Please enter a message of 1 to 5000 characters.</source>
+                <target>Bitte geben Sie eine Nachricht mit 1 bis 5000 Zeichen ein.</target>
+            </trans-unit>
+            <trans-unit id="module.list.unreadBadge">
+                <source>New</source>
+                <target>Neu</target>
+            </trans-unit>
+            <trans-unit id="module.list.messageCount">
+                <source>%d messages</source>
+                <target>%d Nachrichten</target>
+            </trans-unit>
+            <trans-unit id="module.list.unread">
+                <source>New messages</source>
+                <target>Neue Nachrichten</target>
+            </trans-unit>
+            <trans-unit id="toolbar.unread">
+                <source>%d feedback entries with new messages</source>
+                <target>%d Feedback-Einträge mit neuen Nachrichten</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

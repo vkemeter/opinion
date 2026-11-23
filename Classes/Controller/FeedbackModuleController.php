@@ -29,6 +29,7 @@ use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
+use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
@@ -41,6 +42,7 @@ use Vkemeter\Opinion\Storage\ScreenshotStorage;
 final readonly class FeedbackModuleController
 {
     private const int ITEMS_PER_PAGE = 50;
+    private const int MESSAGE_MAX_LENGTH = 5000;
 
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
@@ -54,6 +56,7 @@ final readonly class FeedbackModuleController
         private FlashMessageService $flashMessageService,
         private AccessChecker $accessChecker,
         private ScreenshotStorage $screenshotStorage,
+        private ConversationRepository $conversationRepository,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -68,16 +71,22 @@ final readonly class FeedbackModuleController
         $pages = max(1, (int)ceil($total / self::ITEMS_PER_PAGE));
         $currentPage = min($pages, max(1, (int)($request->getQueryParams()['page'] ?? 1)));
 
+        $items = $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid, $filter);
+        $unreadUids = $this->conversationRepository->findUnreadFeedbackUids($this->getUserUid(), $senderUid);
+        $messageCounts = $this->conversationRepository->countByFeedbackUids(array_map(static fn(array $item): int => (int)$item['uid'], $items));
+
         $view = $this->moduleTemplateFactory->create($request);
         $view->assignMultiple([
             'items' => array_map(
                 fn(array $item): array => [
                     ...$item,
+                    'message_count' => $messageCounts[(int)$item['uid']] ?? 0,
+                    'unread' => in_array((int)$item['uid'], $unreadUids, true),
                     // The address at submission time, also for senders deleted since
                     'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null)),
                     'show_url' => $this->buildUri('opinion_feedback.show', ['uid' => (int)$item['uid'], ...$filterParameters]),
                 ],
-                $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid, $filter),
+                $items,
             ),
             'total' => $total,
             'isAdmin' => $this->isAdmin(),
@@ -115,6 +124,9 @@ final readonly class FeedbackModuleController
         }
 
         $screenshots = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid);
+        $messages = $this->conversationRepository->findByFeedback($uid);
+        // Only the viewer's own read state changes
+        $this->conversationRepository->markRead($uid, $this->getUserUid());
         $systemInfo = $this->decode($record['system_info'] ?? null);
         $context = $this->decode($record['context'] ?? null);
         $clientInfo = $this->decode($record['client_info'] ?? null);
@@ -126,6 +138,8 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
+            'messages' => $messages,
+            'messageMaxLength' => self::MESSAGE_MAX_LENGTH,
             'isAdmin' => $this->isAdmin(),
             // Passed through the forms, so the way back to the list keeps the filter
             'filterParameters' => $filterParameters,
@@ -141,6 +155,37 @@ final readonly class FeedbackModuleController
         ]);
 
         return $view->renderResponse('FeedbackModule/Show');
+    }
+
+    /**
+     * Adds a message to the conversation; same access rules as the detail view, no email is sent.
+     */
+    public function messageAction(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->hasModuleAccess()) {
+            return $this->accessDenied();
+        }
+        $body = $request->getParsedBody();
+        $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
+        // Another user's feedback is treated like an unknown uid
+        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
+        if ($record === null) {
+            return new RedirectResponse($this->buildUri('opinion_feedback'));
+        }
+
+        $message = trim((string)(is_array($body) ? ($body['message'] ?? '') : ''));
+        $length = mb_strlen($message);
+        if ($length === 0 || $length > self::MESSAGE_MAX_LENGTH) {
+            $this->addFlashMessage('module.conversation.invalid', 'module.conversation.flashTitle', ContextualFeedbackSeverity::ERROR);
+        } else {
+            $userUid = $this->getUserUid();
+            // A reply of the sender reopens closed feedback, a message of an administrator does not
+            $reopen = (int)$record['be_user'] === $userUid && $record['status'] === FeedbackStatus::Closed->value;
+            $this->conversationRepository->add($uid, $userUid, $message, new \DateTimeImmutable(), $reopen);
+            $this->addFlashMessage($reopen ? 'module.conversation.reopened' : 'module.conversation.saved', 'module.conversation.flashTitle', ContextualFeedbackSeverity::OK);
+        }
+
+        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
     }
 
     /**
@@ -257,12 +302,17 @@ final readonly class FeedbackModuleController
      */
     private function getSenderFilter(): ?int
     {
-        return $this->isAdmin() ? null : (int)($this->getBackendUser()?->user['uid'] ?? 0);
+        return $this->isAdmin() ? null : $this->getUserUid();
     }
 
     private function accessDenied(): ResponseInterface
     {
         return new HtmlResponse($this->getLanguageService()->sL('opinion.messages:module.accessDenied'), 403);
+    }
+
+    private function getUserUid(): int
+    {
+        return (int)($this->getBackendUser()?->user['uid'] ?? 0);
     }
 
     private function getBackendUser(): ?BackendUserAuthentication

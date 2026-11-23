@@ -6,12 +6,13 @@ namespace Vkemeter\Opinion\Cleanup;
 
 use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 
 /**
  * Deletes feedback records created before a given date together with their
- * screenshots. A record is only removed after its screenshots are gone.
+ * screenshots and conversation. A record is only removed after its screenshots are gone.
  */
 final readonly class FeedbackCleaner
 {
@@ -19,12 +20,14 @@ final readonly class FeedbackCleaner
         private FeedbackRepository $feedbackRepository,
         private ScreenshotStorage $screenshotStorage,
         private ResourceFactory $resourceFactory,
+        private ConversationRepository $conversationRepository,
     ) {}
 
     public function cleanup(\DateTimeImmutable $createdBefore, bool $dryRun): CleanupResult
     {
         $records = 0;
         $screenshots = 0;
+        $messages = 0;
         $errors = [];
 
         foreach ($this->feedbackRepository->findUidsCreatedBefore($createdBefore->getTimestamp()) as $feedbackUid) {
@@ -32,6 +35,7 @@ final readonly class FeedbackCleaner
             if ($dryRun) {
                 $records++;
                 $screenshots += count($fileUids);
+                $messages += $this->conversationRepository->countByFeedback($feedbackUid);
                 continue;
             }
 
@@ -44,6 +48,7 @@ final readonly class FeedbackCleaner
                     }
                     $screenshots++;
                 }
+                $messages += $this->conversationRepository->removeByFeedback($feedbackUid);
                 $this->feedbackRepository->remove($feedbackUid);
                 $records++;
             } catch (\Throwable $exception) {
@@ -51,6 +56,6 @@ final readonly class FeedbackCleaner
             }
         }
 
-        return new CleanupResult($records, $screenshots, $errors);
+        return new CleanupResult($records, $screenshots, $messages, $errors);
     }
 }

@@ -408,6 +408,35 @@ await scenario('screenshot annotation: text in the chosen colour, Escape keeps t
   assert(await countPixels(page, textBox, isYellow) === 0, 'undo did not remove the text');
 });
 
+await scenario('backend: unread count on the module menu entry, also after it is re-rendered', [], async (page) => {
+  await page.route(`${BASE}/backend.html`, (route) => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><body>
+<nav id="modulemenu"><a data-modulemenu-identifier="web_layout">Page</a><a data-modulemenu-identifier="opinion_feedback"><span>Feedback</span></a></nav>
+<button data-opinion-toolbar-config="{}" data-opinion-unread="2" data-opinion-unread-label="2 feedback entries with new messages">Send feedback</button>
+<script type="module" src="/JavaScript/toolbar-item.js"></script></body></html>` }));
+  await page.goto(`${BASE}/backend.html`);
+  const badge = '[data-modulemenu-identifier=opinion_feedback] .opinion-modulemenu-badge';
+  await page.waitForSelector(badge);
+  assert(await page.textContent(badge) === '2', 'badge count');
+  assert(await page.getAttribute(badge, 'aria-hidden') === 'true', 'badge not hidden from screen readers');
+  assert(await page.textContent('[data-modulemenu-identifier=opinion_feedback] .visually-hidden') === '2 feedback entries with new messages', 'label for screen readers');
+  assert(await page.locator('.opinion-modulemenu-badge').count() === 1, 'badge on another entry');
+  // The backend replaces the menu, the badge comes back once
+  await page.evaluate(() => { document.getElementById('modulemenu').innerHTML = '<a data-modulemenu-identifier="opinion_feedback"><span>Feedback</span></a>'; });
+  await page.waitForSelector(badge);
+  assert(await page.locator(badge).count() === 1, 'badge added twice');
+});
+
+await scenario('backend: no badge without unread messages', [], async (page) => {
+  await page.route(`${BASE}/backend.html`, (route) => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><body>
+<nav id="modulemenu"><a data-modulemenu-identifier="opinion_feedback"><span>Feedback</span></a></nav>
+<button data-opinion-toolbar-config="{}" data-opinion-unread="0" data-opinion-unread-label="0 feedback entries with new messages">Send feedback</button>
+<script type="module" src="/JavaScript/toolbar-item.js"></script><script type="module">window.loaded = true;</script></body></html>` }));
+  await page.goto(`${BASE}/backend.html`);
+  await page.waitForFunction(() => window.loaded);
+  await page.waitForTimeout(200);
+  assert(await page.locator('.opinion-modulemenu-badge').count() === 0, 'badge shown for 0');
+});
+
 await scenario('denied screenshot shows notice and text submit still possible', ['--auto-reject-this-tab-capture'], async (page) => {
   await page.click('text=[screenshotTake]');
   await page.waitForFunction(() => document.querySelector('.opinion-dialog__notice')?.textContent !== '', null, { timeout: 10000 });

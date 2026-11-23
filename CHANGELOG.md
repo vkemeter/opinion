@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added: a conversation per feedback in the module "Feedback": administrators
+  and the sender exchange plain-text messages below the feedback, without
+  email. A reply of the sender reopens closed feedback. The list shows the
+  number of messages and marks unread ones as *New*; the module menu entry
+  "Feedback" counts the feedback entries with unread messages in a badge. Needs a database schema update
+  (`extension:setup`) for the new tables `tx_opinion_message` and
+  `tx_opinion_read`; `opinion:cleanup` deletes messages with their feedback
 - Fixed: feedback of editors with screenshot failed in the email delivery
   ("You are not allowed to access that file"); the screenshot is now read on
   behalf of the system, as it is stored

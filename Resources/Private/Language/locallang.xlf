@@ -547,6 +547,72 @@
             <trans-unit id="dialog.emailMissingLink">
                 <source>Open user settings</source>
             </trans-unit>
+            <trans-unit id="tx_opinion_message">
+                <source>Feedback message</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.feedback">
+                <source>Feedback</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.be_user">
+                <source>Author</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_message.message">
+                <source>Message</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read">
+                <source>Feedback read state</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.feedback">
+                <source>Feedback</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.be_user">
+                <source>Backend user</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_read.last_message">
+                <source>Last read message</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.title">
+                <source>Conversation</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.empty">
+                <source>No messages yet.</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.deletedUser">
+                <source>Deleted user</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.message">
+                <source>Your message</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.hint">
+                <source>Visible to the administrators and the sender of the feedback. No email is sent.</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.send">
+                <source>Send message</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.flashTitle">
+                <source>Conversation</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.saved">
+                <source>The message was sent.</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.reopened">
+                <source>The message was sent and the feedback is in progress again.</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.invalid">
+                <source>Please enter a message of 1 to 5000 characters.</source>
+            </trans-unit>
+            <trans-unit id="module.list.unreadBadge">
+                <source>New</source>
+            </trans-unit>
+            <trans-unit id="module.list.messageCount">
+                <source>%d messages</source>
+            </trans-unit>
+            <trans-unit id="module.list.unread">
+                <source>New messages</source>
+            </trans-unit>
+            <trans-unit id="toolbar.unread">
+                <source>%d feedback entries with new messages</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

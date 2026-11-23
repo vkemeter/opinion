@@ -15,6 +15,7 @@ use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
@@ -50,6 +51,12 @@ final class CleanupCommandTest extends FunctionalTestCase
             $this->feedbackUids[$key] = $this->get(FeedbackRepository::class)->add($this->createSubmission($createdAt), $file);
             $this->screenshotPaths[$key] = Environment::getVarPath() . '/opinion' . $file->getIdentifier();
         }
+        // Three messages on the old feedback, one on the recent one
+        $conversation = $this->get(ConversationRepository::class);
+        foreach (['old', 'old', 'old', 'recent'] as $key) {
+            $conversation->add($this->feedbackUids[$key], 1, 'Message', new \DateTimeImmutable());
+        }
+        $conversation->markRead($this->feedbackUids['old'], 1);
     }
 
     #[Test]
@@ -58,10 +65,13 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand([]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Deleted 1 feedback record(s) and 1 screenshot(s)', $tester->getDisplay());
+        self::assertStringContainsString('Deleted 1 feedback record(s), 1 screenshot(s) and 3 message(s)', $tester->getDisplay());
         self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
         self::assertFileDoesNotExist($this->screenshotPaths['old']);
         self::assertSame(0, $this->countReferences($this->feedbackUids['old']));
+        self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($this->feedbackUids['old']));
+        self::assertSame(0, $this->get(ConnectionPool::class)->getConnectionForTable(ConversationRepository::READ_TABLE)->count('*', ConversationRepository::READ_TABLE, []));
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($this->feedbackUids['recent']));
         self::assertSame(1, $this->get(ConnectionPool::class)->getConnectionForTable('sys_file')->count('*', 'sys_file', ['storage' => $this->get(ScreenshotStorageResolver::class)->findStorage()?->getUid()]));
 
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
@@ -74,7 +84,7 @@ final class CleanupCommandTest extends FunctionalTestCase
     {
         $tester = $this->runCommand(['--days' => '5']);
 
-        self::assertStringContainsString('Deleted 2 feedback record(s) and 2 screenshot(s)', $tester->getDisplay());
+        self::assertStringContainsString('Deleted 2 feedback record(s), 2 screenshot(s) and 4 message(s)', $tester->getDisplay());
         self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
         self::assertFileDoesNotExist($this->screenshotPaths['recent']);
     }
@@ -85,9 +95,10 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand(['--days' => '5', '--dry-run' => true]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Would delete 2 feedback record(s) and 2 screenshot(s)', $tester->getDisplay());
+        self::assertStringContainsString('Would delete 2 feedback record(s), 2 screenshot(s) and 4 message(s)', $tester->getDisplay());
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
         self::assertFileExists($this->screenshotPaths['old']);
+        self::assertSame(3, $this->get(ConversationRepository::class)->countByFeedback($this->feedbackUids['old']));
     }
 
     #[Test]
