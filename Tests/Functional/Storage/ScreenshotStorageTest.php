@@ -69,6 +69,18 @@ final class ScreenshotStorageTest extends FunctionalTestCase
         $screenshotStorage->store(self::png(), 'png', new \DateTimeImmutable());
     }
 
+    #[Test]
+    public function storeFailsWhenTheDatedFolderCannotBeCreated(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        // A file named like the year folder makes createFolder() fail
+        touch(Environment::getVarPath() . '/opinion/2031');
+
+        $this->expectException(ScreenshotStorageException::class);
+        $this->expectExceptionCode(1795412871);
+        $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable('2031-10-09 12:00:00'));
+    }
+
     private static function png(): string
     {
         return base64_decode(self::PNG_BASE64, true);

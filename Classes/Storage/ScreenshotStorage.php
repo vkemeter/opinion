@@ -40,6 +40,9 @@ final readonly class ScreenshotStorage
                 Uuid::v4()->toRfc4122() . '.' . $fileExtension,
                 DuplicationBehavior::RENAME,
             );
+        } catch (\Throwable $exception) {
+            // FAL and the local driver throw various exceptions (permissions, full disk); all mean "not stored"
+            throw new ScreenshotStorageException('The screenshot could not be written into the storage: ' . $exception->getMessage(), 1795412871, $exception);
         } finally {
             $storage->setEvaluatePermissions($evaluatePermissions);
             if (is_file($temporaryFile)) {

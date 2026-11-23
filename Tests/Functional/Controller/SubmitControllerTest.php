@@ -7,6 +7,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Controller;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\UploadedFile;
@@ -15,6 +16,7 @@ use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\SubmitController;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
+use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 
 final class SubmitControllerTest extends FunctionalTestCase
 {
@@ -127,6 +129,21 @@ final class SubmitControllerTest extends FunctionalTestCase
         $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
 
         self::assertSame(503, $response->getStatusCode());
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
+    public function failingScreenshotWriteIsRejectedWithServiceUnavailable(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        // A file named like the year folder makes creating the dated folder fail
+        touch(Environment::getVarPath() . '/opinion/' . date('Y'));
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertStringContainsString('without', (string)$this->decode($response)['message']);
         self::assertSame(0, $this->countFeedback());
     }
 

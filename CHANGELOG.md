@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: errors while writing the screenshot into the storage (folder
+  creation, permissions, full disk) are answered with `503` and the hint to
+  send without screenshot instead of a bare `500`
+
 ## 1.2.0 – 2026-11-20
 
 - **Breaking:** the module "Feedback" moved from Admin Tools to its own entry in
