@@ -1,49 +1,57 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 – 2026-11-23
 
+Upgrade from 1.x:
+
+1. Update the database schema: `vendor/bin/typo3 extension:setup`
+   (new tables `tx_opinion_message`, `tx_opinion_read`, new column
+   `tx_opinion_feedback.page_uid`).
+2. Run the upgrade wizard once: `vendor/bin/typo3 upgrade:run opinion_pageUid`.
+3. Optional: `composer require typo3/cms-dashboard` for the dashboard widgets;
+   allow editors the widgets and add `admPanel.enable.opinion = 1` where the
+   admin panel list should appear.
+
+- **Breaking:** screenshots are delivered through the backend route
+  `opinion_screenshot` (access inherited from the module "Feedback") instead
+  of the file dump. File dump URLs (`eID=dumpFile`) of screenshots and their
+  processed variants always answer `403`, also for administrators; links
+  copied from the detail view before stop working. The Core does the whole
+  session check now
+- **Breaking:** the POST routes `opinion_feedback.status` and
+  `opinion_feedback.message` are replaced by `opinion_feedback.save`
+- Added: a conversation per feedback in the module "Feedback": administrators
+  and the sender exchange plain-text messages as a thread, without email. A
+  reply of the sender reopens closed feedback. The list shows the number of
+  messages and marks unread ones as *New*; the module menu entry "Feedback"
+  counts the feedback entries with unread messages. `opinion:cleanup` deletes
+  messages with their feedback. Extension setting `conversation` (default on)
+  switches it off
 - Added: open feedback of a page is shown where people work on it: the admin
   panel lists the open frontend feedback of the current page under "Feedback
-  on this page", the page module shows the open frontend and backend feedback
-  of the page in an info box (links to the module for administrators). Needs
-  a database schema update (`extension:setup`) for the new column `page_uid`
-  and the upgrade wizard `opinion_pageUid` for existing feedback
+  on this page" (links to the module for administrators), the page module
+  shows the open frontend and backend feedback of the page in a collapsible
+  box
 - Added: dashboard widgets "Open feedback", "New messages" and "Latest
   feedback" in the widget group "Feedback", with the access rules of the
-  module. The Core extension dashboard is optional (`suggest`); without it
-  the widgets are not registered
-- Changed: the detail view of the module "Feedback" saves message and status
-  with one form and one button "Save", so neither change is lost
-  (routes `opinion_feedback.status` and `opinion_feedback.message` replaced
-  by `opinion_feedback.save`). Message and screenshot are side by side, the
-  conversation follows as a centred thread, the collected details are
-  collapsed by default
-- Added: extension setting `conversation` (default on) to switch the
-  conversation off
+  module. The Core extension dashboard is optional (`suggest`)
+- Added: the screenshot editor crops the screenshot to the relevant part (only
+  that part is sent) and places short text notes in the selected colour
+- Changed: the detail view saves message and status with one form and one
+  button "Save", so neither change is lost; message and screenshot are side by
+  side, the conversation follows as a centred thread, the collected details
+  are collapsed by default
+- Changed: the toolbar of the screenshot editor shows small icon buttons with
+  tooltips (icons from the TYPO3 icons), all tools and actions in one row
 - Changed: the extension settings show labelled tabs "Email" and "Storage";
   `disabledDeliveryChannels` moved to the tab "Basic"
-- Added: a conversation per feedback in the module "Feedback": administrators
-  and the sender exchange plain-text messages below the feedback, without
-  email. A reply of the sender reopens closed feedback. The list shows the
-  number of messages and marks unread ones as *New*; the module menu entry
-  "Feedback" counts the feedback entries with unread messages in a badge. Needs a database schema update
-  (`extension:setup`) for the new tables `tx_opinion_message` and
-  `tx_opinion_read`; `opinion:cleanup` deletes messages with their feedback
+- Changed: the record edit form no longer shows the screenshot field
 - Fixed: feedback of editors with screenshot failed in the email delivery
   ("You are not allowed to access that file"); the screenshot is now read on
   behalf of the system, as it is stored
-- Added: the screenshot editor can crop the screenshot to the relevant part
-  (only that part is sent) and place short text notes in the selected colour
-- Changed: the toolbar of the screenshot editor is more compact: small icon
-  buttons with tooltips (icons from TYPO3 icons), all tools and actions in one
-  row
-- **Breaking:** screenshots are delivered through the feedback module
-  (backend route `opinion_screenshot`, access inherited from the module) instead of the file dump. File dump
-  URLs (`eID=dumpFile`) of screenshots and their processed variants always
-  answer `403`, also for administrators; links copied from the detail view
-  before stop working. The Core now does the whole session check
+- Fixed: senders and authors without real name are shown with their username
+  in the module instead of an empty name
 - Removed: `AdminRequestChecker` and `AdminRequestCheckerInterface`
-- Changed: the record edit form no longer shows the screenshot field
 
 ## 1.2.1 – 2026-11-23
 
