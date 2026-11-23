@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 – 2026-11-23
 
 - Fixed: errors while writing the screenshot into the storage (folder
   creation, permissions, full disk) are answered with `503` and the hint to
