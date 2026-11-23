@@ -15,6 +15,7 @@ export class ScreenshotControl {
     // The capture as taken, the shapes drawn on it and the image that is sent (capture with shapes burnt in)
     this.originalBlob = null;
     this.shapes = [];
+    this.crop = null;
     this.blob = null;
     this.element = this.render();
   }
@@ -26,6 +27,7 @@ export class ScreenshotControl {
   reset() {
     this.originalBlob = null;
     this.shapes = [];
+    this.crop = null;
     this.blob = null;
     this.preview.removeAttribute('src');
     this.update();
@@ -73,6 +75,7 @@ export class ScreenshotControl {
       const blob = await captureScreenshot();
       this.originalBlob = blob;
       this.shapes = [];
+      this.crop = null;
       this.blob = blob;
       this.preview.src = await blobToDataUrl(blob);
     } catch (error) {
@@ -89,10 +92,12 @@ export class ScreenshotControl {
     let image = null;
     try {
       image = await createImageBitmap(this.originalBlob);
-      const shapes = await openAnnotationEditor({ image, shapes: this.shapes, labels: this.labels, id: `${this.id}-annotation` });
-      if (shapes !== null) {
-        this.blob = shapes.length > 0 ? await flattenAnnotations(image, shapes) : this.originalBlob;
+      const result = await openAnnotationEditor({ image, shapes: this.shapes, crop: this.crop, labels: this.labels, id: `${this.id}-annotation` });
+      if (result !== null) {
+        const { shapes, crop } = result;
+        this.blob = shapes.length > 0 || crop ? await flattenAnnotations(image, shapes, crop) : this.originalBlob;
         this.shapes = shapes;
+        this.crop = crop;
         this.preview.src = await blobToDataUrl(this.blob);
       }
     } catch {

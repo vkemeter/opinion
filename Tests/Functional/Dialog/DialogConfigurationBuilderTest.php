@@ -90,6 +90,10 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertSame('Feedback senden', $configuration['labels']['title']);
         self::assertSame('Verbleibende Zeichen: {count}', $configuration['labels']['charactersLeft']);
         self::assertSame('Schwärzen', $configuration['labels']['annotationBlackout']);
+        self::assertSame('Zuschneiden', $configuration['labels']['annotationCrop']);
+        self::assertSame('Zuschnitt aufheben', $configuration['labels']['annotationResetCrop']);
+        self::assertSame('Text', $configuration['labels']['annotationText']);
+        self::assertSame('Text auf dem Screenshot', $configuration['labels']['annotationTextField']);
         self::assertSame('Fehler', $configuration['categories'][0]['label']);
     }
 }

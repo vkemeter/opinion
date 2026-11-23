@@ -1,13 +1,17 @@
 import { canvasToJpeg } from './screenshot.js';
 
-export const TOOLS = ['rectangle', 'arrow', 'blackout'];
+export const TOOLS = ['rectangle', 'arrow', 'text', 'blackout', 'crop'];
 export const COLORS = { red: '#e00000', yellow: '#ffd400', blue: '#0078e6' };
 const BLACKOUT_COLOR = '#000';
 // Shapes smaller than this (in image pixels) are treated as accidental clicks
 const MIN_SIZE = 4;
+// Crop frames smaller than this (in image pixels, both sides) are ignored
+const MIN_CROP_SIZE = 16;
+const TEXT_OUTLINE_COLOR = '#111';
 
 /**
- * A shape is { tool, color, x1, y1, x2, y2 } in image pixel coordinates.
+ * A shape is { tool, color, x1, y1, x2, y2 } or, for text, { tool: 'text', color, x, y, text }
+ * in image pixel coordinates.
  */
 export function isShapeLargeEnough(shape) {
   return Math.hypot(shape.x2 - shape.x1, shape.y2 - shape.y1) >= MIN_SIZE;
@@ -15,6 +19,19 @@ export function isShapeLargeEnough(shape) {
 
 export function lineWidthFor(imageWidth) {
   return Math.max(2, Math.round(imageWidth / 320));
+}
+
+/**
+ * The crop { x, y, width, height } spanned by two points, or null when it is too small.
+ */
+export function cropFromPoints(x1, y1, x2, y2) {
+  const crop = {
+    x: Math.round(Math.min(x1, x2)),
+    y: Math.round(Math.min(y1, y2)),
+    width: Math.round(Math.abs(x2 - x1)),
+    height: Math.round(Math.abs(y2 - y1)),
+  };
+  return crop.width >= MIN_CROP_SIZE && crop.height >= MIN_CROP_SIZE ? crop : null;
 }
 
 /**
@@ -35,6 +52,10 @@ export function renderAnnotations(context, image, shapes) {
 }
 
 function drawShape(context, shape, lineWidth) {
+  if (shape.tool === 'text') {
+    drawText(context, shape, lineWidth);
+    return;
+  }
   const x = Math.min(shape.x1, shape.x2);
   const y = Math.min(shape.y1, shape.y2);
   const width = Math.abs(shape.x2 - shape.x1);
@@ -60,6 +81,20 @@ function drawShape(context, shape, lineWidth) {
   context.restore();
 }
 
+function drawText(context, { color, x, y, text }, lineWidth) {
+  context.save();
+  context.font = `bold ${lineWidth * 8}px sans-serif`;
+  context.textBaseline = 'top';
+  context.lineJoin = 'round';
+  // Dark outline, so the text stays readable on any background
+  context.lineWidth = lineWidth * 2;
+  context.strokeStyle = TEXT_OUTLINE_COLOR;
+  context.strokeText(text, x, y);
+  context.fillStyle = color;
+  context.fillText(text, x, y);
+  context.restore();
+}
+
 function drawArrow(context, { x1, y1, x2, y2 }, lineWidth) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const headLength = Math.min(lineWidth * 5, Math.hypot(x2 - x1, y2 - y1));
@@ -79,16 +114,25 @@ function drawArrow(context, { x1, y1, x2, y2 }, lineWidth) {
 }
 
 /**
- * Returns the image with the shapes burnt in, as JPEG.
+ * Returns the image with the shapes burnt in, cut to the crop if given, as JPEG.
  *
  * @param {ImageBitmap} image
  * @param {Array<object>} shapes
+ * @param {{ x: number, y: number, width: number, height: number }|null} crop
  * @returns {Promise<Blob>}
  */
-export function flattenAnnotations(image, shapes) {
+export function flattenAnnotations(image, shapes, crop = null) {
   const canvas = document.createElement('canvas');
   canvas.width = image.width;
   canvas.height = image.height;
   renderAnnotations(canvas.getContext('2d'), image, shapes);
-  return canvasToJpeg(canvas);
+  if (!crop || crop.width < MIN_CROP_SIZE || crop.height < MIN_CROP_SIZE) {
+    return canvasToJpeg(canvas);
+  }
+  // The pixels outside the crop are never encoded
+  const cropped = document.createElement('canvas');
+  cropped.width = crop.width;
+  cropped.height = crop.height;
+  cropped.getContext('2d').drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+  return canvasToJpeg(cropped);
 }

@@ -297,6 +297,117 @@ await scenario('screenshot annotation: clear all restores the capture, retake dr
   assert(await page.isDisabled('text=[annotationUndo]'), 'shapes kept after retake');
 });
 
+async function imageSize(page, source) {
+  return page.evaluate(async (source) => {
+    const image = new Image(); image.src = source; await image.decode();
+    return { width: image.width, height: image.height };
+  }, source);
+}
+
+// Number of pixels of the editor canvas in the relative box that match the colour test
+async function countPixels(page, box, test) {
+  const data = await page.evaluate((box) => {
+    const canvas = document.querySelector('.opinion-annotation__canvas');
+    const x = Math.round(canvas.width * box[0]); const y = Math.round(canvas.height * box[1]);
+    return Array.from(canvas.getContext('2d').getImageData(x, y, Math.round(canvas.width * box[2]) - x, Math.round(canvas.height * box[3]) - y).data);
+  }, box);
+  let count = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (test({ r: data[i], g: data[i + 1], b: data[i + 2] })) count++;
+  }
+  return count;
+}
+
+await scenario('screenshot annotation: crop, reset crop, reopen with the frame', ['--auto-accept-this-tab-capture'], async (page) => {
+  await page.click('text=[screenshotTake]');
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  const full = await imageSize(page, await page.getAttribute('.opinion-dialog__preview', 'src'));
+
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await page.isDisabled('text=[annotationResetCrop]'), 'reset crop enabled without crop');
+  // Black out the left half of the later frame, so its content can be checked
+  await page.click('text=[annotationBlackout]');
+  await dragOnCanvas(page, [0.25, 0.25], [0.5, 0.5]);
+  await page.click('text=[annotationCrop]');
+  assert(await page.isDisabled('[data-color=red]'), 'colours enabled for crop');
+  await dragOnCanvas(page, [0.1, 0.1], [0.12, 0.12]);
+  assert(await page.isDisabled('text=[annotationResetCrop]'), 'too small frame accepted');
+  await dragOnCanvas(page, [0.25, 0.25], [0.75, 0.5]);
+  assert(await page.isEnabled('text=[annotationResetCrop]'), 'crop not set');
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+
+  const cropped = await page.getAttribute('.opinion-dialog__preview', 'src');
+  const size = await imageSize(page, cropped);
+  console.log('   cropped', JSON.stringify(size), 'of', JSON.stringify(full));
+  assert(Math.abs(size.width - full.width * 0.5) <= 2 && Math.abs(size.height - full.height * 0.25) <= 2, 'cropped JPEG has not the frame size');
+  const [left, right] = await pixelsAt(page, cropped, [[0.25, 0.5], [0.75, 0.5]]);
+  assert(isBlack(left) && !isBlack(right), 'cropped JPEG does not show the framed area');
+
+  // Reopening shows the full capture with the frame; reset crop sends the full size
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await page.evaluate(() => document.querySelector('.opinion-annotation__canvas').width) === full.width, 'editor not on the full capture');
+  assert(await page.isEnabled('text=[annotationResetCrop]'), 'crop not restored');
+  await page.click('text=[annotationResetCrop]');
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+  const reset = await imageSize(page, await page.getAttribute('.opinion-dialog__preview', 'src'));
+  assert(reset.width === full.width && reset.height === full.height, 'reset crop did not restore the full size');
+});
+
+await scenario('screenshot annotation: text in the chosen colour, Escape keeps the editor', ['--auto-accept-this-tab-capture'], async (page) => {
+  await page.click('text=[screenshotTake]');
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await page.click('text=[annotationText]');
+  await page.click('[data-color=yellow]');
+  const box = await page.locator('.opinion-annotation__canvas').boundingBox();
+
+  // Escape discards the text, the editor stays open
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.waitForSelector('.opinion-annotation__text');
+  assert(await page.getAttribute('.opinion-annotation__text', 'maxlength') === '200', 'no length limit');
+  await page.keyboard.type('discard me');
+  await page.keyboard.press('Escape');
+  assert(await page.locator('dialog.opinion-annotation[open]').count() === 1, 'Escape closed the editor');
+  assert(await page.locator('.opinion-annotation__text').count() === 0, 'text field still open');
+  assert(await page.isDisabled('text=[annotationUndo]'), 'discarded text was placed');
+
+  // An empty text places nothing
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.keyboard.press('Enter');
+  assert(await page.isDisabled('text=[annotationUndo]'), 'empty text was placed');
+
+  const textBox = [0.3, 0.6, 0.6, 0.75];
+  assert(await countPixels(page, textBox, isYellow) === 0, 'yellow before the text');
+  await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.6);
+  await page.keyboard.type('should be blue');
+  await page.keyboard.press('Enter');
+  assert(await page.isEnabled('text=[annotationUndo]'), 'text not placed');
+  assert(await countPixels(page, textBox, isYellow) > 50, 'text not drawn in yellow');
+  await closeEditor(page, () => page.click('text=[annotationApply]'));
+
+  const annotated = await page.getAttribute('.opinion-dialog__preview', 'src');
+  const yellowInJpeg = await page.evaluate(async ({ source, box }) => {
+    const image = new Image(); image.src = source; await image.decode();
+    const c = document.createElement('canvas'); c.width = image.width; c.height = image.height;
+    const ctx = c.getContext('2d'); ctx.drawImage(image, 0, 0);
+    const x = Math.round(image.width * box[0]); const y = Math.round(image.height * box[1]);
+    const data = ctx.getImageData(x, y, Math.round(image.width * box[2]) - x, Math.round(image.height * box[3]) - y).data;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) if (data[i] > 200 && data[i + 1] > 170 && data[i + 2] < 110) count++;
+    return count;
+  }, { source: annotated, box: textBox });
+  assert(yellowInJpeg > 50, 'text not burnt into the JPEG');
+
+  // Placed text is undone like any other shape
+  await page.click('text=[annotate]');
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await page.keyboard.press('Control+z');
+  assert(await countPixels(page, textBox, isYellow) === 0, 'undo did not remove the text');
+});
+
 await scenario('denied screenshot shows notice and text submit still possible', ['--auto-reject-this-tab-capture'], async (page) => {
   await page.click('text=[screenshotTake]');
   await page.waitForFunction(() => document.querySelector('.opinion-dialog__notice')?.textContent !== '', null, { timeout: 10000 });

@@ -361,8 +361,8 @@
                 <target>Screenshot markieren</target>
             </trans-unit>
             <trans-unit id="dialog.annotationHint">
-                <source>Draw on the screenshot with the mouse, a pen or your finger. Black out personal data before sending.</source>
-                <target>Zeichnen Sie mit der Maus, einem Stift oder dem Finger auf den Screenshot. Schwärzen Sie personenbezogene Daten vor dem Senden.</target>
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and add short notes as text. Black out personal data before sending.</source>
+                <target>Zeichnen Sie mit der Maus, einem Stift oder dem Finger auf den Screenshot. Schneiden Sie ihn auf den relevanten Teil zu und ergänzen Sie kurze Notizen als Text. Schwärzen Sie personenbezogene Daten vor dem Senden.</target>
             </trans-unit>
             <trans-unit id="dialog.annotationTools">
                 <source>Tool</source>
@@ -375,6 +375,22 @@
             <trans-unit id="dialog.annotationArrow">
                 <source>Arrow</source>
                 <target>Pfeil</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationText">
+                <source>Text</source>
+                <target>Text</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTextField">
+                <source>Text on the screenshot</source>
+                <target>Text auf dem Screenshot</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationCrop">
+                <source>Crop</source>
+                <target>Zuschneiden</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationResetCrop">
+                <source>Reset crop</source>
+                <target>Zuschnitt aufheben</target>
             </trans-unit>
             <trans-unit id="dialog.annotationBlackout">
                 <source>Black out</source>

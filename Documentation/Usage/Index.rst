@@ -92,12 +92,28 @@ full-screen editor.
 :guilabel:`Arrow`
     Points at an element; drag from the start to the tip.
 
+:guilabel:`Text`
+    Click on the image, type a short note (one line, up to 200 characters)
+    and press :kbd:`Enter`. The text is drawn in the selected colour with a
+    dark outline. :kbd:`Esc` discards the text and keeps the editor open.
+    Placed text cannot be edited or moved; undo it and place it again.
+
 :guilabel:`Black out`
     Covers an area with black, for example personal data that must not be
     sent.
 
+:guilabel:`Crop`
+    Drag a frame around the relevant part; only this part is sent, at full
+    resolution. A new frame replaces the previous one. The area outside the
+    frame is dimmed while editing.
+
+:guilabel:`Reset crop`
+    Removes the frame, the whole screenshot is sent again. The crop is not
+    part of :guilabel:`Undo`.
+
 Colour
-    Red, yellow or blue for rectangle and arrow. Black out is always black.
+    Red, yellow or blue for rectangle, arrow and text. Black out is always
+    black.
 
 :guilabel:`Undo` (also :kbd:`Ctrl` + :kbd:`Z` or :kbd:`Cmd` + :kbd:`Z`)
     Removes the last marking.
@@ -112,7 +128,9 @@ Colour
     Returns to the dialog without changes.
 
 Draw with the mouse, a pen or a finger. Opening the editor again shows the
-markings, they can still be undone. :guilabel:`Retake` starts without markings.
+whole screenshot with the markings and the crop frame; markings can still be
+undone and the crop changed. :guilabel:`Retake` and :guilabel:`Remove` discard
+markings and crop.
 
 ..  important::
     Only the marked-up image is sent. Blacked-out areas are removed in the

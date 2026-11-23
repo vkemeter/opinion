@@ -1,29 +1,42 @@
-import { COLORS, TOOLS, isShapeLargeEnough, renderAnnotations } from './annotation.js';
+import { COLORS, TOOLS, cropFromPoints, isShapeLargeEnough, renderAnnotations } from './annotation.js';
 import { el } from './dom.js';
 
-const TOOL_LABELS = { rectangle: 'annotationRectangle', arrow: 'annotationArrow', blackout: 'annotationBlackout' };
+const TOOL_LABELS = {
+  rectangle: 'annotationRectangle',
+  arrow: 'annotationArrow',
+  text: 'annotationText',
+  blackout: 'annotationBlackout',
+  crop: 'annotationCrop',
+};
 const COLOR_LABELS = { red: 'annotationColorRed', yellow: 'annotationColorYellow', blue: 'annotationColorBlue' };
+// Tools that are always drawn the same way, so the colour buttons do not apply
+const COLORLESS_TOOLS = ['blackout', 'crop'];
+const CROP_DIM_COLOR = 'rgb(0 0 0 / 55%)';
+const CROP_FRAME_COLOR = '#fff';
+const TEXT_MAX_LENGTH = 200;
 
 /**
  * Opens the full-screen editor above the feedback dialog.
- * Resolves with the new list of shapes on apply, or null on cancel.
+ * Resolves with the new shapes and crop on apply, or null on cancel.
  *
- * @param {{ image: ImageBitmap, shapes: Array<object>, labels: object, id: string }} options
- * @returns {Promise<Array<object>|null>}
+ * @param {{ image: ImageBitmap, shapes: Array<object>, crop: object|null, labels: object, id: string }} options
+ * @returns {Promise<{ shapes: Array<object>, crop: object|null }|null>}
  */
 export function openAnnotationEditor(options) {
   return new AnnotationEditor(options).open();
 }
 
 class AnnotationEditor {
-  constructor({ image, shapes, labels, id }) {
+  constructor({ image, shapes, crop = null, labels, id }) {
     this.image = image;
     this.shapes = [...shapes];
+    this.crop = crop;
     this.labels = labels;
     this.id = id;
     this.tool = TOOLS[0];
     this.color = Object.keys(COLORS)[0];
     this.draft = null;
+    this.textInput = null;
     this.result = null;
     this.renderScheduled = false;
     this.element = this.render();
@@ -74,12 +87,15 @@ class AnnotationEditor {
     this.undoButton.addEventListener('click', () => this.undo());
     this.clearButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.annotationClear);
     this.clearButton.addEventListener('click', () => this.clear());
+    this.resetCropButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.annotationResetCrop);
+    this.resetCropButton.addEventListener('click', () => this.resetCrop());
 
     const cancelButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.cancel);
     cancelButton.addEventListener('click', () => this.element.close());
     const applyButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary', type: 'button' }, this.labels.annotationApply);
     applyButton.addEventListener('click', () => {
-      this.result = this.shapes;
+      this.commitText();
+      this.result = { shapes: this.shapes, crop: this.crop };
       this.element.close();
     });
 
@@ -96,22 +112,27 @@ class AnnotationEditor {
     });
 
     dialog.addEventListener('keydown', (event) => {
+      // In the text field Ctrl/Cmd + Z is the native text undo
+      if (event.target === this.textInput) {
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         this.undo();
       }
     });
 
+    this.stage = el('div', { class: 'opinion-annotation__stage' }, [this.canvas]);
     dialog.append(
       el('div', { class: 'opinion-annotation__toolbar' }, [
         el('h2', { class: 'opinion-dialog__title opinion-annotation__title', id: `${this.id}-title` }, this.labels.annotationTitle),
         tools,
         this.colorGroup,
-        el('div', { class: 'opinion-annotation__group' }, [this.undoButton, this.clearButton]),
+        el('div', { class: 'opinion-annotation__group' }, [this.undoButton, this.clearButton, this.resetCropButton]),
         el('div', { class: 'opinion-annotation__group opinion-annotation__group--end' }, [cancelButton, applyButton]),
       ]),
       el('p', { class: 'opinion-dialog__hint opinion-annotation__hint', id: `${this.id}-hint` }, this.labels.annotationHint),
-      el('div', { class: 'opinion-annotation__stage' }, [this.canvas]),
+      this.stage,
     );
     this.updateControls();
     return dialog;
@@ -139,13 +160,28 @@ class AnnotationEditor {
     this.draw();
   }
 
+  resetCrop() {
+    this.crop = null;
+    this.updateControls();
+    this.draw();
+  }
+
   startShape(event) {
     if (event.button !== 0) {
       return;
     }
+    // preventDefault() keeps the focus where it is, so an open text field does not blur by itself
     event.preventDefault();
-    this.canvas.setPointerCapture(event.pointerId);
+    if (this.textInput) {
+      this.commitText();
+      return;
+    }
     const { x, y } = this.toImagePoint(event);
+    if (this.tool === 'text') {
+      this.openTextInput(x, y);
+      return;
+    }
+    this.canvas.setPointerCapture(event.pointerId);
     this.draft = { tool: this.tool, color: COLORS[this.color], x1: x, y1: y, x2: x, y2: y };
   }
 
@@ -164,12 +200,66 @@ class AnnotationEditor {
       return;
     }
     this.moveShape(event);
-    if (isShapeLargeEnough(this.draft)) {
+    if (this.draft.tool === 'crop') {
+      // A new frame replaces the previous one; a too small one is an accidental click
+      const { x1, y1, x2, y2 } = this.draft;
+      this.crop = cropFromPoints(x1, y1, x2, y2) ?? this.crop;
+    } else if (isShapeLargeEnough(this.draft)) {
       this.shapes.push(this.draft);
     }
     this.draft = null;
     this.updateControls();
     this.draw();
+  }
+
+  openTextInput(x, y) {
+    const input = el('input', { class: 'opinion-annotation__text', type: 'text', maxlength: String(TEXT_MAX_LENGTH), 'aria-label': this.labels.annotationTextField });
+    const color = COLORS[this.color];
+    input.style.setProperty('--opinion-text-color', color);
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const stageRect = this.stage.getBoundingClientRect();
+    input.style.left = `${canvasRect.left - stageRect.left + (x * canvasRect.width) / this.canvas.width}px`;
+    input.style.top = `${canvasRect.top - stageRect.top + (y * canvasRect.height) / this.canvas.height}px`;
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        this.commitText();
+      } else if (event.key === 'Escape') {
+        // Discard the text only, the editor stays open
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeTextInput();
+      }
+    });
+    input.addEventListener('blur', () => this.commitText());
+    this.textInput = input;
+    this.textPosition = { x, y, color };
+    this.stage.append(input);
+    input.focus();
+  }
+
+  commitText() {
+    if (!this.textInput) {
+      return;
+    }
+    const text = this.textInput.value.trim();
+    if (text !== '') {
+      this.shapes.push({ tool: 'text', ...this.textPosition, text });
+    }
+    this.closeTextInput();
+    this.updateControls();
+    this.draw();
+  }
+
+  closeTextInput() {
+    const input = this.textInput;
+    if (!input) {
+      return;
+    }
+    // Cleared first, so the blur caused by removing the field does not commit again
+    this.textInput = null;
+    input.remove();
+    this.toolButtons[this.tool].focus();
   }
 
   toImagePoint(event) {
@@ -193,7 +283,29 @@ class AnnotationEditor {
   }
 
   draw() {
-    renderAnnotations(this.context, this.image, this.draft ? [...this.shapes, this.draft] : this.shapes);
+    const draftShape = this.draft && this.draft.tool !== 'crop' ? this.draft : null;
+    renderAnnotations(this.context, this.image, draftShape ? [...this.shapes, draftShape] : this.shapes);
+    const crop = this.draft?.tool === 'crop' ? cropFromPoints(this.draft.x1, this.draft.y1, this.draft.x2, this.draft.y2) : this.crop;
+    if (crop) {
+      this.drawCropFrame(crop);
+    }
+  }
+
+  // Dims the area outside the frame; only shown in the editor, never burnt in
+  drawCropFrame({ x, y, width, height }) {
+    const context = this.context;
+    const { width: canvasWidth, height: canvasHeight } = this.canvas;
+    context.save();
+    context.fillStyle = CROP_DIM_COLOR;
+    context.beginPath();
+    context.rect(0, 0, canvasWidth, canvasHeight);
+    context.rect(x, y, width, height);
+    context.fill('evenodd');
+    context.strokeStyle = CROP_FRAME_COLOR;
+    context.lineWidth = Math.max(1, Math.round(canvasWidth / 640));
+    context.setLineDash([context.lineWidth * 4, context.lineWidth * 3]);
+    context.strokeRect(x, y, width, height);
+    context.restore();
   }
 
   updateControls() {
@@ -203,11 +315,11 @@ class AnnotationEditor {
     }
     for (const [color, button] of Object.entries(this.colorButtons)) {
       button.setAttribute('aria-pressed', String(color === this.color));
-      // Black out is always black
-      button.disabled = this.tool === 'blackout';
+      button.disabled = COLORLESS_TOOLS.includes(this.tool);
     }
     this.undoButton.disabled = this.shapes.length === 0;
     this.clearButton.disabled = this.shapes.length === 0;
+    this.resetCropButton.disabled = this.crop === null;
     // A disabled button loses the focus, keep it inside the editor
     if (focused?.disabled) {
       this.toolButtons[this.tool].focus();

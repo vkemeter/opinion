@@ -322,6 +322,7 @@
 }
 
 .opinion-annotation__stage {
+  position: relative;
   display: flex;
   flex: 1;
   align-items: center;
@@ -330,6 +331,22 @@
   overflow: hidden;
   border-radius: 4px;
   background: #3a3a3a;
+}
+
+.opinion-annotation__text {
+  position: absolute;
+  min-width: 12em;
+  padding: 2px 6px;
+  border: 2px solid var(--opinion-text-color, #e00000);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 92%);
+  color: #111;
+  font: inherit;
+}
+
+.opinion-annotation__text:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
 }
 
 .opinion-annotation__canvas {

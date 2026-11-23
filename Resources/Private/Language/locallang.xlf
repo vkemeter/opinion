@@ -272,7 +272,7 @@
                 <source>Mark up screenshot</source>
             </trans-unit>
             <trans-unit id="dialog.annotationHint">
-                <source>Draw on the screenshot with the mouse, a pen or your finger. Black out personal data before sending.</source>
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and add short notes as text. Black out personal data before sending.</source>
             </trans-unit>
             <trans-unit id="dialog.annotationTools">
                 <source>Tool</source>
@@ -282,6 +282,18 @@
             </trans-unit>
             <trans-unit id="dialog.annotationArrow">
                 <source>Arrow</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationText">
+                <source>Text</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationTextField">
+                <source>Text on the screenshot</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationCrop">
+                <source>Crop</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationResetCrop">
+                <source>Reset crop</source>
             </trans-unit>
             <trans-unit id="dialog.annotationBlackout">
                 <source>Black out</source>
