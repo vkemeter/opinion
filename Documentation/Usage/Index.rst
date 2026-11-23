@@ -120,7 +120,7 @@ Click :guilabel:`Mark up` below the preview to open the screenshot in a
 full-screen editor.
 
 ..  figure:: /Images/AnnotationEditor.png
-    :alt: The editor with a rectangle, an arrow and a blacked-out area on the screenshot
+    :alt: The editor with a rectangle, an arrow, a text note and a blacked-out area on the screenshot
     :class: with-border with-shadow
 
     Marking up the screenshot
