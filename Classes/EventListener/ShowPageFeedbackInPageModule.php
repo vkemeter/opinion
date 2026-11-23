@@ -6,9 +6,11 @@ namespace Vkemeter\Opinion\EventListener;
 
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
@@ -32,15 +34,19 @@ final readonly class ShowPageFeedbackInPageModule
     public function __invoke(ModifyPageLayoutContentEvent $event): void
     {
         $backendUser = $GLOBALS['BE_USER'] ?? null;
-        $pageContext = $event->getPageContext();
-        if (!$backendUser instanceof BackendUserAuthentication || !$this->accessChecker->hasAccess($backendUser) || !$pageContext->isAccessible()) {
+        if (!$backendUser instanceof BackendUserAuthentication || !$this->accessChecker->hasAccess($backendUser)) {
+            return;
+        }
+        // From the request: the event offers getPageContext() only since TYPO3 14.3.12
+        $pageUid = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
+        if ($pageUid <= 0 || BackendUtility::readPageAccess($pageUid, $backendUser->getPagePermsClause(Permission::PAGE_SHOW)) === false) {
             return;
         }
 
         $isAdmin = $backendUser->isAdmin();
         $groups = [];
         foreach (Source::cases() as $source) {
-            $items = $this->feedbackRepository->findOpenByPage($pageContext->pageId, $source, self::LIMIT);
+            $items = $this->feedbackRepository->findOpenByPage($pageUid, $source, self::LIMIT);
             if ($items === []) {
                 continue;
             }
@@ -49,7 +55,7 @@ final readonly class ShowPageFeedbackInPageModule
                     ...$item,
                     'show_url' => $isAdmin ? (string)$this->uriBuilder->buildUriFromRoute('opinion_feedback.show', ['uid' => $item['uid']]) : '',
                 ], $items),
-                'more' => $this->feedbackRepository->countOpenByPage($pageContext->pageId, $source) - count($items),
+                'more' => $this->feedbackRepository->countOpenByPage($pageUid, $source) - count($items),
             ];
         }
         if ($groups === []) {
