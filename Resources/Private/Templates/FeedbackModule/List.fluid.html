@@ -113,7 +113,7 @@
 											{item.message -> f:format.crop(maxCharacters: 90)}
 										</a>
 									</td>
-									<td>{item.sender_name -> f:or(alternative: item.sender_username)}</td>
+									<td>{item.sender_name ?: item.sender_username}</td>
 									<td class="text-break">
 										<f:if condition="{item.sender_email}"><a href="mailto:{item.sender_email}">{item.sender_email}</a></f:if>
 									</td>

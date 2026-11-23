@@ -13,8 +13,7 @@
 				arguments="{severity: record.severity}" />
 		</h1>
 		<p class="text-body-secondary">
-			{record.crdate -> f:format.date(format: 'd.m.Y H:i')} · {f:translate(domain: 'opinion.messages', key: 'source.{record.source}')} · {sender.realName
-			-> f:or(alternative: sender.username)}
+			{record.crdate -> f:format.date(format: 'd.m.Y H:i')} · {f:translate(domain: 'opinion.messages', key: 'source.{record.source}')} · {sender.realName ?: sender.username}
 			<f:if condition="{sender.email}"> (<a href="mailto:{sender.email}">{sender.email}</a>) </f:if>
 		</p>
 		<f:if condition="{reportedUrl}">
@@ -126,7 +125,7 @@
 													<p class="small opacity-75 mb-1">
 														<strong>
 															<f:if condition="{entry.author_username}">
-																<f:then>{entry.author_name -> f:or(alternative: entry.author_username)}</f:then>
+																<f:then>{entry.author_name ?: entry.author_username}</f:then>
 																<f:else>{f:translate(domain: 'opinion.messages', key: 'module.conversation.deletedUser')}</f:else>
 															</f:if>
 														</strong>

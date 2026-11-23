@@ -11,6 +11,7 @@ use Symfony\Component\Routing\Route;
 use TYPO3\CMS\Backend\Module\ModuleProvider;
 use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
@@ -380,6 +381,22 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $this->setUpBackendUser(3);
         $this->postMessage($uid, 'Still broken.');
         self::assertSame('in_progress', $this->statusOf($uid), 'sender');
+    }
+
+    #[Test]
+    public function usersWithoutRealNameAreShownWithTheirUsername(): void
+    {
+        // TYPO3 stores a missing real name as empty string, not as null
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_users')->insert('be_users', ['uid' => 5, 'username' => 'nameless', 'realName' => '', 'admin' => 1]);
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback of nameless', Category::Bug, Severity::Low, Source::Backend, 5, new \DateTimeImmutable(), systemInfo: ['backendUser' => ['username' => 'nameless', 'realName' => '', 'email' => '']]), null);
+        $this->get(ConversationRepository::class)->add($uid, 5, 'Answer of nameless', new \DateTimeImmutable());
+
+        $show = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+        $list = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
+
+        self::assertMatchesRegularExpression('#<strong>\s*nameless\s*</strong>#', $show, 'author of the message');
+        self::assertMatchesRegularExpression('#· Backend · nameless#', $show, 'sender line');
+        self::assertMatchesRegularExpression('#<td>nameless</td>#', $list, 'sender column');
     }
 
     #[Test]
