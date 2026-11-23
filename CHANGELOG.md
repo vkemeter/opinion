@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Changed: the detail view of the module "Feedback" saves message and status
+  with one form and one button "Save", so neither change is lost
+  (routes `opinion_feedback.status` and `opinion_feedback.message` replaced
+  by `opinion_feedback.save`). Message and screenshot are side by side, the
+  conversation follows as a centred thread, the collected details are
+  collapsed by default
+- Added: extension setting `conversation` (default on) to switch the
+  conversation off
+- Changed: the extension settings show labelled tabs "Email" and "Storage";
+  `disabledDeliveryChannels` moved to the tab "Basic"
 - Added: a conversation per feedback in the module "Feedback": administrators
   and the sender exchange plain-text messages below the feedback, without
   email. A reply of the sender reopens closed feedback. The list shows the

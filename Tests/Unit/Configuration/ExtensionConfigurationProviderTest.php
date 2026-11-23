@@ -90,6 +90,8 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     public function getConfigurationReadsDisabledSwitch(): void
     {
         self::assertFalse($this->createSubject(['enabled' => '0'])->getConfiguration()->enabled);
+        self::assertFalse($this->createSubject(['conversation' => '0'])->getConfiguration()->conversationEnabled);
+        self::assertTrue($this->createSubject([])->getConfiguration()->conversationEnabled, 'on by default');
     }
 
     #[Test]

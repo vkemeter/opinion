@@ -83,6 +83,19 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function noUnreadCountWhileConversationIsSwitchedOff(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['conversation'] = '0';
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback', Category::Bug, Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        $this->get(ConversationRepository::class)->add($uid, 3, 'Reply', new \DateTimeImmutable());
+        $this->setUpBackendUser(1);
+
+        [$html] = $this->renderItem();
+
+        self::assertStringContainsString('data-opinion-unread="0"', $html);
+    }
+
+    #[Test]
     public function noUnreadCountWithoutModuleAccess(): void
     {
         // The reporter may send feedback but is not granted the module

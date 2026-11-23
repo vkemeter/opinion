@@ -85,6 +85,17 @@ Extension configuration
 
     `0` hides the feedback triggers for everybody and rejects submissions.
 
+..  confval:: conversation
+    :name: extconf-conversation
+    :type: boolean
+    :default: 1
+
+    `1`: administrators and the sender of a feedback exchange messages in the
+    module :guilabel:`Feedback` (see :ref:`administration-module`). `0` hides
+    the conversation, the message field, the conversation column of the list
+    and the badge on the module menu, and rejects new messages. Stored
+    messages are kept and deleted by `opinion:cleanup` as before.
+
 ..  _configuration-email:
 
 Email sender

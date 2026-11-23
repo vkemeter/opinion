@@ -47,6 +47,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
             redeliverMaxAttempts: max(0, (int)($settings['redeliverMaxAttempts'] ?? self::DEFAULT_REDELIVER_MAX_ATTEMPTS)),
             rateLimit: max(0, (int)($settings['rateLimit'] ?? self::DEFAULT_RATE_LIMIT)),
             disabledDeliveryChannels: GeneralUtility::trimExplode(',', (string)($settings['disabledDeliveryChannels'] ?? ''), true),
+            conversationEnabled: (bool)($settings['conversation'] ?? true),
         );
     }
 

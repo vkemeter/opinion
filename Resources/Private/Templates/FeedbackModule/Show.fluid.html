@@ -42,122 +42,13 @@
 					<div class="card-body">{record.message -> f:format.nl2br()}</div>
 				</div>
 
-				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'module.conversation.title')}</h2>
-				<f:if condition="{messages}">
-					<f:then>
-						<ol class="list-unstyled d-flex flex-column gap-2">
-							<f:for
-								each="{messages}"
-								as="entry">
-								<li class="card">
-									<div class="card-body">
-										<p class="text-body-secondary small mb-1">
-											<strong>
-												<f:if condition="{entry.author_username}">
-													<f:then>{entry.author_name -> f:or(alternative: entry.author_username)}</f:then>
-													<f:else>{f:translate(domain: 'opinion.messages', key: 'module.conversation.deletedUser')}</f:else>
-												</f:if>
-											</strong>
-											· {entry.crdate -> f:format.date(format: 'd.m.Y H:i')}
-										</p>
-										<div>{entry.message -> f:format.nl2br()}</div>
-									</div>
-								</li>
-							</f:for>
-						</ol>
-					</f:then>
-					<f:else>
-						<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.conversation.empty')}</p>
-					</f:else>
-				</f:if>
-				<form
-					method="post"
-					action="{be:moduleLink(route: 'opinion_feedback.message')}">
-					<input
-						type="hidden"
-						name="uid"
-						value="{record.uid}" />
-					<f:render
-						section="FilterFields"
-						arguments="{filterParameters: filterParameters}" />
-					<label
-						class="form-label"
-						for="opinion-conversation-message">
-						{f:translate(domain: 'opinion.messages', key: 'module.conversation.message')}
-					</label>
-					<textarea
-						id="opinion-conversation-message"
-						name="message"
-						class="form-control"
-						rows="4"
-						required
-						maxlength="{messageMaxLength}"
-						aria-describedby="opinion-conversation-hint"></textarea>
-					<p
-						id="opinion-conversation-hint"
-						class="form-text">
-						{f:translate(domain: 'opinion.messages', key: 'module.conversation.hint')}
-					</p>
-					<button
-						type="submit"
-						class="btn btn-default">
-						{f:translate(domain: 'opinion.messages', key: 'module.conversation.send')}
-					</button>
-				</form>
-
 				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</h2>
-				<f:if condition="{isAdmin}">
-					<f:then>
-						<form
-							method="post"
-							action="{be:moduleLink(route: 'opinion_feedback.status')}"
-							class="d-flex flex-wrap align-items-center gap-2">
-							<input
-								type="hidden"
-								name="uid"
-								value="{record.uid}" />
-							<f:render
-								section="FilterFields"
-								arguments="{filterParameters: filterParameters}" />
-							<f:render
-								partial="FeedbackModule/Badges"
-								section="Status"
-								arguments="{status: record.status}" />
-							<label
-								class="visually-hidden"
-								for="opinion-status">
-								{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}
-							</label>
-							<select
-								id="opinion-status"
-								name="status"
-								class="form-select w-auto">
-								<f:for
-									each="{statuses}"
-									as="status">
-									<option
-										value="{status}"
-										{f:if(condition: '{status} == {record.status}', then: 'selected')}>
-										{f:translate(domain: 'opinion.messages', key: 'status.{status}')}
-									</option>
-								</f:for>
-							</select>
-							<button
-								type="submit"
-								class="btn btn-default">
-								{f:translate(domain: 'opinion.messages', key: 'module.status.submit')}
-							</button>
-						</form>
-					</f:then>
-					<f:else>
-						<p>
-							<f:render
-								partial="FeedbackModule/Badges"
-								section="Status"
-								arguments="{status: record.status}" />
-						</p>
-					</f:else>
-				</f:if>
+				<p>
+					<f:render
+						partial="FeedbackModule/Badges"
+						section="Status"
+						arguments="{status: record.status}" />
+				</p>
 				<f:comment>Delivery details contain the recipient addresses: administrators only</f:comment>
 				<f:if condition="{isAdmin}">
 					<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</h2>
@@ -216,27 +107,138 @@
 			</div>
 		</div>
 
+		<f:if condition="{conversationEnabled} || {isAdmin}">
+			<div class="row justify-content-center mt-4">
+				<div class="col-12 col-xl-8">
+					<f:if condition="{conversationEnabled}">
+						<h2>{f:translate(domain: 'opinion.messages', key: 'module.conversation.title')}</h2>
+						<f:if condition="{messages}">
+							<f:then>
+								<ol class="list-unstyled d-flex flex-column gap-3">
+									<f:for
+										each="{messages}"
+										as="entry">
+										<f:comment>Messages of the sender on the start side, of everybody else on the end side</f:comment>
+										<li class="d-flex {f:if(condition: '{entry.be_user} == {record.be_user}', then: 'justify-content-start', else: 'justify-content-end')}">
+											<f:comment>card-primary sets background and text from the TYPO3 colour tokens, so it works in dark mode too</f:comment>
+											<article class="card mb-0 w-75 {f:if(condition: '{entry.be_user} == {record.be_user}', then: 'card-default', else: 'card-primary')}">
+												<div class="card-body">
+													<p class="small opacity-75 mb-1">
+														<strong>
+															<f:if condition="{entry.author_username}">
+																<f:then>{entry.author_name -> f:or(alternative: entry.author_username)}</f:then>
+																<f:else>{f:translate(domain: 'opinion.messages', key: 'module.conversation.deletedUser')}</f:else>
+															</f:if>
+														</strong>
+														· <time datetime="{entry.crdate -> f:format.date(format: 'c')}">{entry.crdate -> f:format.date(format: 'd.m.Y H:i')}</time>
+													</p>
+													<div>{entry.message -> f:format.nl2br()}</div>
+												</div>
+											</article>
+										</li>
+									</f:for>
+								</ol>
+							</f:then>
+							<f:else>
+								<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.conversation.empty')}</p>
+							</f:else>
+						</f:if>
+					</f:if>
+					<f:comment>One form for message and status, so no change gets lost</f:comment>
+					<form
+						method="post"
+						action="{be:moduleLink(route: 'opinion_feedback.save')}"
+						class="card mb-0">
+						<div class="card-body d-flex flex-column gap-3">
+							<input
+								type="hidden"
+								name="uid"
+								value="{record.uid}" />
+							<f:render
+								section="FilterFields"
+								arguments="{filterParameters: filterParameters}" />
+							<f:if condition="{conversationEnabled}">
+								<div>
+									<label
+										class="form-label"
+										for="opinion-conversation-message">
+										{f:translate(domain: 'opinion.messages', key: 'module.conversation.message')}
+									</label>
+									<textarea
+										id="opinion-conversation-message"
+										name="message"
+										class="form-control"
+										rows="4"
+										maxlength="{messageMaxLength}"
+										aria-describedby="opinion-conversation-hint"></textarea>
+									<p
+										id="opinion-conversation-hint"
+										class="form-text mb-0">
+										{f:translate(domain: 'opinion.messages', key: 'module.conversation.hint')}
+									</p>
+								</div>
+							</f:if>
+							<div class="d-flex flex-wrap align-items-end gap-2">
+								<f:if condition="{isAdmin}">
+									<div>
+										<label
+											class="form-label"
+											for="opinion-status">
+											{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}
+										</label>
+										<select
+											id="opinion-status"
+											name="status"
+											class="form-select w-auto">
+											<f:for
+												each="{statuses}"
+												as="status">
+												<option
+													value="{status}"
+													{f:if(condition: '{status} == {record.status}', then: 'selected')}>
+													{f:translate(domain: 'opinion.messages', key: 'status.{status}')}
+												</option>
+											</f:for>
+										</select>
+									</div>
+								</f:if>
+								<button
+									type="submit"
+									class="btn btn-primary ms-auto">
+									{f:translate(domain: 'opinion.messages', key: 'module.save.submit')}
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</f:if>
+
+		<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'module.details.title')}</h2>
 		<f:for
 			each="{sections}"
 			as="rows"
 			key="section">
 			<f:if condition="{rows}">
-				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</h2>
-				<div class="table-fit">
-					<table class="table table-sm table-striped">
-						<tbody>
-							<f:for
-								each="{rows}"
-								as="value"
-								key="label">
-								<tr>
-									<th class="w-25 text-nowrap">{label}</th>
-									<td class="text-break">{value}</td>
-								</tr>
-							</f:for>
-						</tbody>
-					</table>
-				</div>
+				<f:comment>Collapsed by default, the details are rarely needed</f:comment>
+				<details class="card mb-2">
+					<summary class="card-header fw-semibold p-2">{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</summary>
+					<div class="table-fit mb-0">
+						<table class="table table-sm table-striped mb-0">
+							<tbody>
+								<f:for
+									each="{rows}"
+									as="value"
+									key="label">
+									<tr>
+										<th class="w-25 text-nowrap">{label}</th>
+										<td class="text-break">{value}</td>
+									</tr>
+								</f:for>
+							</tbody>
+						</table>
+					</div>
+				</details>
 			</f:if>
 		</f:for>
 	</f:section>

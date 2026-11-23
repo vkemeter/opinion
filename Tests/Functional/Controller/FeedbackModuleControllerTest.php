@@ -96,7 +96,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('screen.width', $html);
         self::assertStringContainsString('No screenshot attached.', $html);
         self::assertStringNotContainsString('dumpFile', $html);
-        self::assertStringContainsString('opinion/feedback/status', $html);
+        self::assertStringContainsString('opinion/feedback/save', $html);
         self::assertMatchesRegularExpression('#<option\s+value="new"\s+selected>\s*New\s*</option>#', $html);
         self::assertMatchesRegularExpression('#<option\s+value="closed"\s*>#', $html);
     }
@@ -199,7 +199,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     #[Test]
     public function postRoutesOnlyAcceptPost(): void
     {
-        foreach (['opinion_feedback.redeliver', 'opinion_feedback.status'] as $identifier) {
+        foreach (['opinion_feedback.redeliver', 'opinion_feedback.save'] as $identifier) {
             $route = $this->get(Router::class)->getRoute($identifier);
             self::assertInstanceOf(Route::class, $route);
             self::assertSame(['POST'], $route->getMethods(), $identifier);
@@ -319,7 +319,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('Rita Reporter', $html);
         self::assertStringContainsString('Deleted user', $html);
         self::assertStringContainsString('02.10.2026 10:00', $html);
-        self::assertStringContainsString('opinion/feedback/message', $html);
+        self::assertStringContainsString('opinion/feedback/save', $html);
         self::assertSame([], $conversation->findUnreadFeedbackUids(1, null), 'read for the viewer');
         self::assertSame([$uid], $conversation->findUnreadFeedbackUids(4, null), 'still unread for the other admin');
     }
@@ -359,7 +359,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
         self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($foreign));
         self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($own));
-        self::assertSame('Please enter a message of 1 to 5000 characters.', $this->getFlashMessages()[0] ?? null);
+        self::assertSame([
+            'Nothing to save: write a message or change the status.',
+            'The message is longer than 5000 characters. Nothing has been saved.',
+        ], $this->getFlashMessages());
 
         $this->setUpBackendUser(2);
         self::assertSame(403, $this->postMessage($own, 'Without access')->getStatusCode());
@@ -377,6 +380,79 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $this->setUpBackendUser(3);
         $this->postMessage($uid, 'Still broken.');
         self::assertSame('in_progress', $this->statusOf($uid), 'sender');
+    }
+
+    #[Test]
+    public function statusAndMessageAreSavedTogetherOrNotAtAll(): void
+    {
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+
+        $this->postSave($uid, ['status' => 'in_progress', 'message' => 'We are on it.']);
+        self::assertSame('in_progress', $this->statusOf($uid));
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid));
+        self::assertSame(['The message and the status have been saved.'], $this->getFlashMessages());
+
+        $this->postSave($uid, ['status' => 'done', 'message' => 'Lost?']);
+        $this->postSave($uid, ['status' => 'closed', 'message' => str_repeat('a', 5001)]);
+        self::assertSame('in_progress', $this->statusOf($uid), 'invalid form stores no status');
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid), 'invalid form stores no message');
+
+        $this->postSave($uid, ['status' => 'in_progress', 'message' => '  ']);
+        self::assertSame([
+            'The status is invalid and has not been changed.',
+            'The message is longer than 5000 characters. Nothing has been saved.',
+            'Nothing to save: write a message or change the status.',
+        ], $this->getFlashMessages());
+    }
+
+    #[Test]
+    public function statusChosenByAnAdministratorWinsOverReopening(): void
+    {
+        // The administrator is the sender here; a closed feedback stays closed when it is kept in the form
+        $uid = $this->addFeedback('Own feedback of the admin', '2026-10-01 10:00', 1);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, FeedbackStatus::Closed);
+
+        $this->postSave($uid, ['status' => 'closed', 'message' => 'Note to myself']);
+
+        self::assertSame('closed', $this->statusOf($uid));
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid));
+    }
+
+    #[Test]
+    public function switchedOffConversationShowsNoThreadAndRejectsMessages(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['conversation'] = '0';
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->get(ConversationRepository::class)->add($uid, 3, 'Stored before switching off', new \DateTimeImmutable());
+
+        $show = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+        $list = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
+        $this->postSave($uid, ['status' => 'closed', 'message' => 'Not allowed']);
+
+        self::assertStringNotContainsString('Stored before switching off', $show);
+        self::assertStringNotContainsString('name="message"', $show);
+        self::assertStringContainsString('name="status"', $show, 'the status can still be changed');
+        self::assertStringNotContainsString('<th>Conversation</th>', $list);
+        self::assertSame(['Conversations are switched off. Nothing has been saved.'], $this->getFlashMessages());
+        self::assertSame('new', $this->statusOf($uid));
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid), 'stored messages are kept');
+
+        $this->postStatus($uid, 'closed');
+        self::assertSame('closed', $this->statusOf($uid));
+    }
+
+    #[Test]
+    public function detailViewHasOneFormAndCollapsedDetails(): void
+    {
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertSame(1, substr_count($html, 'opinion/feedback/save'), 'one form for message and status');
+        self::assertStringNotContainsString('opinion/feedback/status', $html);
+        self::assertSame(1, preg_match_all('#<button\s+type="submit"\s+class="btn btn-primary#', $html), 'one save button');
+        self::assertGreaterThan(0, substr_count($html, '<details'));
+        self::assertStringNotContainsString('<details open', $html);
     }
 
     #[Test]
@@ -417,7 +493,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         );
 
         self::assertSame(403, $response->getStatusCode());
-        self::assertSame(403, $this->postStatus($own, 'closed')->getStatusCode());
+        $this->postSave($own, ['status' => 'closed', 'message' => 'Close it']);
+        self::assertSame(['Only administrators change the status. Nothing has been saved.'], $this->getFlashMessages());
+        self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($own), 'message not stored either');
         $record = $this->get(FeedbackRepository::class)->findByUid($own);
         self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
         self::assertSame('new', $record['status'] ?? null);
@@ -496,9 +574,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
 
-        $response = $this->get(FeedbackModuleController::class)->statusAction(
-            $this->createRequest('opinion_feedback.status')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'status' => 'closed', 'filter' => ['search' => 'Feed', 'status' => 'bogus']]),
-        );
+        $response = $this->postSave($uid, ['status' => 'closed', 'filter' => ['search' => 'Feed', 'status' => 'bogus']]);
 
         self::assertStringContainsString('search=Feed', $response->getHeaderLine('Location'));
         self::assertStringNotContainsString('bogus', $response->getHeaderLine('Location'));
@@ -514,8 +590,16 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
     private function postStatus(int $uid, string $status): ResponseInterface
     {
-        return $this->get(FeedbackModuleController::class)->statusAction(
-            $this->createRequest('opinion_feedback.status')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'status' => $status]),
+        return $this->postSave($uid, ['status' => $status]);
+    }
+
+    /**
+     * @param array<string, mixed> $fields
+     */
+    private function postSave(int $uid, array $fields): ResponseInterface
+    {
+        return $this->get(FeedbackModuleController::class)->saveAction(
+            $this->createRequest('opinion_feedback.save')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, ...$fields]),
         );
     }
 
@@ -546,9 +630,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
     private function postMessage(int $uid, string $message): ResponseInterface
     {
-        return $this->get(FeedbackModuleController::class)->messageAction(
-            $this->createRequest('opinion_feedback.message')->withMethod('POST')->withParsedBody(['uid' => (string)$uid, 'message' => $message]),
-        );
+        return $this->postSave($uid, ['message' => $message]);
     }
 
     /**

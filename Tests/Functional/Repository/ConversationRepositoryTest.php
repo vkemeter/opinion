@@ -82,7 +82,7 @@ final class ConversationRepositoryTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function addReopensClosedFeedbackOnlyWhenAsked(): void
+    public function addSetsTheStatusOnlyWhenGiven(): void
     {
         $feedback = $this->addFeedback();
         $feedbackRepository = $this->get(FeedbackRepository::class);
@@ -92,7 +92,7 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         $repository->add($feedback, self::ADMIN, 'Done', new \DateTimeImmutable());
         self::assertSame('closed', $this->statusOf($feedback));
 
-        $repository->add($feedback, self::SENDER, 'Not fixed', new \DateTimeImmutable(), true);
+        $repository->add($feedback, self::SENDER, 'Not fixed', new \DateTimeImmutable(), FeedbackStatus::InProgress);
         self::assertSame('in_progress', $this->statusOf($feedback));
     }
 

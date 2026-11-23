@@ -84,7 +84,9 @@
 								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.email')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}</th>
 								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</th>
-								<th>{f:translate(domain: 'opinion.messages', key: 'module.conversation.title')}</th>
+								<f:if condition="{conversationEnabled}">
+									<th>{f:translate(domain: 'opinion.messages', key: 'module.conversation.title')}</th>
+								</f:if>
 								<f:if condition="{isAdmin}">
 									<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
 								</f:if>
@@ -122,23 +124,25 @@
 											section="Status"
 											arguments="{status: item.status}" />
 									</td>
-									<td class="text-nowrap">
-										<f:if condition="{item.message_count}">
-											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.messageCount', arguments: {0: item.message_count})}">
-												<span aria-hidden="true">{core:icon(identifier: 'actions-chat', size: 'small')} {item.message_count}</span>
-												<span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'module.list.messageCount', arguments: {0: item.message_count})}</span>
-											</span>
-										</f:if>
-										<f:if condition="{item.unread}">
-											<span
-												class="badge text-bg-info ms-1"
-												title="{f:translate(domain: 'opinion.messages', key: 'module.list.unread')}"
-												>{f:translate(domain: 'opinion.messages', key: 'module.list.unreadBadge')}<span class="visually-hidden"
-													>: {f:translate(domain: 'opinion.messages', key: 'module.list.unread')}</span
-												></span
-											>
-										</f:if>
-									</td>
+									<f:if condition="{conversationEnabled}">
+										<td class="text-nowrap">
+											<f:if condition="{item.message_count}">
+												<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.messageCount', arguments: {0: item.message_count})}">
+													<span aria-hidden="true">{core:icon(identifier: 'actions-chat', size: 'small')} {item.message_count}</span>
+													<span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'module.list.messageCount', arguments: {0: item.message_count})}</span>
+												</span>
+											</f:if>
+											<f:if condition="{item.unread}">
+												<span
+													class="badge text-bg-info ms-1"
+													title="{f:translate(domain: 'opinion.messages', key: 'module.list.unread')}"
+													>{f:translate(domain: 'opinion.messages', key: 'module.list.unreadBadge')}<span class="visually-hidden"
+														>: {f:translate(domain: 'opinion.messages', key: 'module.list.unread')}</span
+													></span
+												>
+											</f:if>
+										</td>
+									</f:if>
 									<f:if condition="{isAdmin}">
 										<td>
 											<f:render

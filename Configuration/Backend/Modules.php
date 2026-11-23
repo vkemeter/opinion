@@ -24,12 +24,8 @@ return [
                 'target' => FeedbackModuleController::class . '::redeliverAction',
                 'methods' => ['POST'],
             ],
-            'message' => [
-                'target' => FeedbackModuleController::class . '::messageAction',
-                'methods' => ['POST'],
-            ],
-            'status' => [
-                'target' => FeedbackModuleController::class . '::statusAction',
+            'save' => [
+                'target' => FeedbackModuleController::class . '::saveAction',
                 'methods' => ['POST'],
             ],
         ],

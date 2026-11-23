@@ -1,5 +1,17 @@
-# cat=email; type=string; label=opinion.messages:extconf.disabledDeliveryChannels
+# cat=basic; type=boolean; label=opinion.messages:extconf.enabled
+enabled = 1
+
+# cat=basic; type=boolean; label=opinion.messages:extconf.conversation
+conversation = 1
+
+# cat=basic; type=int+; label=opinion.messages:extconf.rateLimit
+rateLimit = 10
+
+# cat=basic; type=string; label=opinion.messages:extconf.disabledDeliveryChannels
 disabledDeliveryChannels =
+
+# customcategory=email=opinion.messages:extconf.category.email
+# customcategory=storage=opinion.messages:extconf.category.storage
 
 # cat=email; type=string; label=opinion.messages:extconf.recipients
 recipients =
@@ -12,12 +24,6 @@ redeliverMaxAttempts = 5
 
 # cat=storage; type=int+; label=opinion.messages:extconf.retentionDays
 retentionDays = 180
-
-# cat=basic; type=int+; label=opinion.messages:extconf.rateLimit
-rateLimit = 10
-
-# cat=basic; type=boolean; label=opinion.messages:extconf.enabled
-enabled = 1
 
 # customcategory=collect=opinion.messages:extconf.category.collect
 # customsubcategory=client=opinion.messages:extconf.collect.client

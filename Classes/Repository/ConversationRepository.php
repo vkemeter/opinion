@@ -24,12 +24,12 @@ final readonly class ConversationRepository
     ) {}
 
     /**
-     * Stores a message; with $reopen a closed feedback goes back to "in progress" in the same transaction.
+     * Stores a message; a given status is set on the feedback in the same transaction.
      */
-    public function add(int $feedbackUid, int $authorUid, string $message, \DateTimeImmutable $createdAt, bool $reopen = false): int
+    public function add(int $feedbackUid, int $authorUid, string $message, \DateTimeImmutable $createdAt, ?FeedbackStatus $status = null): int
     {
         return $this->connectionPool->getConnectionForTable(self::MESSAGE_TABLE)->transactional(
-            function (Connection $connection) use ($feedbackUid, $authorUid, $message, $createdAt, $reopen): int {
+            function (Connection $connection) use ($feedbackUid, $authorUid, $message, $createdAt, $status): int {
                 $connection->insert(self::MESSAGE_TABLE, [
                     'pid' => 0,
                     'crdate' => $createdAt->getTimestamp(),
@@ -38,11 +38,11 @@ final readonly class ConversationRepository
                     'message' => $message,
                 ]);
                 $uid = (int)$connection->lastInsertId();
-                if ($reopen) {
+                if ($status !== null) {
                     $connection->update(
                         FeedbackRepository::TABLE,
-                        ['status' => FeedbackStatus::InProgress->value, 'tstamp' => $createdAt->getTimestamp()],
-                        ['uid' => $feedbackUid, 'status' => FeedbackStatus::Closed->value],
+                        ['status' => $status->value, 'tstamp' => $createdAt->getTimestamp()],
+                        ['uid' => $feedbackUid],
                     );
                 }
 

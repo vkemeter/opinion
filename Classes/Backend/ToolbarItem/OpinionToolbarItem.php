@@ -13,6 +13,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use Vkemeter\Opinion\Access\AccessChecker;
+use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Dialog\DialogConfigurationBuilder;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Repository\ConversationRepository;
@@ -34,6 +35,7 @@ final class OpinionToolbarItem implements ToolbarItemInterface, RequestAwareTool
         private readonly ConversationRepository $conversationRepository,
         private readonly ModuleProvider $moduleProvider,
         private readonly LanguageServiceFactory $languageServiceFactory,
+        private readonly ConfigurationProviderInterface $configurationProvider,
     ) {}
 
     public function setRequest(ServerRequestInterface $request): void
@@ -53,7 +55,7 @@ final class OpinionToolbarItem implements ToolbarItemInterface, RequestAwareTool
         $backendUser = $this->getBackendUser();
         $configuration = $this->dialogConfigurationBuilder->build($backendUser, Source::Backend);
         $unread = 0;
-        if ($this->moduleProvider->accessGranted('opinion_feedback', $backendUser)) {
+        if ($this->configurationProvider->getConfiguration()->conversationEnabled && $this->moduleProvider->accessGranted('opinion_feedback', $backendUser)) {
             $userUid = (int)($backendUser->user['uid'] ?? 0);
             $unread = count($this->conversationRepository->findUnreadFeedbackUids($userUid, $backendUser->isAdmin() ? null : $userUid));
         }

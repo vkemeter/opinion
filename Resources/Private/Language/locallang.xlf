@@ -16,6 +16,9 @@
             <trans-unit id="extconf.retentionDays">
                 <source>Retention in days: feedback records and screenshots older than this are deleted by the command opinion:cleanup</source>
             </trans-unit>
+            <trans-unit id="extconf.conversation">
+                <source>Conversation: administrators and the sender of a feedback exchange messages in the module "Feedback"</source>
+            </trans-unit>
             <trans-unit id="extconf.enabled">
                 <source>Enable feedback: shows the feedback triggers and accepts submissions</source>
             </trans-unit>
@@ -427,6 +430,12 @@
             <trans-unit id="module.show.noScreenshot">
                 <source>No screenshot attached.</source>
             </trans-unit>
+            <trans-unit id="extconf.category.email">
+                <source>Email</source>
+            </trans-unit>
+            <trans-unit id="extconf.category.storage">
+                <source>Storage</source>
+            </trans-unit>
             <trans-unit id="extconf.category.collect">
                 <source>Collected details</source>
             </trans-unit>
@@ -599,7 +608,7 @@
                 <source>The message was sent and the feedback is in progress again.</source>
             </trans-unit>
             <trans-unit id="module.conversation.invalid">
-                <source>Please enter a message of 1 to 5000 characters.</source>
+                <source>The message is longer than 5000 characters. Nothing has been saved.</source>
             </trans-unit>
             <trans-unit id="module.list.unreadBadge">
                 <source>New</source>
@@ -612,6 +621,27 @@
             </trans-unit>
             <trans-unit id="toolbar.unread">
                 <source>%d feedback entries with new messages</source>
+            </trans-unit>
+            <trans-unit id="module.save.title">
+                <source>Feedback</source>
+            </trans-unit>
+            <trans-unit id="module.save.submit">
+                <source>Save</source>
+            </trans-unit>
+            <trans-unit id="module.save.saved">
+                <source>The message and the status have been saved.</source>
+            </trans-unit>
+            <trans-unit id="module.save.nothing">
+                <source>Nothing to save: write a message or change the status.</source>
+            </trans-unit>
+            <trans-unit id="module.status.denied">
+                <source>Only administrators change the status. Nothing has been saved.</source>
+            </trans-unit>
+            <trans-unit id="module.conversation.disabled">
+                <source>Conversations are switched off. Nothing has been saved.</source>
+            </trans-unit>
+            <trans-unit id="module.details.title">
+                <source>Collected details</source>
             </trans-unit>
         </body>
     </file>

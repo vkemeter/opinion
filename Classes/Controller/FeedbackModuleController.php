@@ -72,8 +72,9 @@ final readonly class FeedbackModuleController
         $currentPage = min($pages, max(1, (int)($request->getQueryParams()['page'] ?? 1)));
 
         $items = $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid, $filter);
-        $unreadUids = $this->conversationRepository->findUnreadFeedbackUids($this->getUserUid(), $senderUid);
-        $messageCounts = $this->conversationRepository->countByFeedbackUids(array_map(static fn(array $item): int => (int)$item['uid'], $items));
+        $conversationEnabled = $this->configurationProvider->getConfiguration()->conversationEnabled;
+        $unreadUids = $conversationEnabled ? $this->conversationRepository->findUnreadFeedbackUids($this->getUserUid(), $senderUid) : [];
+        $messageCounts = $conversationEnabled ? $this->conversationRepository->countByFeedbackUids(array_map(static fn(array $item): int => (int)$item['uid'], $items)) : [];
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->assignMultiple([
@@ -89,6 +90,7 @@ final readonly class FeedbackModuleController
                 $items,
             ),
             'total' => $total,
+            'conversationEnabled' => $conversationEnabled,
             'isAdmin' => $this->isAdmin(),
             'filter' => $filterParameters,
             'filterActive' => $filter->isActive(),
@@ -124,9 +126,12 @@ final readonly class FeedbackModuleController
         }
 
         $screenshots = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid);
-        $messages = $this->conversationRepository->findByFeedback($uid);
-        // Only the viewer's own read state changes
-        $this->conversationRepository->markRead($uid, $this->getUserUid());
+        $conversationEnabled = $this->configurationProvider->getConfiguration()->conversationEnabled;
+        $messages = $conversationEnabled ? $this->conversationRepository->findByFeedback($uid) : [];
+        if ($conversationEnabled) {
+            // Only the viewer's own read state changes
+            $this->conversationRepository->markRead($uid, $this->getUserUid());
+        }
         $systemInfo = $this->decode($record['system_info'] ?? null);
         $context = $this->decode($record['context'] ?? null);
         $clientInfo = $this->decode($record['client_info'] ?? null);
@@ -138,6 +143,7 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
+            'conversationEnabled' => $conversationEnabled,
             'messages' => $messages,
             'messageMaxLength' => self::MESSAGE_MAX_LENGTH,
             'isAdmin' => $this->isAdmin(),
@@ -158,34 +164,68 @@ final readonly class FeedbackModuleController
     }
 
     /**
-     * Adds a message to the conversation; same access rules as the detail view, no email is sent.
+     * Saves the form of the detail view: a message (conversation) and, for administrators, the
+     * status. Everything is validated first, then saved in one transaction or nothing is saved.
      */
-    public function messageAction(ServerRequestInterface $request): ResponseInterface
+    public function saveAction(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->hasModuleAccess()) {
             return $this->accessDenied();
         }
-        $body = $request->getParsedBody();
-        $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
+        $body = is_array($request->getParsedBody()) ? $request->getParsedBody() : [];
+        $uid = (int)($body['uid'] ?? 0);
         // Another user's feedback is treated like an unknown uid
         $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
         if ($record === null) {
             return new RedirectResponse($this->buildUri('opinion_feedback'));
         }
+        $redirect = new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
 
-        $message = trim((string)(is_array($body) ? ($body['message'] ?? '') : ''));
-        $length = mb_strlen($message);
-        if ($length === 0 || $length > self::MESSAGE_MAX_LENGTH) {
-            $this->addFlashMessage('module.conversation.invalid', 'module.conversation.flashTitle', ContextualFeedbackSeverity::ERROR);
-        } else {
-            $userUid = $this->getUserUid();
-            // A reply of the sender reopens closed feedback, a message of an administrator does not
-            $reopen = (int)$record['be_user'] === $userUid && $record['status'] === FeedbackStatus::Closed->value;
-            $this->conversationRepository->add($uid, $userUid, $message, new \DateTimeImmutable(), $reopen);
-            $this->addFlashMessage($reopen ? 'module.conversation.reopened' : 'module.conversation.saved', 'module.conversation.flashTitle', ContextualFeedbackSeverity::OK);
+        // The form of administrators always sends the chosen status, the one of editors none
+        $statusChosen = isset($body['status']);
+        $status = null;
+        if ($statusChosen) {
+            $status = FeedbackStatus::tryFrom((string)$body['status']);
+            if ($status === null || (!$this->isAdmin() && $status->value !== $record['status'])) {
+                $this->addFlashMessage($status === null ? 'module.status.invalid' : 'module.status.denied', 'module.save.title', ContextualFeedbackSeverity::ERROR);
+                return $redirect;
+            }
+            // Unchanged status: nothing to write
+            $status = $status->value === $record['status'] ? null : $status;
         }
 
-        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
+        $message = trim((string)($body['message'] ?? ''));
+        if ($message !== '' && !$this->configurationProvider->getConfiguration()->conversationEnabled) {
+            $this->addFlashMessage('module.conversation.disabled', 'module.save.title', ContextualFeedbackSeverity::ERROR);
+            return $redirect;
+        }
+        if (mb_strlen($message) > self::MESSAGE_MAX_LENGTH) {
+            $this->addFlashMessage('module.conversation.invalid', 'module.save.title', ContextualFeedbackSeverity::ERROR);
+            return $redirect;
+        }
+
+        if ($message === '') {
+            if ($status === null) {
+                $this->addFlashMessage('module.save.nothing', 'module.save.title', ContextualFeedbackSeverity::INFO);
+            } else {
+                $this->feedbackRepository->updateStatus($uid, $status);
+                $this->addFlashMessage('module.status.saved', 'module.save.title', ContextualFeedbackSeverity::OK);
+            }
+            return $redirect;
+        }
+
+        $userUid = $this->getUserUid();
+        // A reply of the sender reopens closed feedback, unless a status was chosen in the same form
+        $reopen = !$statusChosen && (int)$record['be_user'] === $userUid && $record['status'] === FeedbackStatus::Closed->value;
+        $this->conversationRepository->add($uid, $userUid, $message, new \DateTimeImmutable(), $reopen ? FeedbackStatus::InProgress : $status);
+        $key = match (true) {
+            $status !== null => 'module.save.saved',
+            $reopen => 'module.conversation.reopened',
+            default => 'module.conversation.saved',
+        };
+        $this->addFlashMessage($key, 'module.save.title', ContextualFeedbackSeverity::OK);
+
+        return $redirect;
     }
 
     /**
@@ -232,31 +272,6 @@ final readonly class FeedbackModuleController
             null => ['module.redeliver.impossible', ContextualFeedbackSeverity::WARNING],
         };
         $this->addFlashMessage($key, 'module.redeliver.title', $severity);
-
-        return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
-    }
-
-    /**
-     * Sets the processing status; administrators only.
-     */
-    public function statusAction(ServerRequestInterface $request): ResponseInterface
-    {
-        if (!$this->isAdmin()) {
-            return $this->accessDenied();
-        }
-        $body = $request->getParsedBody();
-        $uid = (int)(is_array($body) ? ($body['uid'] ?? 0) : 0);
-        if ($uid <= 0 || $this->feedbackRepository->findByUid($uid) === null) {
-            return new RedirectResponse($this->buildUri('opinion_feedback'));
-        }
-
-        $status = FeedbackStatus::tryFrom((string)(is_array($body) ? ($body['status'] ?? '') : ''));
-        if ($status === null) {
-            $this->addFlashMessage('module.status.invalid', 'module.status.title', ContextualFeedbackSeverity::ERROR);
-        } else {
-            $this->feedbackRepository->updateStatus($uid, $status);
-            $this->addFlashMessage('module.status.saved', 'module.status.title', ContextualFeedbackSeverity::OK);
-        }
 
         return new RedirectResponse($this->buildUri('opinion_feedback.show', ['uid' => $uid, ...$this->getPostedFilterParameters($body)]));
     }

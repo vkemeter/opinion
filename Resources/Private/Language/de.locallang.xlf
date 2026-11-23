@@ -20,6 +20,10 @@
                 <source>Retention in days: feedback records and screenshots older than this are deleted by the command opinion:cleanup</source>
                 <target>Aufbewahrung in Tagen: ältere Feedback-Datensätze und Screenshots löscht der Befehl opinion:cleanup</target>
             </trans-unit>
+            <trans-unit id="extconf.conversation">
+                <source>Conversation: administrators and the sender of a feedback exchange messages in the module "Feedback"</source>
+                <target>Unterhaltung: Administratoren und der Absender eines Feedbacks tauschen im Modul "Feedback" Nachrichten aus</target>
+            </trans-unit>
             <trans-unit id="extconf.enabled">
                 <source>Enable feedback: shows the feedback triggers and accepts submissions</source>
                 <target>Feedback aktivieren: zeigt die Feedback-Schaltflächen an und nimmt Einsendungen an</target>
@@ -568,6 +572,14 @@
                 <source>No screenshot attached.</source>
                 <target>Kein Screenshot angehängt.</target>
             </trans-unit>
+            <trans-unit id="extconf.category.email">
+                <source>Email</source>
+                <target>E-Mail</target>
+            </trans-unit>
+            <trans-unit id="extconf.category.storage">
+                <source>Storage</source>
+                <target>Speicherung</target>
+            </trans-unit>
             <trans-unit id="extconf.category.collect">
                 <source>Collected details</source>
                 <target>Erfasste Angaben</target>
@@ -797,8 +809,8 @@
                 <target>Die Nachricht wurde gesendet und das Feedback ist wieder in Bearbeitung.</target>
             </trans-unit>
             <trans-unit id="module.conversation.invalid">
-                <source>Please enter a message of 1 to 5000 characters.</source>
-                <target>Bitte geben Sie eine Nachricht mit 1 bis 5000 Zeichen ein.</target>
+                <source>The message is longer than 5000 characters. Nothing has been saved.</source>
+                <target>Die Nachricht ist länger als 5000 Zeichen. Es wurde nichts gespeichert.</target>
             </trans-unit>
             <trans-unit id="module.list.unreadBadge">
                 <source>New</source>
@@ -815,6 +827,34 @@
             <trans-unit id="toolbar.unread">
                 <source>%d feedback entries with new messages</source>
                 <target>%d Feedback-Einträge mit neuen Nachrichten</target>
+            </trans-unit>
+            <trans-unit id="module.save.title">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="module.save.submit">
+                <source>Save</source>
+                <target>Speichern</target>
+            </trans-unit>
+            <trans-unit id="module.save.saved">
+                <source>The message and the status have been saved.</source>
+                <target>Die Nachricht und der Status wurden gespeichert.</target>
+            </trans-unit>
+            <trans-unit id="module.save.nothing">
+                <source>Nothing to save: write a message or change the status.</source>
+                <target>Nichts zu speichern: Schreiben Sie eine Nachricht oder ändern Sie den Status.</target>
+            </trans-unit>
+            <trans-unit id="module.status.denied">
+                <source>Only administrators change the status. Nothing has been saved.</source>
+                <target>Nur Administratoren ändern den Status. Es wurde nichts gespeichert.</target>
+            </trans-unit>
+            <trans-unit id="module.conversation.disabled">
+                <source>Conversations are switched off. Nothing has been saved.</source>
+                <target>Unterhaltungen sind ausgeschaltet. Es wurde nichts gespeichert.</target>
+            </trans-unit>
+            <trans-unit id="module.details.title">
+                <source>Collected details</source>
+                <target>Erfasste Details</target>
             </trans-unit>
         </body>
     </file>
