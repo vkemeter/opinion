@@ -115,6 +115,24 @@ undelivered afterwards.
 To retry regularly, add a Scheduler task :guilabel:`Execute console commands`
 with the command `opinion:redeliver`, for example every 30 minutes.
 
+..  _administration-upgrade:
+
+Upgrade to version 2
+====================
+
+Version 2 stores the page of a feedback in its own field. After the database
+schema update (:bash:`vendor/bin/typo3 extension:setup`), run the upgrade
+wizard :guilabel:`Opinion: page of existing feedback` once, so feedback sent
+before is listed per page as well:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 upgrade:run opinion_pageUid
+
+Feedback without collected page (`collect_context_page`, see
+:ref:`configuration-collected-details-context`)
+belongs to no page and is never listed per page.
+
 ..  _administration-cleanup:
 
 Clean up old feedback
@@ -164,4 +182,8 @@ Data and privacy
     and are deleted with their feedback by `opinion:cleanup`. Messages of a
     backend user deleted since stay and are shown with the author "Deleted
     user".
+*   Everybody who may send feedback sees the text, date and status of the
+    open feedback of the page they view, also of other senders, in the
+    admin panel (frontend feedback) and in the page module (frontend and
+    backend feedback); names of senders are not shown.
 *   `opinion:cleanup` enforces the retention period.

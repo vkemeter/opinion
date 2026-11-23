@@ -1,0 +1,52 @@
+<html
+	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	data-namespace-typo3-fluid="true">
+	<div
+		class="callout callout-info"
+		role="region"
+		aria-labelledby="opinion-page-feedback-title">
+		<f:comment>Collapsed by default, so the box does not push the page content down</f:comment>
+		<details class="callout-content">
+			<summary
+				class="callout-title"
+				id="opinion-page-feedback-title">
+				{f:translate(domain: 'opinion.messages', key: 'pageFeedback.summary', arguments: {0: total})}
+			</summary>
+			<div class="callout-body mt-3">
+				<f:for
+					each="{groups}"
+					as="group"
+					key="source">
+					<h3 class="h5">{f:translate(domain: 'opinion.messages', key: 'pageFeedback.{source}')}</h3>
+					<ul class="list-unstyled mb-2 d-flex flex-column gap-2">
+						<f:for
+							each="{group.items}"
+							as="item">
+							<li class="mb-1">
+								<f:render
+									partial="FeedbackModule/Badges"
+									section="Status"
+									arguments="{status: item.status}" />
+								<span class="text-nowrap ms-1">{item.crdate -> f:format.date(format: 'd.m.Y H:i')}</span>
+								·
+								<f:if condition="{item.show_url}">
+									<f:then
+										><a
+											href="{item.show_url}"
+											title="{f:translate(domain: 'opinion.messages', key: 'pageFeedback.show')}"
+											>{item.message -> f:format.crop(maxCharacters: 120)}</a
+										></f:then
+									>
+									<f:else>{item.message -> f:format.crop(maxCharacters: 120)}</f:else>
+								</f:if>
+							</li>
+						</f:for>
+					</ul>
+					<f:if condition="{group.more} > 0">
+						<p class="mb-0">{f:translate(domain: 'opinion.messages', key: 'pageFeedback.more', arguments: {0: group.more})}</p>
+					</f:if>
+				</f:for>
+			</div>
+		</details>
+	</div>
+</html>

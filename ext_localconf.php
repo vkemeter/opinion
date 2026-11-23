@@ -13,3 +13,14 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['adminpanel']['modules']['opinion'] = [
         ],
     ],
 ];
+
+// Shown only while the current page has open frontend feedback
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['adminpanel']['modules']['opinion_page'] = [
+    'module' => \Vkemeter\Opinion\Adminpanel\PageFeedbackModule::class,
+    'after' => ['opinion'],
+    'submodules' => [
+        'opinion_page_list' => [
+            'module' => \Vkemeter\Opinion\Adminpanel\PageFeedbackSubModule::class,
+        ],
+    ],
+];

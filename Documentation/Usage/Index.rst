@@ -17,10 +17,21 @@ On a frontend page, click :guilabel:`Feedback` in the admin panel. The dialog
 opens directly. The page, site, language and workspace as well as the details
 of the admin panel tab :guilabel:`Info > General` are attached.
 
+When the page already has open feedback (*New* or *In progress*) sent from the
+frontend, the admin panel shows :guilabel:`Feedback on this page` with the
+number. It lists that feedback with text, date and status, so you see whether
+a problem was reported already. The list shows the feedback of every sender,
+without their names; feedback sent from the backend is not listed here.
+
 ..  _usage-backend:
 
 Backend: toolbar
 ================
+
+The page module shows an info box above the content when the page has open
+feedback, grouped into feedback sent from the frontend and from the backend,
+each with text, date and status. Administrators open a feedback from there in
+the module :guilabel:`Feedback`.
 
 In the backend, click the speech-bubble button in the toolbar. The current
 module, the module URL and the selected page are attached.

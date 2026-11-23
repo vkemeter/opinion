@@ -55,6 +55,9 @@
             <trans-unit id="tx_opinion_feedback.screenshot">
                 <source>Screenshot</source>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.page_uid">
+                <source>Page</source>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.client_info">
                 <source>Browser and device</source>
             </trans-unit>
@@ -678,6 +681,30 @@
             </trans-unit>
             <trans-unit id="dashboard.latest.empty">
                 <source>No feedback yet.</source>
+            </trans-unit>
+            <trans-unit id="adminpanel.pageFeedback.label">
+                <source>Feedback on this page</source>
+            </trans-unit>
+            <trans-unit id="adminpanel.pageFeedback.description">
+                <source>Open feedback sent for this page, so a problem is not reported twice.</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.more">
+                <source>and %d more</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.title">
+                <source>Open feedback on this page</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.summary">
+                <source>Open feedback on this page: %d</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.frontend">
+                <source>From the frontend</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.backend">
+                <source>From the backend</source>
+            </trans-unit>
+            <trans-unit id="pageFeedback.show">
+                <source>Show feedback</source>
             </trans-unit>
         </body>
     </file>

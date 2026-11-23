@@ -170,6 +170,42 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertTrue($ctrl['readOnly']);
     }
 
+    #[Test]
+    public function pageUidIsStoredFromTheContext(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+
+        self::assertSame(12, (int)($repository->findByUid($repository->add($this->createSubmission(), null))['page_uid'] ?? -1));
+        self::assertSame(0, (int)($repository->findByUid($repository->add($this->createPageSubmission(null, Source::Frontend, 'No page'), null))['page_uid'] ?? -1));
+    }
+
+    #[Test]
+    public function openFeedbackOfAPageIsFilteredByStatusAndSourceNewestFirst(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $oldFrontend = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Old frontend', '2026-11-01'), null);
+        $newFrontend = $repository->add($this->createPageSubmission(12, Source::Frontend, 'New frontend', '2026-11-03'), null);
+        $backend = $repository->add($this->createPageSubmission(12, Source::Backend, 'Backend', '2026-11-02'), null);
+        $closed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Closed', '2026-11-04'), null);
+        $repository->updateStatus($closed, FeedbackStatus::Closed);
+        $repository->updateStatus($oldFrontend, FeedbackStatus::InProgress);
+        $repository->add($this->createPageSubmission(13, Source::Frontend, 'Other page'), null);
+        $repository->add($this->createPageSubmission(null, Source::Frontend, 'No page'), null);
+
+        self::assertSame([$newFrontend, $backend, $oldFrontend], array_column($repository->findOpenByPage(12, null, 10), 'uid'));
+        self::assertSame([$newFrontend, $oldFrontend], array_column($repository->findOpenByPage(12, Source::Frontend, 10), 'uid'));
+        self::assertSame([$newFrontend], array_column($repository->findOpenByPage(12, Source::Frontend, 1), 'uid'), 'limit');
+        self::assertSame(2, $repository->countOpenByPage(12, Source::Frontend));
+        self::assertSame(1, $repository->countOpenByPage(12, Source::Backend));
+        self::assertSame(0, $repository->countOpenByPage(0, null), 'feedback without page belongs to no page');
+        self::assertSame(['uid' => $newFrontend, 'crdate' => (new \DateTimeImmutable('2026-11-03'))->getTimestamp(), 'source' => 'frontend', 'message' => 'New frontend', 'status' => 'new'], $repository->findOpenByPage(12, null, 1)[0]);
+    }
+
+    private function createPageSubmission(?int $pageUid, Source $source, string $message, string $date = 'now'): Submission
+    {
+        return new Submission($message, Category::Bug, Severity::Low, $source, 3, new \DateTimeImmutable($date), context: $pageUid === null ? [] : ['pageUid' => $pageUid]);
+    }
+
     private function createSubmission(): Submission
     {
         return new Submission(

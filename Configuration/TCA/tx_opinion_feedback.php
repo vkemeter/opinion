@@ -117,6 +117,15 @@ return [
             'label' => 'opinion.messages:tx_opinion_feedback.context',
             'config' => $readOnlyJson,
         ],
+        // The page of the collected context, for the lists per page; 0 = no page collected
+        'page_uid' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.page_uid',
+            'config' => [
+                'type' => 'number',
+                'default' => 0,
+                'readOnly' => true,
+            ],
+        ],
         'delivery_status' => [
             'label' => 'opinion.messages:tx_opinion_feedback.delivery_status',
             'config' => [

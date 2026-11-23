@@ -72,6 +72,10 @@
                 <source>Screenshot</source>
                 <target>Screenshot</target>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.page_uid">
+                <source>Page</source>
+                <target>Seite</target>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.client_info">
                 <source>Browser and device</source>
                 <target>Browser und Gerät</target>
@@ -903,6 +907,38 @@
             <trans-unit id="dashboard.latest.empty">
                 <source>No feedback yet.</source>
                 <target>Noch kein Feedback.</target>
+            </trans-unit>
+            <trans-unit id="adminpanel.pageFeedback.label">
+                <source>Feedback on this page</source>
+                <target>Feedback zu dieser Seite</target>
+            </trans-unit>
+            <trans-unit id="adminpanel.pageFeedback.description">
+                <source>Open feedback sent for this page, so a problem is not reported twice.</source>
+                <target>Offenes Feedback zu dieser Seite, damit ein Problem nicht doppelt gemeldet wird.</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.more">
+                <source>and %d more</source>
+                <target>und %d weitere</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.title">
+                <source>Open feedback on this page</source>
+                <target>Offenes Feedback zu dieser Seite</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.summary">
+                <source>Open feedback on this page: %d</source>
+                <target>Offenes Feedback zu dieser Seite: %d</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.frontend">
+                <source>From the frontend</source>
+                <target>Aus dem Frontend</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.backend">
+                <source>From the backend</source>
+                <target>Aus dem Backend</target>
+            </trans-unit>
+            <trans-unit id="pageFeedback.show">
+                <source>Show feedback</source>
+                <target>Feedback anzeigen</target>
             </trans-unit>
         </body>
     </file>

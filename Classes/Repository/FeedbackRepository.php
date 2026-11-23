@@ -11,6 +11,7 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\File;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
+use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
 
 /**
@@ -44,6 +45,7 @@ final readonly class FeedbackRepository
                 'client_info' => $submission->clientInfo,
                 'system_info' => $submission->systemInfo,
                 'context' => $submission->context,
+                'page_uid' => self::pageUidOf($submission->context),
                 'delivery_status' => DeliveryStatus::Pending->value,
                 'delivery_log' => '',
                 'delivery_attempts' => 0,
@@ -85,6 +87,75 @@ final readonly class FeedbackRepository
             ->set('delivery_attempts', $queryBuilder->quoteIdentifier('delivery_attempts') . ' + 1', false)
             ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
             ->executeStatement();
+    }
+
+    /**
+     * The page uid of a collected context, 0 when no page was collected.
+     *
+     * @param array<string, mixed> $context
+     */
+    public static function pageUidOf(array $context): int
+    {
+        $pageUid = filter_var($context['pageUid'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+        return $pageUid === false ? 0 : $pageUid;
+    }
+
+    /**
+     * Open feedback (new or in progress) of a page, newest first.
+     *
+     * @param Source|null $source only feedback of this source, null = both
+     * @return list<array{uid: int, crdate: int, source: string, message: string, status: string}>
+     */
+    public function findOpenByPage(int $pageUid, ?Source $source, int $limit): array
+    {
+        $rows = $this->createOpenByPageQuery($pageUid, $source)
+            ->select('uid', 'crdate', 'source', 'message', 'status')
+            ->orderBy('crdate', 'DESC')
+            ->addOrderBy('uid', 'DESC')
+            ->setMaxResults($limit)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(static fn(array $row): array => [
+            'uid' => (int)$row['uid'],
+            'crdate' => (int)$row['crdate'],
+            'source' => (string)$row['source'],
+            'message' => (string)$row['message'],
+            'status' => (string)$row['status'],
+        ], $rows);
+    }
+
+    /**
+     * @param Source|null $source only feedback of this source, null = both
+     */
+    public function countOpenByPage(int $pageUid, ?Source $source): int
+    {
+        return (int)$this->createOpenByPageQuery($pageUid, $source)
+            ->count('uid')
+            ->executeQuery()
+            ->fetchOne();
+    }
+
+    private function createOpenByPageQuery(int $pageUid, ?Source $source): QueryBuilder
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
+        $queryBuilder
+            ->from(self::TABLE)
+            ->where(
+                // A page uid of 0 means "no page" and never matches
+                $queryBuilder->expr()->eq('page_uid', $queryBuilder->createNamedParameter($pageUid > 0 ? $pageUid : -1, Connection::PARAM_INT)),
+                $queryBuilder->expr()->in('status', $queryBuilder->createNamedParameter(
+                    [FeedbackStatus::New->value, FeedbackStatus::InProgress->value],
+                    Connection::PARAM_STR_ARRAY,
+                )),
+            );
+        if ($source !== null) {
+            $queryBuilder->andWhere($queryBuilder->expr()->eq('source', $queryBuilder->createNamedParameter($source->value)));
+        }
+
+        return $queryBuilder;
     }
 
     public function updateStatus(int $uid, FeedbackStatus $status): void

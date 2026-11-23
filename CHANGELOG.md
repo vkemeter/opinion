@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added: open feedback of a page is shown where people work on it: the admin
+  panel lists the open frontend feedback of the current page under "Feedback
+  on this page", the page module shows the open frontend and backend feedback
+  of the page in an info box (links to the module for administrators). Needs
+  a database schema update (`extension:setup`) for the new column `page_uid`
+  and the upgrade wizard `opinion_pageUid` for existing feedback
 - Added: dashboard widgets "Open feedback", "New messages" and "Latest
   feedback" in the widget group "Feedback", with the access rules of the
   module. The Core extension dashboard is optional (`suggest`); without it
