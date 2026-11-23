@@ -248,3 +248,10 @@ docker run --rm --pull always -v $(pwd):/project -it \
 ```
 
 Open `Documentation-GENERATED-temp/Index.html`.
+
+---
+
+<p align="center">
+  Supported by<br>
+  <a href="https://www.fonda.at"><img src="Documentation/Images/fonda.png" alt="FONDA" width="120"></a>
+</p>

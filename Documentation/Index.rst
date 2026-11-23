@@ -96,3 +96,12 @@ stored as a record and delivered by email.
     :hidden:
 
     Sitemap
+
+----
+
+Supported by
+
+..  image:: /Images/fonda.png
+    :alt: FONDA
+    :width: 120px
+    :target: https://www.fonda.at
