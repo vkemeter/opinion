@@ -136,13 +136,13 @@
 				<f:if condition="{screenshot}">
 					<f:then>
 						<a
-							href="{screenshot.publicUrl}"
+							href="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
 							target="_blank"
 							rel="noopener"
 							title="{f:translate(domain: 'opinion.messages', key: 'module.show.openScreenshot')}">
 							<img
 								class="img-fluid img-thumbnail"
-								src="{screenshot.publicUrl}"
+								src="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
 								alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
 						</a>
 					</f:then>

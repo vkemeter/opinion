@@ -23,6 +23,8 @@ use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
+use Vkemeter\Opinion\Storage\ScreenshotStorage;
+use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 
 final class FeedbackModuleControllerTest extends FunctionalTestCase
 {
@@ -90,6 +92,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('pageInfo.imagesOnPage.total', $html);
         self::assertStringContainsString('screen.width', $html);
         self::assertStringContainsString('No screenshot attached.', $html);
+        self::assertStringNotContainsString('dumpFile', $html);
         self::assertStringContainsString('opinion/feedback/status', $html);
         self::assertMatchesRegularExpression('#<option\s+value="new"\s+selected>\s*New\s*</option>#', $html);
         self::assertMatchesRegularExpression('#<option\s+value="closed"\s*>#', $html);
@@ -264,6 +267,39 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function showLinksTheScreenshotThroughTheModule(): void
+    {
+        $uid = $this->addFeedbackWithScreenshot(1);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertSame(2, substr_count($html, '/typo3/opinion/screenshot?'));
+        self::assertStringNotContainsString('dumpFile', $html);
+    }
+
+    #[Test]
+    public function screenshotIsDeliveredToAdminsAndTheSenderOnly(): void
+    {
+        $ofAdmin = $this->addFeedbackWithScreenshot(1);
+        $ofReporter = $this->addFeedbackWithScreenshot(3);
+        $withoutScreenshot = $this->addFeedback('No screenshot', '2026-10-01 10:00');
+        self::assertSame('opinion_feedback', $this->get(Router::class)->getRoute('opinion_screenshot')?->getOption('inheritAccessFromModule'), 'Core checks the module access');
+
+        $response = $this->requestScreenshot($ofReporter);
+        self::assertSame(200, $response->getStatusCode(), 'admin, foreign feedback');
+        self::assertSame(self::png(), (string)$response->getBody());
+        self::assertSame(404, $this->requestScreenshot($withoutScreenshot)->getStatusCode(), 'no screenshot');
+        self::assertSame(404, $this->requestScreenshot(999)->getStatusCode(), 'unknown');
+
+        $this->setUpBackendUser(3);
+        self::assertSame(200, $this->requestScreenshot($ofReporter)->getStatusCode(), 'sender');
+        self::assertSame(404, $this->requestScreenshot($ofAdmin)->getStatusCode(), 'foreign feedback');
+
+        $this->setUpBackendUser(2);
+        self::assertSame(403, $this->requestScreenshot($ofReporter)->getStatusCode(), 'without options.opinion.enable');
+    }
+
+    #[Test]
     public function editorGetsNoForeignFeedback(): void
     {
         $foreign = $this->addFeedback('Feedback of the admin', '2026-10-01 10:00');
@@ -404,6 +440,24 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $GLOBALS['TYPO3_REQUEST'] = $request;
 
         return $request;
+    }
+
+    private function requestScreenshot(int $uid): ResponseInterface
+    {
+        return $this->get(FeedbackModuleController::class)->screenshotAction($this->createRequest('opinion_screenshot', ['uid' => (string)$uid]));
+    }
+
+    private function addFeedbackWithScreenshot(int $senderUid): int
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $screenshot = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
+
+        return $this->get(FeedbackRepository::class)->add(new Submission('With screenshot', Category::Bug, Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()), $screenshot);
+    }
+
+    private static function png(): string
+    {
+        return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', true);
     }
 
     private function addFeedback(string $message, string $date, int $senderUid = 1): int

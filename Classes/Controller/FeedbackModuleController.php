@@ -16,6 +16,7 @@ use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Access\AccessChecker;
@@ -30,6 +31,7 @@ use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
+use Vkemeter\Opinion\Storage\ScreenshotStorage;
 
 /**
  * Module "Feedback": administrators see all submissions and manage delivery
@@ -51,6 +53,7 @@ final readonly class FeedbackModuleController
         private ConfigurationProviderInterface $configurationProvider,
         private FlashMessageService $flashMessageService,
         private AccessChecker $accessChecker,
+        private ScreenshotStorage $screenshotStorage,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -138,6 +141,25 @@ final readonly class FeedbackModuleController
         ]);
 
         return $view->renderResponse('FeedbackModule/Show');
+    }
+
+    /**
+     * Delivers the screenshot of one feedback; same access rules as the detail view.
+     */
+    public function screenshotAction(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->hasModuleAccess()) {
+            return $this->accessDenied();
+        }
+        $uid = (int)($request->getQueryParams()['uid'] ?? 0);
+        // Another user's feedback is treated like an unknown uid
+        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
+        $screenshot = $record !== null ? ($this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid)[0] ?? null) : null;
+        if (!$screenshot instanceof FileReference) {
+            return new HtmlResponse('', 404);
+        }
+
+        return $this->screenshotStorage->stream($screenshot->getOriginalFile());
     }
 
     /**

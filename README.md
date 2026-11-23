@@ -136,9 +136,9 @@ command `opinion:cleanup`.
 - Records live on the root level (`pid = 0`), read-only, and are shown in the
   admin module "Feedback" only, not in the List module.
 - Screenshots are stored in a local, **non-public** FAL storage below
-  `var/opinion/`, outside the web root. TYPO3 serves them through the
-  `dumpFile` URL only; a listener answers `403` unless the request carries an
-  admin session.
+  `var/opinion/`, outside the web root. Only the feedback module delivers
+  them, to administrators and the sender; the `dumpFile` URL always answers
+  `403`.
 - Blacked-out areas are burnt into the screenshot in the browser; the original
   capture never leaves the page.
 - The browser sends a fixed set of environment details (URL, title, user agent,

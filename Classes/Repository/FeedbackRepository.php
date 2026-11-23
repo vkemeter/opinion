@@ -216,28 +216,6 @@ final readonly class FeedbackRepository
         return $queryBuilder;
     }
 
-    /**
-     * Sender (be_user) of the feedback that references the screenshot file.
-     */
-    public function findSenderUidOfScreenshot(int $fileUid): ?int
-    {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_file_reference');
-        $queryBuilder->getRestrictions()->removeAll();
-        $senderUid = $queryBuilder
-            ->select('feedback.be_user')
-            ->from('sys_file_reference', 'reference')
-            ->join('reference', self::TABLE, 'feedback', $queryBuilder->expr()->eq('feedback.uid', $queryBuilder->quoteIdentifier('reference.uid_foreign')))
-            ->where(
-                $queryBuilder->expr()->eq('reference.tablenames', $queryBuilder->createNamedParameter(self::TABLE)),
-                $queryBuilder->expr()->eq('reference.fieldname', $queryBuilder->createNamedParameter('screenshot')),
-                $queryBuilder->expr()->eq('reference.uid_local', $queryBuilder->createNamedParameter($fileUid, Connection::PARAM_INT)),
-            )
-            ->executeQuery()
-            ->fetchOne();
-
-        return $senderUid === false ? null : (int)$senderUid;
-    }
-
     public function remove(int $uid): void
     {
         $this->connectionPool->getConnectionForTable('sys_file_reference')->delete(

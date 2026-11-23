@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Storage;
 
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Uid\Uuid;
 use TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior;
 use TYPO3\CMS\Core\Resource\File;
@@ -61,6 +62,22 @@ final readonly class ScreenshotStorage
 
         try {
             $storage->deleteFile($file);
+        } finally {
+            $storage->setEvaluatePermissions($evaluatePermissions);
+        }
+    }
+
+    /**
+     * Inline response with the file; access is checked by the caller (feedback module).
+     */
+    public function stream(File $file): ResponseInterface
+    {
+        $storage = $file->getStorage();
+        $evaluatePermissions = $storage->getEvaluatePermissions();
+        $storage->setEvaluatePermissions(false);
+
+        try {
+            return $storage->streamFile($file);
         } finally {
             $storage->setEvaluatePermissions($evaluatePermissions);
         }

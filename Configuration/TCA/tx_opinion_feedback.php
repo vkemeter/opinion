@@ -34,7 +34,7 @@ return [
     ],
     'types' => [
         1 => [
-            'showitem' => 'status,source,category,severity,be_user,message,screenshot,
+            'showitem' => 'status,source,category,severity,be_user,message,
             --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context,
             --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
         ],

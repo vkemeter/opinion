@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** screenshots are delivered through the feedback module
+  (backend route `opinion_screenshot`, access inherited from the module) instead of the file dump. File dump
+  URLs (`eID=dumpFile`) of screenshots and their processed variants always
+  answer `403`, also for administrators; links copied from the detail view
+  before stop working. The Core now does the whole session check
+- Removed: `AdminRequestChecker` and `AdminRequestCheckerInterface`
+- Changed: the record edit form no longer shows the screenshot field
+
 ## 1.2.1 – 2026-11-23
 
 - Fixed: errors while writing the screenshot into the storage (folder

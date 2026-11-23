@@ -126,9 +126,9 @@ Data and privacy
 *   Feedback is only accepted from logged-in backend users who may send
     feedback, at most :confval:`extconf-ratelimit` per user and hour.
 *   Screenshots are stored in a non-public file storage below `var/opinion/`,
-    outside the web root. TYPO3 serves them through its file dump URL only,
-    and only to requests with the session of an administrator or of the
-    sender of the feedback.
+    outside the web root. They are delivered only through the feedback module
+    in the backend, to administrators and to the sender of the feedback. The
+    TYPO3 file dump URL (`eID=dumpFile`) always answers `403` for them.
 *   Blacked-out areas are burnt into the screenshot in the browser; the
     original capture never leaves the page.
 *   The browser sends a fixed set of details only, the server drops every

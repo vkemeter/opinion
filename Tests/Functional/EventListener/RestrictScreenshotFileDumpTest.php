@@ -5,25 +5,17 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\EventListener;
 
 use PHPUnit\Framework\Attributes\Test;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\EventDispatcher\ListenerProvider;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Resource\Event\ModifyFileDumpEvent;
 use TYPO3\CMS\Core\Resource\File;
+use TYPO3\CMS\Core\Resource\ResourceInterface;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Access\AccessChecker;
-use Vkemeter\Opinion\Authentication\AdminRequestCheckerInterface;
-use Vkemeter\Opinion\Domain\Category;
-use Vkemeter\Opinion\Domain\Severity;
-use Vkemeter\Opinion\Domain\Source;
-use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\EventListener\RestrictScreenshotFileDump;
-use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
-use Vkemeter\Opinion\Storage\ScreenshotStorageResolver;
 
 final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
 {
@@ -48,36 +40,29 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function screenshotIsDeniedWithoutSession(): void
+    public function screenshotIsAlwaysDenied(): void
     {
-        $event = $this->dispatch($this->createScreenshot(), null);
+        $event = $this->dispatch($this->createScreenshot());
 
         self::assertTrue($event->isPropagationStopped());
         self::assertSame(403, $event->getResponse()?->getStatusCode());
     }
 
     #[Test]
-    public function screenshotIsServedWithAdminSession(): void
+    public function screenshotIsDeniedAlsoWithAdminSession(): void
     {
-        self::assertFalse($this->dispatch($this->createScreenshot(), $this->createBackendUser(1, true))->isPropagationStopped());
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $this->setUpBackendUser(1);
+
+        self::assertSame(403, $this->dispatch($this->createScreenshot())->getResponse()?->getStatusCode());
     }
 
     #[Test]
-    public function screenshotIsServedToTheSenderOnly(): void
-    {
-        $screenshot = $this->createScreenshot(senderUid: 3);
-
-        self::assertFalse($this->dispatch($screenshot, $this->createBackendUser(3, false))->isPropagationStopped(), 'sender');
-        self::assertSame(403, $this->dispatch($screenshot, $this->createBackendUser(5, false))->getResponse()?->getStatusCode(), 'other editor');
-        self::assertSame(403, $this->dispatch($screenshot, $this->createBackendUser(3, false, mayUseFeedback: false))->getResponse()?->getStatusCode(), 'sender without access');
-    }
-
-    #[Test]
-    public function processedScreenshotIsDeniedWithoutSession(): void
+    public function processedScreenshotIsDenied(): void
     {
         $processedFile = $this->createScreenshot()->process('Image.Preview', ['width' => 1, 'height' => 1]);
 
-        self::assertSame(403, $this->dispatch($processedFile, null)->getResponse()?->getStatusCode());
+        self::assertSame(403, $this->dispatch($processedFile)->getResponse()?->getStatusCode());
     }
 
     #[Test]
@@ -91,42 +76,18 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         file_put_contents($temporaryFile, self::png());
         $file = $storage->addFile($temporaryFile, $storage->getRootLevelFolder(false), 'public.png');
 
-        self::assertFalse($this->dispatch($file, null)->isPropagationStopped());
+        self::assertFalse($this->dispatch($file)->isPropagationStopped());
     }
 
-    /**
-     * A screenshot stored with a feedback of the given sender.
-     */
-    private function createScreenshot(int $senderUid = 1): File
+    private function createScreenshot(): File
     {
-        $screenshot = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
-        $this->get(FeedbackRepository::class)->add(new Submission('Teaser', Category::Bug, Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()), $screenshot);
-
-        return $screenshot;
+        return $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
     }
 
-    private function createBackendUser(int $uid, bool $isAdmin, bool $mayUseFeedback = true): BackendUserAuthentication
+    private function dispatch(ResourceInterface $file): ModifyFileDumpEvent
     {
-        $backendUser = self::createStub(BackendUserAuthentication::class);
-        $backendUser->user = ['uid' => $uid];
-        $backendUser->method('isAdmin')->willReturn($isAdmin);
-        $backendUser->method('getTSConfig')->willReturn($mayUseFeedback ? ['options.' => ['opinion.' => ['enable' => '1']]] : []);
-
-        return $backendUser;
-    }
-
-    private function dispatch(\TYPO3\CMS\Core\Resource\ResourceInterface $file, ?BackendUserAuthentication $backendUser): ModifyFileDumpEvent
-    {
-        $adminRequestChecker = self::createStub(AdminRequestCheckerInterface::class);
-        $adminRequestChecker->method('getAuthenticatedBackendUser')->willReturn($backendUser);
         $event = new ModifyFileDumpEvent($file, new ServerRequest('https://example.com/index.php?eID=dumpFile'));
-
-        (new RestrictScreenshotFileDump(
-            $this->get(ScreenshotStorageResolver::class),
-            $adminRequestChecker,
-            $this->get(AccessChecker::class),
-            $this->get(FeedbackRepository::class),
-        ))($event);
+        $this->get(RestrictScreenshotFileDump::class)($event);
 
         return $event;
     }

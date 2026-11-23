@@ -60,6 +60,19 @@ final class ScreenshotStorageTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function streamReturnsTheFileInline(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $file = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
+
+        $response = $this->get(ScreenshotStorage::class)->stream($file);
+
+        self::assertSame('image/png', $response->getHeaderLine('Content-Type'));
+        self::assertStringStartsWith('inline', $response->getHeaderLine('Content-Disposition'));
+        self::assertSame(self::png(), (string)$response->getBody());
+    }
+
+    #[Test]
     public function storeFailsWithoutStorage(): void
     {
         $screenshotStorage = $this->get(ScreenshotStorage::class);
