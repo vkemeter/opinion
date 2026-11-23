@@ -7,6 +7,7 @@ namespace Vkemeter\Opinion\Tests\Unit\Delivery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Mail\MailerInterface;
+use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
@@ -15,6 +16,9 @@ use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Storage\ScreenshotStorage;
+use Vkemeter\Opinion\Storage\ScreenshotStorageLocation;
+use Vkemeter\Opinion\Storage\ScreenshotStorageResolver;
 
 final class EmailDeliveryChannelTest extends UnitTestCase
 {
@@ -37,7 +41,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
     #[DataProvider('subjectDataProvider')]
     public function buildSubjectContainsPrefixCategorySeverityAndMessageStart(string $prefix, string $message, string $expected): void
     {
-        $subject = new EmailDeliveryChannel(self::createStub(MailerInterface::class), new DataFlattener())->buildSubject(
+        $subject = $this->createChannel()->buildSubject(
             new Submission($message, Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
             new OpinionConfiguration(true, ['team@example.com'], $prefix, 180),
         );
@@ -48,7 +52,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
     #[Test]
     public function deliverFailsWithoutRecipients(): void
     {
-        $result = new EmailDeliveryChannel(self::createStub(MailerInterface::class), new DataFlattener())->deliver(
+        $result = $this->createChannel()->deliver(
             new Submission('Image is cropped.', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
             null,
             new OpinionConfiguration(true, [], '[Opinion]', 180),
@@ -56,5 +60,15 @@ final class EmailDeliveryChannelTest extends UnitTestCase
 
         self::assertFalse($result->success);
         self::assertSame('email', $result->channel);
+    }
+
+    private function createChannel(): EmailDeliveryChannel
+    {
+        // No screenshot is delivered here, so the storage is never asked
+        return new EmailDeliveryChannel(
+            self::createStub(MailerInterface::class),
+            new DataFlattener(),
+            new ScreenshotStorage(new ScreenshotStorageResolver(self::createStub(StorageRepository::class), new ScreenshotStorageLocation())),
+        );
     }
 }

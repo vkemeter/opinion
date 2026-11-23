@@ -6,6 +6,9 @@ namespace Vkemeter\Opinion\Tests\Functional\Delivery;
 
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Mime\Address;
+use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
+use TYPO3\CMS\Core\Http\NormalizedParams;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -33,6 +36,24 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
             'defaultMailFromName' => 'TYPO3',
         ],
     ];
+
+    #[Test]
+    public function deliverAttachesTheScreenshotAlsoForEditorsWithoutFileMount(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $this->setUpBackendUser(3);
+        // As in the submit request: storages created in the backend evaluate the editor's file permissions
+        $request = new ServerRequest('https://example.com/typo3/', 'POST', null, [], ['HTTP_HOST' => 'example.com', 'HTTPS' => 'on', 'SCRIPT_NAME' => '/typo3/index.php'])
+            ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
+        $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $screenshot = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
+
+        $result = $this->get(EmailDeliveryChannel::class)->deliver($this->createSubmission(), $screenshot, $this->configuration());
+
+        self::assertTrue($result->success, $result->message);
+        self::assertContains('screenshot.png', array_map(static fn($part): ?string => $part->getFilename(), $this->getSentEmail()->getAttachments()));
+    }
 
     #[Test]
     public function deliverSendsMailWithAllDetailsAndScreenshot(): void
@@ -107,7 +128,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = '127.0.0.1:1';
 
         $this->expectException(\Throwable::class);
-        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener())->deliver($this->createSubmission(), null, $this->configuration());
+        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener(), $this->get(ScreenshotStorage::class))->deliver($this->createSubmission(), null, $this->configuration());
     }
 
     private function getSentEmail(): FluidEmail

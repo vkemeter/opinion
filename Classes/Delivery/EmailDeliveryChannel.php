@@ -15,6 +15,7 @@ use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\ReportedUrl;
+use Vkemeter\Opinion\Storage\ScreenshotStorage;
 
 final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
 {
@@ -23,6 +24,7 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
     public function __construct(
         private MailerInterface $mailer,
         private DataFlattener $dataFlattener,
+        private ScreenshotStorage $screenshotStorage,
     ) {}
 
     public function getIdentifier(): string
@@ -64,7 +66,7 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         }
 
         if ($screenshot instanceof File) {
-            $content = $screenshot->getContents();
+            $content = $this->screenshotStorage->getContents($screenshot);
             $email
                 ->embed($content, 'screenshot', $screenshot->getMimeType())
                 ->attach($content, 'screenshot.' . $screenshot->getExtension(), $screenshot->getMimeType());

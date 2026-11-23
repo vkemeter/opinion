@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed: feedback of editors with screenshot failed in the email delivery
+  ("You are not allowed to access that file"); the screenshot is now read on
+  behalf of the system, as it is stored
 - **Breaking:** screenshots are delivered through the feedback module
   (backend route `opinion_screenshot`, access inherited from the module) instead of the file dump. File dump
   URLs (`eID=dumpFile`) of screenshots and their processed variants always

@@ -68,6 +68,22 @@ final readonly class ScreenshotStorage
     }
 
     /**
+     * Content of the file, read on behalf of the system (the sending editor has no file mount on the storage).
+     */
+    public function getContents(File $file): string
+    {
+        $storage = $file->getStorage();
+        $evaluatePermissions = $storage->getEvaluatePermissions();
+        $storage->setEvaluatePermissions(false);
+
+        try {
+            return $file->getContents();
+        } finally {
+            $storage->setEvaluatePermissions($evaluatePermissions);
+        }
+    }
+
+    /**
      * Inline response with the file; access is checked by the caller (feedback module).
      */
     public function stream(File $file): ResponseInterface
