@@ -219,17 +219,17 @@ await scenario('screenshot annotation: rectangle, arrow, black out, undo, cancel
   assert(await page.locator('dialog.opinion-dialog[open]').count() === 1, 'feedback dialog closed');
   assert(await page.evaluate(() => document.activeElement?.dataset.tool) === 'rectangle', 'rectangle tool not focused');
   assert(await pressed(page, '[data-tool=rectangle]') === 'true', 'rectangle not pressed');
-  assert(await page.isDisabled('text=[annotationUndo]') && await page.isDisabled('text=[annotationClear]'), 'undo/clear enabled without shapes');
+  assert(await page.isDisabled('[aria-label="[annotationUndo]"]') && await page.isDisabled('[aria-label="[annotationClear]"]'), 'undo/clear enabled without shapes');
 
   await page.click('[data-color=yellow]');
   assert(await pressed(page, '[data-color=yellow]') === 'true' && await pressed(page, '[data-color=red]') === 'false', 'colour state wrong');
   await dragOnCanvas(page, [0.1, 0.1], [0.4, 0.4]);
-  await page.click('text=[annotationArrow]');
+  await page.click('[aria-label="[annotationArrow]"]');
   await dragOnCanvas(page, [0.1, 0.7], [0.4, 0.7]);
-  await page.click('text=[annotationBlackout]');
+  await page.click('[aria-label="[annotationBlackout]"]');
   assert(await page.isDisabled('[data-color=red]'), 'colours enabled for black out');
   await dragOnCanvas(page, [0.6, 0.1], [0.9, 0.4]);
-  await page.click('text=[annotationUndo]');
+  await page.click('[aria-label="[annotationUndo]"]');
   let [blackout] = await pixelsAt(page, null, [[0.75, 0.25]]);
   assert(!isBlack(blackout), 'undo did not remove the black out');
   await dragOnCanvas(page, [0.6, 0.1], [0.9, 0.4]);
@@ -252,10 +252,10 @@ await scenario('screenshot annotation: rectangle, arrow, black out, undo, cancel
   // Reopening shows the shapes; Escape closes only the editor and keeps the image
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  assert(await page.isEnabled('text=[annotationUndo]'), 'shapes not restored');
+  assert(await page.isEnabled('[aria-label="[annotationUndo]"]'), 'shapes not restored');
   [blackout] = await pixelsAt(page, null, [[0.75, 0.25]]);
   assert(isBlack(blackout), 'black out not shown again');
-  await page.click('text=[annotationClear]');
+  await page.click('[aria-label="[annotationClear]"]');
   await closeEditor(page, () => page.keyboard.press('Escape'));
   assert(await page.locator('dialog.opinion-dialog[open]').count() === 1, 'Escape closed the feedback dialog');
   assert(await page.getAttribute('.opinion-dialog__preview', 'src') === annotated, 'cancel changed the screenshot');
@@ -273,28 +273,28 @@ await scenario('screenshot annotation: clear all restores the capture, retake dr
   const original = await page.getAttribute('.opinion-dialog__preview', 'src');
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await page.click('text=[annotationBlackout]');
+  await page.click('[aria-label="[annotationBlackout]"]');
   await dragOnCanvas(page, [0.2, 0.2], [0.8, 0.8]);
   await closeEditor(page, () => page.click('text=[annotationApply]'));
   assert(await page.getAttribute('.opinion-dialog__preview', 'src') !== original, 'black out not applied');
 
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await page.click('text=[annotationClear]');
+  await page.click('[aria-label="[annotationClear]"]');
   assert(await page.evaluate(() => document.activeElement?.dataset.tool) === 'rectangle', 'focus lost after clear');
   await closeEditor(page, () => page.click('text=[annotationApply]'));
   assert(await page.getAttribute('.opinion-dialog__preview', 'src') === original, 'clear all did not restore the capture');
 
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await page.click('text=[annotationBlackout]');
+  await page.click('[aria-label="[annotationBlackout]"]');
   await dragOnCanvas(page, [0.2, 0.2], [0.8, 0.8]);
   await closeEditor(page, () => page.click('text=[annotationApply]'));
   await page.click('text=[screenshotRetake]');
   await page.waitForFunction((previous) => document.querySelector('.opinion-dialog__preview')?.src !== previous, await page.getAttribute('.opinion-dialog__preview', 'src'), { timeout: 10000 });
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  assert(await page.isDisabled('text=[annotationUndo]'), 'shapes kept after retake');
+  assert(await page.isDisabled('[aria-label="[annotationUndo]"]'), 'shapes kept after retake');
 });
 
 async function imageSize(page, source) {
@@ -325,16 +325,16 @@ await scenario('screenshot annotation: crop, reset crop, reopen with the frame',
 
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  assert(await page.isDisabled('text=[annotationResetCrop]'), 'reset crop enabled without crop');
+  assert(await page.isDisabled('[aria-label="[annotationResetCrop]"]'), 'reset crop enabled without crop');
   // Black out the left half of the later frame, so its content can be checked
-  await page.click('text=[annotationBlackout]');
+  await page.click('[aria-label="[annotationBlackout]"]');
   await dragOnCanvas(page, [0.25, 0.25], [0.5, 0.5]);
-  await page.click('text=[annotationCrop]');
+  await page.click('[aria-label="[annotationCrop]"]');
   assert(await page.isDisabled('[data-color=red]'), 'colours enabled for crop');
   await dragOnCanvas(page, [0.1, 0.1], [0.12, 0.12]);
-  assert(await page.isDisabled('text=[annotationResetCrop]'), 'too small frame accepted');
+  assert(await page.isDisabled('[aria-label="[annotationResetCrop]"]'), 'too small frame accepted');
   await dragOnCanvas(page, [0.25, 0.25], [0.75, 0.5]);
-  assert(await page.isEnabled('text=[annotationResetCrop]'), 'crop not set');
+  assert(await page.isEnabled('[aria-label="[annotationResetCrop]"]'), 'crop not set');
   await closeEditor(page, () => page.click('text=[annotationApply]'));
 
   const cropped = await page.getAttribute('.opinion-dialog__preview', 'src');
@@ -348,8 +348,8 @@ await scenario('screenshot annotation: crop, reset crop, reopen with the frame',
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
   assert(await page.evaluate(() => document.querySelector('.opinion-annotation__canvas').width) === full.width, 'editor not on the full capture');
-  assert(await page.isEnabled('text=[annotationResetCrop]'), 'crop not restored');
-  await page.click('text=[annotationResetCrop]');
+  assert(await page.isEnabled('[aria-label="[annotationResetCrop]"]'), 'crop not restored');
+  await page.click('[aria-label="[annotationResetCrop]"]');
   await closeEditor(page, () => page.click('text=[annotationApply]'));
   const reset = await imageSize(page, await page.getAttribute('.opinion-dialog__preview', 'src'));
   assert(reset.width === full.width && reset.height === full.height, 'reset crop did not restore the full size');
@@ -360,7 +360,7 @@ await scenario('screenshot annotation: text in the chosen colour, Escape keeps t
   await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
   await page.click('text=[annotate]');
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await page.click('text=[annotationText]');
+  await page.click('[aria-label="[annotationText]"]');
   await page.click('[data-color=yellow]');
   const box = await page.locator('.opinion-annotation__canvas').boundingBox();
 
@@ -372,19 +372,19 @@ await scenario('screenshot annotation: text in the chosen colour, Escape keeps t
   await page.keyboard.press('Escape');
   assert(await page.locator('dialog.opinion-annotation[open]').count() === 1, 'Escape closed the editor');
   assert(await page.locator('.opinion-annotation__text').count() === 0, 'text field still open');
-  assert(await page.isDisabled('text=[annotationUndo]'), 'discarded text was placed');
+  assert(await page.isDisabled('[aria-label="[annotationUndo]"]'), 'discarded text was placed');
 
   // An empty text places nothing
   await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
   await page.keyboard.press('Enter');
-  assert(await page.isDisabled('text=[annotationUndo]'), 'empty text was placed');
+  assert(await page.isDisabled('[aria-label="[annotationUndo]"]'), 'empty text was placed');
 
   const textBox = [0.3, 0.6, 0.6, 0.75];
   assert(await countPixels(page, textBox, isYellow) === 0, 'yellow before the text');
   await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.6);
   await page.keyboard.type('should be blue');
   await page.keyboard.press('Enter');
-  assert(await page.isEnabled('text=[annotationUndo]'), 'text not placed');
+  assert(await page.isEnabled('[aria-label="[annotationUndo]"]'), 'text not placed');
   assert(await countPixels(page, textBox, isYellow) > 50, 'text not drawn in yellow');
   await closeEditor(page, () => page.click('text=[annotationApply]'));
 

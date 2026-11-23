@@ -7,6 +7,9 @@
   behalf of the system, as it is stored
 - Added: the screenshot editor can crop the screenshot to the relevant part
   (only that part is sent) and place short text notes in the selected colour
+- Changed: the toolbar of the screenshot editor is more compact: small icon
+  buttons with tooltips (icons from TYPO3 icons), all tools and actions in one
+  row
 - **Breaking:** screenshots are delivered through the feedback module
   (backend route `opinion_screenshot`, access inherited from the module) instead of the file dump. File dump
   URLs (`eID=dumpFile`) of screenshots and their processed variants always

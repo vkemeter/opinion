@@ -1,5 +1,6 @@
 import { COLORS, TOOLS, cropFromPoints, isShapeLargeEnough, renderAnnotations } from './annotation.js';
 import { el } from './dom.js';
+import { icon } from './icons.js';
 
 const TOOL_LABELS = {
   rectangle: 'annotationRectangle',
@@ -24,6 +25,14 @@ const TEXT_MAX_LENGTH = 200;
  */
 export function openAnnotationEditor(options) {
   return new AnnotationEditor(options).open();
+}
+
+/**
+ * A small button showing only an icon; the label is its accessible name and tooltip.
+ */
+function iconButton(iconName, label, attributes = {}) {
+  const { class: className = '', ...rest } = attributes;
+  return el('button', { class: `opinion-dialog__button opinion-annotation__button opinion-annotation__button--icon ${className}`.trim(), type: 'button', 'aria-label': label, title: label, ...rest }, [icon(iconName)]);
 }
 
 class AnnotationEditor {
@@ -65,7 +74,7 @@ class AnnotationEditor {
     this.toolButtons = {};
     const tools = el('div', { class: 'opinion-annotation__group', role: 'group', 'aria-label': this.labels.annotationTools });
     for (const tool of TOOLS) {
-      const button = el('button', { class: `opinion-dialog__button opinion-annotation__tool opinion-annotation__tool--${tool}`, type: 'button', 'data-tool': tool }, this.labels[TOOL_LABELS[tool]]);
+      const button = iconButton(tool, this.labels[TOOL_LABELS[tool]], { class: `opinion-annotation__tool opinion-annotation__tool--${tool}`, 'data-tool': tool });
       button.addEventListener('click', () => this.selectTool(tool));
       this.toolButtons[tool] = button;
       tools.append(button);
@@ -83,16 +92,16 @@ class AnnotationEditor {
       this.colorGroup.append(button);
     }
 
-    this.undoButton = el('button', { class: 'opinion-dialog__button', type: 'button', 'aria-keyshortcuts': 'Control+Z Meta+Z' }, this.labels.annotationUndo);
+    this.undoButton = iconButton('undo', this.labels.annotationUndo, { 'aria-keyshortcuts': 'Control+Z Meta+Z' });
     this.undoButton.addEventListener('click', () => this.undo());
-    this.clearButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.annotationClear);
+    this.clearButton = iconButton('clear', this.labels.annotationClear);
     this.clearButton.addEventListener('click', () => this.clear());
-    this.resetCropButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.annotationResetCrop);
+    this.resetCropButton = iconButton('resetCrop', this.labels.annotationResetCrop);
     this.resetCropButton.addEventListener('click', () => this.resetCrop());
 
-    const cancelButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.cancel);
+    const cancelButton = el('button', { class: 'opinion-dialog__button opinion-annotation__button', type: 'button' }, [icon('cancel'), this.labels.cancel]);
     cancelButton.addEventListener('click', () => this.element.close());
-    const applyButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary', type: 'button' }, this.labels.annotationApply);
+    const applyButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary opinion-annotation__button', type: 'button' }, [icon('apply'), this.labels.annotationApply]);
     applyButton.addEventListener('click', () => {
       this.commitText();
       this.result = { shapes: this.shapes, crop: this.crop };
