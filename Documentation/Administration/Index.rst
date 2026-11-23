@@ -15,6 +15,12 @@ the module granted (see :ref:`configuration-access`) see only the feedback
 they sent themselves, with message, screenshot, collected details and the
 status; delivery details and all actions stay with administrators.
 
+..  figure:: /Images/ModuleDetailView.png
+    :alt: The detail view with message, status, screenshot, the conversation as a thread and the collapsed details
+    :class: with-border with-shadow
+
+    Detail view of a feedback, here as seen by its sender
+
 List
     Newest first, with date, category, severity, source, sender and their
     email address, the start of the message, a screenshot marker, the

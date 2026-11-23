@@ -43,7 +43,18 @@ Set up the extension
 This creates
 
 *   the table `tx_opinion_feedback` for the feedback records,
+*   the tables `tx_opinion_message` and `tx_opinion_read` for the
+    conversations and their read state,
 *   the file storage "Opinion screenshots" with the base path `var/opinion/`.
+
+Updating from version 1, also run the upgrade wizard, see
+:ref:`administration-upgrade`.
+
+The dashboard widgets need the TYPO3 dashboard, which is optional:
+
+..  code-block:: bash
+
+    composer require typo3/cms-dashboard
 
 Afterwards configure at least the email recipients, see
 :ref:`configuration-extension`.

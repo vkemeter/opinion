@@ -19,13 +19,21 @@ The dialog opens from two places:
 Both are only shown to users who may send feedback (see below).
 
 Before sending, the screenshot can be marked up in a full-screen editor: frame
-an area with a rectangle, point at something with an arrow, or black out
-personal data. The markings are burnt into the image; only the marked-up image
-is sent.
+an area with a rectangle, point at something with an arrow, add a short text
+note, black out personal data or crop it to the relevant part. The markings
+are burnt into the image; only the marked-up image is sent.
 
-Admins find all feedback in the module **Feedback**: a list, newest first,
-and a detail view with message, screenshot and all collected details. Editors
-who may send feedback see their own feedback there.
+Admins find all feedback in the module **Feedback**: search, filters, a list
+with status and conversation, and a detail view with message, screenshot, a
+conversation with the sender and all collected details. Editors who may send
+feedback see their own feedback there and answer in the conversation; unread
+messages are counted on the module menu entry.
+
+The open feedback of a page is shown where people work on it: in the admin
+panel ("Feedback on this page", frontend feedback) and in the page module
+(frontend and backend feedback), so a problem is not reported twice. With the
+optional TYPO3 dashboard, three widgets show open feedback, new messages and
+the latest feedback.
 
 ## Requirements
 
@@ -43,8 +51,10 @@ Without Composer, install it from the
 [TYPO3 Extension Repository](https://extensions.typo3.org/extension/opinion).
 Changes are listed in the [changelog](CHANGELOG.md).
 
-`extension:setup` creates the table `tx_opinion_feedback` and the file storage
-"Opinion screenshots" (see below).
+`extension:setup` creates the tables `tx_opinion_feedback`, `tx_opinion_message`
+and `tx_opinion_read` and the file storage "Opinion screenshots" (see below).
+Updating from version 1, also run `vendor/bin/typo3 upgrade:run opinion_pageUid`
+once. For the dashboard widgets, install `typo3/cms-dashboard`.
 
 ## Configuration
 
@@ -134,7 +144,11 @@ command `opinion:cleanup`.
 ## Data and privacy
 
 - Records live on the root level (`pid = 0`), read-only, and are shown in the
-  admin module "Feedback" only, not in the List module.
+  module "Feedback" only, not in the List module.
+- Conversation messages are shown only to administrators and the sender of the
+  feedback, are never sent by email and are removed with their feedback.
+- Everybody who may send feedback sees text, date and status of the open
+  feedback of the page they view, also of other senders (without names).
 - Screenshots are stored in a local, **non-public** FAL storage below
   `var/opinion/`, outside the web root. Only the feedback module delivers
   them, to administrators and the sender; the `dumpFile` URL always answers
@@ -152,7 +166,8 @@ command `opinion:cleanup`.
   without cache, like in the admin panel itself. Cookies, server variables and
   request parameters of that tab are not taken.
 - The IP address is stored anonymised.
-- `opinion:cleanup` removes records, references and screenshot files.
+- `opinion:cleanup` removes records, references, screenshot files and
+  conversations.
 
 ### Deployment
 

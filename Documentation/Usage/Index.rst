@@ -22,16 +22,19 @@ frontend, the admin panel shows :guilabel:`Feedback on this page` with the
 number. It lists that feedback with text, date and status, so you see whether
 a problem was reported already. The list shows the feedback of every sender,
 without their names; feedback sent from the backend is not listed here.
+Administrators open a feedback from the list in the module
+:guilabel:`Feedback`, in a new tab.
+
+..  figure:: /Images/AdminPanelPageFeedback.png
+    :alt: The admin panel tab "Feedback on this page" with two open feedback entries
+    :class: with-border with-shadow
+
+    Open feedback of the current page in the admin panel
 
 ..  _usage-backend:
 
 Backend: toolbar
 ================
-
-The page module shows an info box above the content when the page has open
-feedback, grouped into feedback sent from the frontend and from the backend,
-each with text, date and status. Administrators open a feedback from there in
-the module :guilabel:`Feedback`.
 
 In the backend, click the speech-bubble button in the toolbar. The current
 module, the module URL and the selected page are attached.
@@ -40,6 +43,24 @@ When an administrator answers your feedback and you have access to the module
 :guilabel:`Feedback`, its entry in the module menu shows a badge with the
 number of feedback entries with new messages. Answer in the detail view of the
 feedback, below the message (see :ref:`administration-module`).
+
+..  _usage-page-module:
+
+Backend: page module
+====================
+
+The page module shows a collapsed box above the content when the page has
+open feedback, with their number. Opened, it lists the feedback grouped into
+feedback sent from the frontend and from the backend, each with status, date
+and text. Administrators open a feedback from there in the module
+:guilabel:`Feedback`. The box is shown to everybody who may send feedback and
+may open the page.
+
+..  figure:: /Images/PageModuleFeedback.png
+    :alt: The page module with the opened box "Open feedback on this page" above the content
+    :class: with-border with-shadow
+
+    Open feedback of a page in the page module
 
 ..  _usage-dashboard:
 
@@ -63,6 +84,12 @@ add the widgets of the group :guilabel:`Feedback` to your dashboard:
 Each widget has a button to the module :guilabel:`Feedback`. The widgets show
 the same feedback as the module: administrators all of it, editors with access
 to the module only their own, other users nothing.
+
+..  figure:: /Images/DashboardWidgets.png
+    :alt: A dashboard with the widgets "Open feedback", "New messages" and "Latest feedback"
+    :class: with-border with-shadow
+
+    The three widgets of the group "Feedback"
 
 ..  _usage-dialog:
 

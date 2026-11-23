@@ -31,17 +31,27 @@ Features
     *Other*; severities *Low*, *Normal*, *High*.
 *   **Screenshot of the current tab** via the browser's screen capture
     (`getDisplayMedia()`), with preview, retake and remove.
-*   **Mark up the screenshot** in a full-screen editor: rectangle, arrow and
-    black out. Markings are burnt into the image in the browser.
+*   **Mark up the screenshot** in a full-screen editor: rectangle, arrow,
+    text notes, black out and crop. Markings are burnt into the image in the
+    browser; only the cropped part is sent.
 *   **Collected details** about browser, server and the current page or
     backend module, each of which an administrator can switch off.
 *   **Stored first, delivered second:** every submission is saved as a record;
     a failing mail transport never loses feedback.
 *   **Email delivery** to configurable recipients, the sender as reply-to,
     the screenshot inline and attached.
-*   **Admin module "Feedback"** with a list and a detail view.
-*   **Non-public screenshot storage** outside the web root, readable for
-    administrators only.
+*   **Module "Feedback"** with search, filters, a list and a detail view, and a
+    processing status *New*, *In progress* or *Closed*. Administrators see all
+    feedback, editors their own.
+*   **Conversation** per feedback between administrators and the sender, in
+    the module and without email; unread messages are counted on the module
+    menu entry.
+*   **Feedback per page:** the open feedback of a page in the admin panel and
+    in the page module, so a problem is not reported twice.
+*   **Dashboard widgets** for open feedback, new messages and the latest
+    feedback (with the optional TYPO3 dashboard).
+*   **Non-public screenshot storage** outside the web root, delivered only
+    through the module to administrators and the sender.
 *   **Retention:** the console command `opinion:cleanup` deletes old feedback,
     also as a Scheduler task.
 
