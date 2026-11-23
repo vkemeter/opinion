@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added: dashboard widgets "Open feedback", "New messages" and "Latest
+  feedback" in the widget group "Feedback", with the access rules of the
+  module. The Core extension dashboard is optional (`suggest`); without it
+  the widgets are not registered
 - Changed: the detail view of the module "Feedback" saves message and status
   with one form and one button "Save", so neither change is lost
   (routes `opinion_feedback.status` and `opinion_feedback.message` replaced

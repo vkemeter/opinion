@@ -269,6 +269,11 @@ Modules > Feedback`). Without the TSconfig option the module stays closed even
 when it is granted; with :confval:`extconf-enabled` switched off only
 administrators can open it.
 
+The dashboard widgets (see :ref:`usage-dashboard`) need to be allowed for
+these users in their backend group (:guilabel:`Access Rights > Dashboard
+widgets`), like every dashboard widget; they show data only to users who may
+open the module.
+
 Sending feedback also needs a valid email address in the user account, so the
 team can answer. Users without one still see the trigger, but get a note with
 a link to their user settings instead of the form; the endpoint rejects their

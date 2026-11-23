@@ -6,3 +6,5 @@ services:
 
     Vkemeter\Opinion\:
         resource: '../Classes/*'
+        # Needs EXT:dashboard, registered in Services.php only when it is installed
+        exclude: '../Classes/Dashboard/*'

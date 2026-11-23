@@ -34,7 +34,11 @@
 		"phpstan/phpstan-phpunit": "^2.0",
 		"phpstan/phpstan-strict-rules": "^2.0",
 		"saschaegerer/phpstan-typo3": "^3.0",
+		"typo3/cms-dashboard": "^14.3",
 		"typo3/testing-framework": "^9.5"
+	},
+	"suggest": {
+		"typo3/cms-dashboard": "Dashboard widgets for open feedback, new messages and the latest feedback"
 	},
 	"autoload": {
 		"psr-4": {

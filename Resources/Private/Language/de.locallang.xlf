@@ -856,6 +856,54 @@
                 <source>Collected details</source>
                 <target>Erfasste Details</target>
             </trans-unit>
+            <trans-unit id="dashboard.group">
+                <source>Feedback</source>
+                <target>Feedback</target>
+            </trans-unit>
+            <trans-unit id="dashboard.button">
+                <source>Open module "Feedback"</source>
+                <target>Modul "Feedback" öffnen</target>
+            </trans-unit>
+            <trans-unit id="dashboard.open.title">
+                <source>Open feedback</source>
+                <target>Offenes Feedback</target>
+            </trans-unit>
+            <trans-unit id="dashboard.open.subtitle">
+                <source>New or in progress</source>
+                <target>Neu oder in Bearbeitung</target>
+            </trans-unit>
+            <trans-unit id="dashboard.open.description">
+                <source>Number of feedback that is new or in progress</source>
+                <target>Anzahl der Feedbacks, die neu oder in Bearbeitung sind</target>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.title">
+                <source>New messages</source>
+                <target>Neue Nachrichten</target>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.subtitle">
+                <source>Unread messages</source>
+                <target>Ungelesene Nachrichten</target>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.description">
+                <source>Number of feedback entries with messages you have not read yet</source>
+                <target>Anzahl der Feedback-Einträge mit Nachrichten, die Sie noch nicht gelesen haben</target>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.title">
+                <source>Latest feedback</source>
+                <target>Neuestes Feedback</target>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.subtitle">
+                <source>The five newest entries</source>
+                <target>Die fünf neuesten Einträge</target>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.description">
+                <source>The newest feedback with date, category and status, linked to its detail view</source>
+                <target>Das neueste Feedback mit Datum, Kategorie und Status, verlinkt mit der Detailansicht</target>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.empty">
+                <source>No feedback yet.</source>
+                <target>Noch kein Feedback.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

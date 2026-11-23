@@ -643,6 +643,42 @@
             <trans-unit id="module.details.title">
                 <source>Collected details</source>
             </trans-unit>
+            <trans-unit id="dashboard.group">
+                <source>Feedback</source>
+            </trans-unit>
+            <trans-unit id="dashboard.button">
+                <source>Open module "Feedback"</source>
+            </trans-unit>
+            <trans-unit id="dashboard.open.title">
+                <source>Open feedback</source>
+            </trans-unit>
+            <trans-unit id="dashboard.open.subtitle">
+                <source>New or in progress</source>
+            </trans-unit>
+            <trans-unit id="dashboard.open.description">
+                <source>Number of feedback that is new or in progress</source>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.title">
+                <source>New messages</source>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.subtitle">
+                <source>Unread messages</source>
+            </trans-unit>
+            <trans-unit id="dashboard.newMessages.description">
+                <source>Number of feedback entries with messages you have not read yet</source>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.title">
+                <source>Latest feedback</source>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.subtitle">
+                <source>The five newest entries</source>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.description">
+                <source>The newest feedback with date, category and status, linked to its detail view</source>
+            </trans-unit>
+            <trans-unit id="dashboard.latest.empty">
+                <source>No feedback yet.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

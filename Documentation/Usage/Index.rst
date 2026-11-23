@@ -30,6 +30,29 @@ When an administrator answers your feedback and you have access to the module
 number of feedback entries with new messages. Answer in the detail view of the
 feedback, below the message (see :ref:`administration-module`).
 
+..  _usage-dashboard:
+
+Backend: dashboard widgets
+==========================
+
+With the TYPO3 dashboard installed (Composer package `typo3/cms-dashboard`),
+add the widgets of the group :guilabel:`Feedback` to your dashboard:
+
+:guilabel:`Open feedback`
+    The number of feedback that is *New* or *In progress*.
+
+:guilabel:`New messages`
+    The number of feedback entries with messages you have not read yet; 0
+    while :confval:`extconf-conversation` is switched off.
+
+:guilabel:`Latest feedback`
+    The five newest entries with date, category, status and the start of the
+    message, each linked to its detail view.
+
+Each widget has a button to the module :guilabel:`Feedback`. The widgets show
+the same feedback as the module: administrators all of it, editors with access
+to the module only their own, other users nothing.
+
 ..  _usage-dialog:
 
 The feedback dialog
