@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -203,6 +202,6 @@ final class CleanupCommandTest extends FunctionalTestCase
 
     private function createSubmission(\DateTimeImmutable $createdAt): Submission
     {
-        return new Submission('The teaser image is cropped.', Category::Bug, Severity::Normal, Source::Frontend, 1, $createdAt);
+        return new Submission('The teaser image is cropped.', 'bug', Severity::Normal, Source::Frontend, 1, $createdAt);
     }
 }

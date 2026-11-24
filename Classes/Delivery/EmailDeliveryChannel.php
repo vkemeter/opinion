@@ -92,6 +92,6 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
             $message = rtrim(mb_substr($message, 0, self::SUBJECT_MESSAGE_LENGTH)) . '…';
         }
 
-        return ltrim(sprintf('%s [%s/%s] %s', $configuration->subjectPrefix, $submission->category->value, $submission->severity->value, $message));
+        return ltrim(sprintf('%s [%s/%s] %s', $configuration->subjectPrefix, $submission->category, $submission->severity->value, $message));
     }
 }

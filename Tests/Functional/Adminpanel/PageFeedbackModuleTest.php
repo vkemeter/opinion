@@ -15,7 +15,6 @@ use TYPO3\CMS\Core\Routing\PageArguments;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Adminpanel\PageFeedbackModule;
 use Vkemeter\Opinion\Adminpanel\PageFeedbackSubModule;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -139,7 +138,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
     private function addFeedback(int $pageUid, Source $source, string $message, int $senderUid, FeedbackStatus $status = FeedbackStatus::New, string $date = 'now'): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $uid = $repository->add(new Submission($message, Category::Bug, Severity::Low, $source, $senderUid, new \DateTimeImmutable($date), context: ['pageUid' => $pageUid]), null);
+        $uid = $repository->add(new Submission($message, 'bug', Severity::Low, $source, $senderUid, new \DateTimeImmutable($date), context: ['pageUid' => $pageUid]), null);
         $repository->updateStatus($uid, $status);
     }
 }

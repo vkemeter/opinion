@@ -63,6 +63,7 @@ Admin Tools → Settings → Extension Configuration → `opinion`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `recipients` | – | Comma-separated email addresses. Invalid ones are ignored. |
+| `categories` | `bug,content,idea,other` | Categories in the dialog: `value` or `value=Label`, comma-separated; a translation `category.<value>` wins |
 | `subjectPrefix` | `[Opinion]` | Prefix of the email subject |
 | `retentionDays` | `180` | Age after which `opinion:cleanup` deletes feedback |
 | `redeliverMaxAttempts` | `5` | Attempts after which `opinion:redeliver` gives up, `0` = no limit |
@@ -206,7 +207,7 @@ Extension points:
 ## Endpoint
 
 `POST` to the backend AJAX route `opinion_submit`, `multipart/form-data`:
-`message`, `category` (`bug|content|idea|other`), `severity`
+`message`, `category` (one of `categories`, default `bug|content|idea|other`), `severity`
 (`low|normal|high`), `source` (`frontend|backend`), `clientInfo` (JSON),
 `context` (JSON), `screenshot` (PNG/JPEG, at most 10 MB).
 

@@ -32,6 +32,50 @@ Extension configuration
     delivery status "not delivered"; it is not delivered again later, also not
     after a channel is switched on again.
 
+..  confval:: categories
+    :name: extconf-categories
+    :type: string
+    :default: `bug,content,idea,other`
+
+    Categories offered in the feedback dialog, in this order; the first one is
+    preselected. Comma-separated entries `value` or `value=Label`, for example
+    `bug,content,question=Question,design`.
+
+    *   A value consists of 1 to 30 characters `a-z`, `0-9`, `_` and `-` and
+        starts with a letter or digit. Invalid entries and repeated values are
+        ignored, the first occurrence wins. Without a valid entry the default
+        list applies.
+    *   The label shown in the dialog, the module, the dashboard and the email
+        is the translation `opinion.messages:category.<value>` if it exists,
+        otherwise the configured label, otherwise the value. The four default
+        values are translated into English and German; a configured label for
+        them is only a fallback.
+    *   Feedback keeps its category when the value is removed later. It is
+        still listed and delivered again, but the filter of the module only
+        offers the configured categories.
+    *   The email subject contains the value, not the label, so mail filters
+        keep working when a label changes.
+
+    To translate an own category, add the translation to a language file and
+    register it as override of the domain `opinion.messages`, for example in
+    :file:`ext_localconf.php` of a site package:
+
+    ..  code-block:: php
+        :caption: EXT:my_sitepackage/ext_localconf.php
+
+        $GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']['opinion.messages'][]
+            = 'EXT:my_sitepackage/Resources/Private/Language/Overrides/opinion.xlf';
+        $GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']['de']['opinion.messages'][]
+            = 'EXT:my_sitepackage/Resources/Private/Language/Overrides/de.opinion.xlf';
+
+    ..  code-block:: xml
+        :caption: EXT:my_sitepackage/Resources/Private/Language/Overrides/de.opinion.xlf
+
+        <trans-unit id="category.question">
+            <source>Question</source>
+            <target>Frage</target>
+        </trans-unit>
+
 ..  confval:: recipients
     :name: extconf-recipients
     :type: string

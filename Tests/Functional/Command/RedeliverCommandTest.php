@@ -10,7 +10,6 @@ use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -97,7 +96,7 @@ final class RedeliverCommandTest extends FunctionalTestCase
     public function feedbackThatCannotBeRebuiltStopsFailingAtTheAttemptLimit(): void
     {
         $uid = $this->addFeedback('-1 hour', DeliveryStatus::Failed, 2);
-        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['category' => 'feature'], ['uid' => $uid]);
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['severity' => 'urgent'], ['uid' => $uid]);
 
         self::assertSame(Command::FAILURE, $this->runCommand([])->getStatusCode());
         self::assertSame(3, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['delivery_attempts'] ?? 0));
@@ -160,7 +159,7 @@ final class RedeliverCommandTest extends FunctionalTestCase
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission(
             message: 'The teaser image is cropped.',
-            category: Category::Bug,
+            category: 'bug',
             severity: Severity::Normal,
             source: Source::Frontend,
             backendUserUid: 1,

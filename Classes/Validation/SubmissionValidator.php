@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Validation;
 
 use Psr\Http\Message\UploadedFileInterface;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Screenshot;
 use Vkemeter\Opinion\Domain\ScreenshotType;
 use Vkemeter\Opinion\Domain\Severity;
@@ -24,8 +23,9 @@ final readonly class SubmissionValidator
 
     /**
      * @param array<array-key, mixed> $fields
+     * @param list<string> $categories the configured category values
      */
-    public function validate(array $fields, ?UploadedFileInterface $screenshotUpload): ValidationResult
+    public function validate(array $fields, ?UploadedFileInterface $screenshotUpload, array $categories): ValidationResult
     {
         $errors = [];
 
@@ -39,7 +39,12 @@ final readonly class SubmissionValidator
             $errors['message'] = 'tooLong';
         }
 
-        $category = $this->validateEnum($fields, 'category', Category::class, $errors);
+        $category = is_string($fields['category'] ?? null) ? $fields['category'] : '';
+        if ($category === '') {
+            $errors['category'] = 'required';
+        } elseif (!in_array($category, $categories, true)) {
+            $errors['category'] = 'invalid';
+        }
         $severity = $this->validateEnum($fields, 'severity', Severity::class, $errors);
         $source = $this->validateEnum($fields, 'source', Source::class, $errors);
         $clientInfo = $this->validateJsonObject($fields, 'clientInfo', $errors);

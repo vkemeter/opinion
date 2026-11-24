@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Categories are configurable: the new setting `categories` (default
+  `bug,content,idea,other`) lists the categories of the dialog as `value` or
+  `value=Label`, in their order. A translation `category.<value>` (also from a
+  `LANG/resourceOverrides` file) wins over the label. Feedback keeps its
+  category when it is removed from the list later; it is still shown and
+  delivered again, only the filter of the module offers the configured
+  categories. The email subject keeps the value
 - `opinion:cleanup --days=0` deletes feedback regardless of age, and the new
   option `--status` (e.g. `--status=closed` or `--status=new,closed`) deletes
   only feedback with these processing statuses, combined with the age

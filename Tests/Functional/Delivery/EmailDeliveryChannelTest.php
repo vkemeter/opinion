@@ -15,7 +15,6 @@ use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -84,6 +83,23 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         $attachmentNames = array_map(static fn($part): ?string => $part->getFilename(), $email->getAttachments());
         self::assertContains('screenshot', $attachmentNames);
         self::assertContains('screenshot.png', $attachmentNames);
+    }
+
+    #[Test]
+    public function ownAndRemovedCategoriesAreLabelledAndTheSubjectKeepsTheValue(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'bug,question=Question & answer';
+        $channel = $this->get(EmailDeliveryChannel::class);
+
+        $channel->deliver($this->createSubmission(category: 'question'), null, $this->configuration());
+        $email = $this->getSentEmail();
+        self::assertSame('[Opinion] [question/low] Teaser <b>image</b> is cropped.', $email->getSubject());
+        self::assertStringContainsString('Question &amp; answer', (string)$email->getHtmlBody());
+        self::assertStringContainsString('Question & answer', (string)$email->getTextBody());
+
+        // Removed from the configuration after it was sent: the shipped translation stays
+        $channel->deliver($this->createSubmission(category: 'idea'), null, $this->configuration());
+        self::assertStringContainsString('Idea', (string)$this->getSentEmail()->getHtmlBody());
     }
 
     #[Test]
@@ -157,11 +173,11 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
      * @param array<string, mixed> $clientInfo
      * @param array<string, mixed> $context
      */
-    private function createSubmission(array $clientInfo = ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true], array $context = ['pageUid' => 12]): Submission
+    private function createSubmission(array $clientInfo = ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true], array $context = ['pageUid' => 12], string $category = 'content'): Submission
     {
         return new Submission(
             message: 'Teaser <b>image</b> is cropped.',
-            category: Category::Content,
+            category: $category,
             severity: Severity::Low,
             source: Source::Frontend,
             backendUserUid: 2,

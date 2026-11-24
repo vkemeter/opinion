@@ -15,7 +15,6 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\DeliveryChannelInterface;
 use Vkemeter\Opinion\Delivery\DeliveryResult;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\Screenshot;
 use Vkemeter\Opinion\Domain\ScreenshotType;
@@ -184,7 +183,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
     {
         return new Submission(
             message: 'The teaser image is cropped.',
-            category: Category::Bug,
+            category: 'bug',
             severity: Severity::Normal,
             source: Source::Frontend,
             backendUserUid: 1,

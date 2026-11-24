@@ -1,5 +1,6 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:opinion="http://typo3.org/ns/Vkemeter/Opinion/ViewHelpers"
 	xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
 	xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
 	data-namespace-typo3-fluid="true">
@@ -41,7 +42,7 @@
 				arguments="{name: 'status', label: 'tx_opinion_feedback.status', prefix: 'status', options: filterOptions.status, value: filter.status}" />
 			<f:render
 				section="Select"
-				arguments="{name: 'category', label: 'tx_opinion_feedback.category', prefix: 'category', options: filterOptions.category, value: filter.category}" />
+				arguments="{name: 'category', label: 'tx_opinion_feedback.category', options: filterOptions.category, labels: filterLabels.category, value: filter.category}" />
 			<f:render
 				section="Select"
 				arguments="{name: 'severity', label: 'tx_opinion_feedback.severity', prefix: 'severity', options: filterOptions.severity, value: filter.severity}" />
@@ -99,7 +100,7 @@
 								as="item">
 								<tr>
 									<td class="text-nowrap">{item.crdate -> f:format.date(format: 'd.m.Y H:i')}</td>
-									<td>{f:translate(domain: 'opinion.messages', key: 'category.{item.category}')}</td>
+									<td>{opinion:label(list: 'category', value: item.category)}</td>
 									<td>
 										<f:render
 											partial="FeedbackModule/Badges"
@@ -213,7 +214,10 @@
 					<option
 						value="{option}"
 						{f:if(condition: '{option} == {value}', then: 'selected')}>
-						{f:translate(domain: 'opinion.messages', key: '{prefix}.{option}')}
+						<f:if condition="{labels}">
+							<f:then>{labels.{option}}</f:then>
+							<f:else>{f:translate(domain: 'opinion.messages', key: '{prefix}.{option}')}</f:else>
+						</f:if>
 					</option>
 				</f:for>
 			</select>

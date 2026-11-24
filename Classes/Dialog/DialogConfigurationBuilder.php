@@ -10,9 +10,9 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Collection\CollectionFilter;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Formatting\ConfiguredLabels;
 use Vkemeter\Opinion\Validation\SubmissionValidator;
 
 /**
@@ -73,6 +73,7 @@ final readonly class DialogConfigurationBuilder
         private LanguageServiceFactory $languageServiceFactory,
         private ConfigurationProviderInterface $configurationProvider,
         private CollectionFilter $collectionFilter,
+        private ConfiguredLabels $configuredLabels,
     ) {}
 
     /**
@@ -97,8 +98,8 @@ final readonly class DialogConfigurationBuilder
             'messageMinLength' => SubmissionValidator::MESSAGE_MIN_LENGTH,
             'messageMaxLength' => SubmissionValidator::MESSAGE_MAX_LENGTH,
             'categories' => array_map(
-                static fn(Category $category): array => ['value' => $category->value, 'label' => $translate('category.' . $category->value)],
-                Category::cases(),
+                fn(string $category): array => ['value' => $category, 'label' => $this->configuredLabels->label('category', $category, $configuration, $languageService)],
+                $configuration->categoryValues(),
             ),
             'severities' => array_map(
                 static fn(Severity $severity): array => ['value' => $severity->value, 'label' => $translate('severity.' . $severity->value)],

@@ -18,7 +18,6 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Site\Entity\NullSite;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -118,7 +117,7 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
     private function addFeedback(int $pageUid, Source $source, string $message, FeedbackStatus $status = FeedbackStatus::New): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $uid = $repository->add(new Submission($message, Category::Bug, Severity::Low, $source, 3, new \DateTimeImmutable(), context: ['pageUid' => $pageUid]), null);
+        $uid = $repository->add(new Submission($message, 'bug', Severity::Low, $source, 3, new \DateTimeImmutable(), context: ['pageUid' => $pageUid]), null);
         $repository->updateStatus($uid, $status);
     }
 }

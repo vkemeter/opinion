@@ -8,6 +8,8 @@ use Vkemeter\Opinion\Collection\CollectableField;
 
 final readonly class OpinionConfiguration
 {
+    public const array DEFAULT_CATEGORIES = ['bug' => '', 'content' => '', 'idea' => '', 'other' => ''];
+
     /**
      * @param list<string> $recipients
      * @param list<CollectableField> $disabledFields details that are not collected
@@ -16,6 +18,7 @@ final readonly class OpinionConfiguration
      * @param int $rateLimit submissions per backend user and hour, 0 = no limit
      * @param list<string> $disabledDeliveryChannels identifiers of delivery channels that do not run
      * @param bool $conversationEnabled administrators and the sender exchange messages in the module
+     * @param array<array-key, string> $categories offered categories in their order: value => configured label ('' = none); numeric values are int keys, see categoryValues()
      */
     public function __construct(
         public bool $enabled,
@@ -28,7 +31,18 @@ final readonly class OpinionConfiguration
         public int $rateLimit = 0,
         public array $disabledDeliveryChannels = [],
         public bool $conversationEnabled = true,
+        public array $categories = self::DEFAULT_CATEGORIES,
     ) {}
+
+    /**
+     * The configured category values as strings, in their order.
+     *
+     * @return list<string>
+     */
+    public function categoryValues(): array
+    {
+        return array_map(strval(...), array_keys($this->categories));
+    }
 
     public function collects(CollectableField $field): bool
     {

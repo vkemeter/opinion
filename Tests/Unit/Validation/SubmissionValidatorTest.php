@@ -9,7 +9,6 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\UploadedFileInterface;
 use TYPO3\CMS\Core\Http\UploadedFile;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\ScreenshotType;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -19,6 +18,7 @@ final class SubmissionValidatorTest extends UnitTestCase
 {
     private const string PNG = "\x89PNG\r\n\x1a\nrest";
     private const string JPEG = "\xFF\xD8\xFF\xE0rest";
+    private const array CATEGORIES = ['bug', 'content', 'idea', 'other'];
 
     /** @var list<string> */
     private array $temporaryFiles = [];
@@ -39,11 +39,11 @@ final class SubmissionValidatorTest extends UnitTestCase
             'message' => "  The teaser image is cropped.  \n",
             'clientInfo' => '{"language":"de"}',
             'context' => '{"pageUid":12}',
-        ], $this->upload(self::JPEG));
+        ], $this->upload(self::JPEG), self::CATEGORIES);
 
         self::assertTrue($result->isValid());
         self::assertSame('The teaser image is cropped.', $result->message);
-        self::assertSame(Category::Bug, $result->category);
+        self::assertSame('bug', $result->category);
         self::assertSame(Severity::High, $result->severity);
         self::assertSame(Source::Frontend, $result->source);
         self::assertSame(['language' => 'de'], $result->clientInfo);
@@ -55,7 +55,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function screenshotAndJsonFieldsAreOptional(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), null);
+        $result = new SubmissionValidator()->validate(self::validFields(), null, self::CATEGORIES);
 
         self::assertTrue($result->isValid());
         self::assertNull($result->screenshot);
@@ -66,7 +66,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function noFileUploadCountsAsNoScreenshot(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_NO_FILE));
+        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_NO_FILE), self::CATEGORIES);
 
         self::assertTrue($result->isValid());
         self::assertNull($result->screenshot);
@@ -101,10 +101,19 @@ final class SubmissionValidatorTest extends UnitTestCase
     {
         $fields = array_filter([...self::validFields(), ...$override], static fn(mixed $value): bool => $value !== null);
 
-        $result = new SubmissionValidator()->validate($fields, null);
+        $result = new SubmissionValidator()->validate($fields, null, self::CATEGORIES);
 
         self::assertFalse($result->isValid());
         self::assertSame([$field => $code], $result->errors);
+    }
+
+    #[Test]
+    public function categoryMustBeConfigured(): void
+    {
+        $validator = new SubmissionValidator();
+
+        self::assertSame('question', $validator->validate([...self::validFields(), 'category' => 'question'], null, ['bug', 'question'])->category, 'own value');
+        self::assertSame(['category' => 'invalid'], $validator->validate([...self::validFields(), 'category' => 'idea'], null, ['bug', 'question'])->errors, 'removed value');
     }
 
     #[Test]
@@ -112,14 +121,14 @@ final class SubmissionValidatorTest extends UnitTestCase
     {
         $validator = new SubmissionValidator();
 
-        self::assertTrue($validator->validate([...self::validFields(), 'message' => str_repeat('ä', 10)], null)->isValid());
-        self::assertTrue($validator->validate([...self::validFields(), 'message' => str_repeat('ä', 5000)], null)->isValid());
+        self::assertTrue($validator->validate([...self::validFields(), 'message' => str_repeat('ä', 10)], null, self::CATEGORIES)->isValid());
+        self::assertTrue($validator->validate([...self::validFields(), 'message' => str_repeat('ä', 5000)], null, self::CATEGORIES)->isValid());
     }
 
     #[Test]
     public function screenshotWithImageMediaTypeButOtherContentIsRejected(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), $this->upload('<?php echo 1;', 'image/png'));
+        $result = new SubmissionValidator()->validate(self::validFields(), $this->upload('<?php echo 1;', 'image/png'), self::CATEGORIES);
 
         self::assertSame(['screenshot' => 'invalidType'], $result->errors);
     }
@@ -127,7 +136,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function screenshotAboveTenMegabytesIsRejected(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), $this->upload(self::PNG . str_repeat('0', 10 * 1024 * 1024)));
+        $result = new SubmissionValidator()->validate(self::validFields(), $this->upload(self::PNG . str_repeat('0', 10 * 1024 * 1024)), self::CATEGORIES);
 
         self::assertSame(['screenshot' => 'tooLarge'], $result->errors);
     }
@@ -135,7 +144,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function screenshotExceedingPhpUploadLimitIsRejectedAsTooLarge(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_INI_SIZE));
+        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_INI_SIZE), self::CATEGORIES);
 
         self::assertSame(['screenshot' => 'tooLarge'], $result->errors);
     }
@@ -143,7 +152,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function failedUploadIsRejected(): void
     {
-        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_PARTIAL));
+        $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_PARTIAL), self::CATEGORIES);
 
         self::assertSame(['screenshot' => 'uploadFailed'], $result->errors);
     }
@@ -151,7 +160,7 @@ final class SubmissionValidatorTest extends UnitTestCase
     #[Test]
     public function allErrorsAreReportedAtOnce(): void
     {
-        $result = new SubmissionValidator()->validate(['category' => 'x'], $this->upload('nope'));
+        $result = new SubmissionValidator()->validate(['category' => 'x'], $this->upload('nope'), self::CATEGORIES);
 
         self::assertSame(
             ['message' => 'required', 'category' => 'invalid', 'severity' => 'required', 'source' => 'required', 'screenshot' => 'invalidType'],

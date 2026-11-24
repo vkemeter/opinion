@@ -7,7 +7,6 @@ namespace Vkemeter\Opinion\Tests\Functional\Repository;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
@@ -68,7 +67,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     {
         $repository = $this->get(FeedbackRepository::class);
         $foreign = $repository->add($this->createSubmission(), null);
-        $own = $repository->add(new Submission('Own', Category::Bug, Severity::Low, Source::Backend, 7, new \DateTimeImmutable()), null);
+        $own = $repository->add(new Submission('Own', 'bug', Severity::Low, Source::Backend, 7, new \DateTimeImmutable()), null);
 
         self::assertSame(2, $repository->countAll());
         self::assertSame(1, $repository->countAll(7));
@@ -83,9 +82,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     {
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
         $repository = $this->get(FeedbackRepository::class);
-        $teaser = $repository->add(new Submission('Teaser is cropped', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable(), ['url' => 'https://example.com/produkte/über'], [], ['pageTitle' => 'Produkte']), null);
-        $idea = $repository->add(new Submission('Add a 100% better search', Category::Idea, Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
-        $closed = $repository->add(new Submission('Old bug', Category::Bug, Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
+        $teaser = $repository->add(new Submission('Teaser is cropped', 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable(), ['url' => 'https://example.com/produkte/über'], [], ['pageTitle' => 'Produkte']), null);
+        $idea = $repository->add(new Submission('Add a 100% better search', 'idea', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
+        $closed = $repository->add(new Submission('Old bug', 'bug', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
         $repository->updateStatus($closed, FeedbackStatus::Closed);
         $repository->updateDeliveryStatus($closed, DeliveryStatus::Failed, '');
 
@@ -94,12 +93,12 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
             $repository->findPage(50, 0, $senderUid, $filter),
         );
 
-        self::assertEqualsCanonicalizing([$teaser, $closed], $find(new FeedbackFilter(category: Category::Bug)));
+        self::assertEqualsCanonicalizing([$teaser, $closed], $find(new FeedbackFilter(category: 'bug')));
         self::assertSame([$closed], $find(new FeedbackFilter(status: FeedbackStatus::Closed)));
-        self::assertSame([$closed], $find(new FeedbackFilter(category: Category::Bug, severity: Severity::Low)));
+        self::assertSame([$closed], $find(new FeedbackFilter(category: 'bug', severity: Severity::Low)));
         self::assertSame([$closed], $find(new FeedbackFilter(deliveryStatus: DeliveryStatus::Failed)));
         self::assertSame([$teaser], $find(new FeedbackFilter(source: Source::Frontend)));
-        self::assertSame(2, $repository->countAll(null, new FeedbackFilter(category: Category::Bug)));
+        self::assertSame(2, $repository->countAll(null, new FeedbackFilter(category: 'bug')));
 
         self::assertSame([$teaser], $find(new FeedbackFilter(search: 'cropped')), 'message');
         self::assertSame([$teaser], $find(new FeedbackFilter(search: '/produkte/über')), 'URL with escaped slashes and umlaut');
@@ -109,7 +108,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame([], $find(new FeedbackFilter(search: '_')), 'wildcard escaped');
 
         self::assertSame([$closed], $find(new FeedbackFilter(search: 'bug'), 3), 'sender restriction kept');
-        self::assertSame(1, $repository->countAll(3, new FeedbackFilter(category: Category::Bug)));
+        self::assertSame(1, $repository->countAll(3, new FeedbackFilter(category: 'bug')));
     }
 
     #[Test]
@@ -223,14 +222,14 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
 
     private function createPageSubmission(?int $pageUid, Source $source, string $message, string $date = 'now'): Submission
     {
-        return new Submission($message, Category::Bug, Severity::Low, $source, 3, new \DateTimeImmutable($date), context: $pageUid === null ? [] : ['pageUid' => $pageUid]);
+        return new Submission($message, 'bug', Severity::Low, $source, 3, new \DateTimeImmutable($date), context: $pageUid === null ? [] : ['pageUid' => $pageUid]);
     }
 
     private function createSubmission(): Submission
     {
         return new Submission(
             message: 'Ümlauts and <b>markup</b> stay as they are.',
-            category: Category::Bug,
+            category: 'bug',
             severity: Severity::High,
             source: Source::Frontend,
             backendUserUid: 3,

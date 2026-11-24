@@ -7,6 +7,9 @@
             <trans-unit id="extconf.disabledDeliveryChannels">
                 <source>Disabled delivery channels: comma-separated identifiers of channels that do not deliver feedback, e.g. email or the identifier of a custom channel. Empty = all channels deliver.</source>
             </trans-unit>
+            <trans-unit id="extconf.categories">
+                <source>Categories offered in the dialog, in this order: comma-separated entries value or value=Label (value: a-z, 0-9, _ and -, at most 30 characters). A translation category.&lt;value&gt; wins over the label. Empty or invalid = bug,content,idea,other.</source>
+            </trans-unit>
             <trans-unit id="extconf.recipients">
                 <source>Recipients: comma-separated email addresses that receive the feedback</source>
             </trans-unit>

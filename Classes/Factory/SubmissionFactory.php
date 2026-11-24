@@ -16,7 +16,6 @@ use Vkemeter\Opinion\Collector\UrlParameterFilter;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Context\ContextProviderInterface;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -47,16 +46,17 @@ final readonly class SubmissionFactory
         $fields = $request->getParsedBody();
         $screenshotUpload = $request->getUploadedFiles()['screenshot'] ?? null;
 
+        $configuration = $this->configurationProvider->getConfiguration();
         $result = $this->validator->validate(
             is_array($fields) ? $fields : [],
             $screenshotUpload instanceof UploadedFileInterface ? $screenshotUpload : null,
+            $configuration->categoryValues(),
         );
-        if (!$result->isValid() || !$result->category instanceof Category || !$result->severity instanceof Severity || !$result->source instanceof Source) {
+        if (!$result->isValid() || !$result->severity instanceof Severity || !$result->source instanceof Source) {
             throw new InvalidSubmissionException($result->errors, 1791562180);
         }
 
         $createdAt = \DateTimeImmutable::createFromInterface($this->clock->now());
-        $configuration = $this->configurationProvider->getConfiguration();
 
         return new Submission(
             message: $result->message,

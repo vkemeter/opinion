@@ -48,6 +48,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
             rateLimit: max(0, (int)($settings['rateLimit'] ?? self::DEFAULT_RATE_LIMIT)),
             disabledDeliveryChannels: GeneralUtility::trimExplode(',', (string)($settings['disabledDeliveryChannels'] ?? ''), true),
             conversationEnabled: (bool)($settings['conversation'] ?? true),
+            categories: ConfiguredValueList::parse((string)($settings['categories'] ?? ''), OpinionConfiguration::DEFAULT_CATEGORIES),
         );
     }
 

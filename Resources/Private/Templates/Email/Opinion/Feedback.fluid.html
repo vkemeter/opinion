@@ -1,5 +1,6 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:opinion="http://typo3.org/ns/Vkemeter/Opinion/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:layout name="SystemEmail" />
 	<f:section name="Title">{f:translate(domain: 'opinion.messages', key: 'email.headline')}</f:section>
@@ -15,7 +16,7 @@
 					valign="top">
 					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}
 				</th>
-				<td>{f:translate(domain: 'opinion.messages', key: 'category.{submission.category.value}')}</td>
+				<td>{opinion:label(list: 'category', value: submission.category)}</td>
 			</tr>
 			<tr>
 				<th

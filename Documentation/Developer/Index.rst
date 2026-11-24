@@ -140,7 +140,8 @@ configuration (`endpoint`).
     *   -   `message`
         -   10 to 5000 characters
     *   -   `category`
-        -   `bug`, `content`, `idea` or `other`
+        -   one of the configured :confval:`extconf-categories`
+            (default `bug`, `content`, `idea`, `other`)
     *   -   `severity`
         -   `low`, `normal` or `high`
     *   -   `source`

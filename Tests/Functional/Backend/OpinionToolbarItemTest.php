@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Backend\ToolbarItem\OpinionToolbarItem;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -69,7 +68,7 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         $feedbackRepository = $this->get(FeedbackRepository::class);
         $conversation = $this->get(ConversationRepository::class);
         foreach (['First', 'Second'] as $message) {
-            $uid = $feedbackRepository->add(new Submission($message . ' feedback', Category::Bug, Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+            $uid = $feedbackRepository->add(new Submission($message . ' feedback', 'bug', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
             $conversation->add($uid, 3, 'Reply of the reporter', new \DateTimeImmutable());
             $conversation->add($uid, 3, 'Another reply', new \DateTimeImmutable());
         }
@@ -86,7 +85,7 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
     public function noUnreadCountWhileConversationIsSwitchedOff(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['conversation'] = '0';
-        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback', Category::Bug, Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback', 'bug', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
         $this->get(ConversationRepository::class)->add($uid, 3, 'Reply', new \DateTimeImmutable());
         $this->setUpBackendUser(1);
 
@@ -102,7 +101,7 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         $this->setUpBackendUser(3);
 
         // Messages exist, but without the module there is nothing to show them in
-        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback', Category::Bug, Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback', 'bug', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
         $this->get(ConversationRepository::class)->add($uid, 1, 'Answer', new \DateTimeImmutable());
 
         [$html] = $this->renderItem();

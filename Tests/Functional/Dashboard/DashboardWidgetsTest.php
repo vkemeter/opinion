@@ -13,7 +13,6 @@ use TYPO3\CMS\Dashboard\WidgetRegistry;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Dashboard\OpenFeedbackDataProvider;
 use Vkemeter\Opinion\Dashboard\UnreadConversationsDataProvider;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -111,6 +110,21 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function latestFeedbackShowsTheLabelOfAnOwnCategory(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'question=Question & answer';
+        $repository = $this->get(FeedbackRepository::class);
+        $repository->add(new Submission('A question about the teaser', 'question', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        $repository->add(new Submission('An idea for the footer', 'idea', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        $this->setUpAdmin();
+
+        $html = $this->renderWidget('opinion-latestFeedback');
+
+        self::assertStringContainsString('Question &amp; answer', $html);
+        self::assertStringContainsString('<td>Idea</td>', $html, 'removed shipped category keeps its translation');
+    }
+
+    #[Test]
     public function numberWidgetShowsTheNumberAndTheButtonToTheModule(): void
     {
         $this->addFeedback(1, FeedbackStatus::New);
@@ -167,7 +181,7 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     private function addFeedback(int $senderUid, FeedbackStatus $status, string $message = 'Teaser is cropped', string $date = 'now'): int
     {
         $repository = $this->get(FeedbackRepository::class);
-        $uid = $repository->add(new Submission($message, Category::Bug, Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable($date)), null);
+        $uid = $repository->add(new Submission($message, 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable($date)), null);
         $repository->updateStatus($uid, $status);
 
         return $uid;

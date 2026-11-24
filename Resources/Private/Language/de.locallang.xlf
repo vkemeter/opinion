@@ -8,6 +8,10 @@
                 <source>Disabled delivery channels: comma-separated identifiers of channels that do not deliver feedback, e.g. email or the identifier of a custom channel. Empty = all channels deliver.</source>
                 <target>Deaktivierte Zustellkanäle: kommagetrennte Kennungen der Kanäle, die kein Feedback zustellen, z. B. email oder die Kennung eines eigenen Kanals. Leer = alle Kanäle stellen zu.</target>
             </trans-unit>
+            <trans-unit id="extconf.categories">
+                <source>Categories offered in the dialog, in this order: comma-separated entries value or value=Label (value: a-z, 0-9, _ and -, at most 30 characters). A translation category.&lt;value&gt; wins over the label. Empty or invalid = bug,content,idea,other.</source>
+                <target>Kategorien im Dialog, in dieser Reihenfolge: kommagetrennte Einträge wert oder wert=Label (wert: a-z, 0-9, _ und -, höchstens 30 Zeichen). Eine Übersetzung category.&lt;wert&gt; hat Vorrang vor dem Label. Leer oder ungültig = bug,content,idea,other.</target>
+            </trans-unit>
             <trans-unit id="extconf.recipients">
                 <source>Recipients: comma-separated email addresses that receive the feedback</source>
                 <target>Empfänger: kommagetrennte E-Mail-Adressen, an die das Feedback geschickt wird</target>

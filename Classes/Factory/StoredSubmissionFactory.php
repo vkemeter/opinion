@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Factory;
 
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -17,13 +16,13 @@ final readonly class StoredSubmissionFactory
 {
     /**
      * @param array<string, mixed> $record row of tx_opinion_feedback
-     * @throws \ValueError when category, severity or source are no known values
+     * @throws \ValueError when severity or source are no known values; the category is taken as stored
      */
     public function createFromRecord(array $record): Submission
     {
         return new Submission(
             message: (string)($record['message'] ?? ''),
-            category: Category::from((string)($record['category'] ?? '')),
+            category: (string)($record['category'] ?? ''),
             severity: Severity::from((string)($record['severity'] ?? '')),
             source: Source::from((string)($record['source'] ?? '')),
             backendUserUid: (int)($record['be_user'] ?? 0),

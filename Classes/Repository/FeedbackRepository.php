@@ -37,7 +37,7 @@ final readonly class FeedbackRepository
                 'crdate' => $timestamp,
                 'tstamp' => $timestamp,
                 'source' => $submission->source->value,
-                'category' => $submission->category->value,
+                'category' => $submission->category,
                 'severity' => $submission->severity->value,
                 'be_user' => $submission->backendUserUid,
                 'message' => $submission->message,
@@ -267,9 +267,9 @@ final readonly class FeedbackRepository
             return $queryBuilder;
         }
 
-        foreach (['status' => $filter->status, 'category' => $filter->category, 'severity' => $filter->severity, 'source' => $filter->source, 'delivery_status' => $filter->deliveryStatus] as $field => $value) {
+        foreach (['status' => $filter->status?->value, 'category' => $filter->category, 'severity' => $filter->severity?->value, 'source' => $filter->source?->value, 'delivery_status' => $filter->deliveryStatus?->value] as $field => $value) {
             if ($value !== null) {
-                $queryBuilder->andWhere($queryBuilder->expr()->eq('feedback.' . $field, $queryBuilder->createNamedParameter($value->value)));
+                $queryBuilder->andWhere($queryBuilder->expr()->eq('feedback.' . $field, $queryBuilder->createNamedParameter($value)));
             }
         }
         if ($filter->search !== null) {

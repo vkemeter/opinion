@@ -19,7 +19,6 @@ use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\FeedbackModuleController;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
@@ -107,7 +106,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         $uid = $this->get(FeedbackRepository::class)->add(new Submission(
             message: 'Wrong teaser',
-            category: Category::Bug,
+            category: 'bug',
             severity: Severity::High,
             source: Source::Backend,
             backendUserUid: 1,
@@ -127,8 +126,8 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     public function showDoesNotLinkAForeignHostOrABackslashPath(): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $foreign = $repository->add(new Submission('Foreign', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable('2026-10-01 10:00'), clientInfo: ['url' => 'https://evil.example/login']), null);
-        $backslash = $repository->add(new Submission('Backslash', Category::Bug, Severity::High, Source::Backend, 1, new \DateTimeImmutable('2026-10-01 10:00'), context: ['url' => '/\\evil.example/typo3']), null);
+        $foreign = $repository->add(new Submission('Foreign', 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable('2026-10-01 10:00'), clientInfo: ['url' => 'https://evil.example/login']), null);
+        $backslash = $repository->add(new Submission('Backslash', 'bug', Severity::High, Source::Backend, 1, new \DateTimeImmutable('2026-10-01 10:00'), context: ['url' => '/\\evil.example/typo3']), null);
 
         $controller = $this->get(FeedbackModuleController::class);
         $foreignHtml = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$foreign]))->getBody();
@@ -405,7 +404,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         // TYPO3 stores a missing real name as empty string, not as null
         $this->get(ConnectionPool::class)->getConnectionForTable('be_users')->insert('be_users', ['uid' => 5, 'username' => 'nameless', 'realName' => '', 'admin' => 1]);
-        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback of nameless', Category::Bug, Severity::Low, Source::Backend, 5, new \DateTimeImmutable(), systemInfo: ['backendUser' => ['username' => 'nameless', 'realName' => '', 'email' => '']]), null);
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback of nameless', 'bug', Severity::Low, Source::Backend, 5, new \DateTimeImmutable(), systemInfo: ['backendUser' => ['username' => 'nameless', 'realName' => '', 'email' => '']]), null);
         $this->get(ConversationRepository::class)->add($uid, 5, 'Answer of nameless', new \DateTimeImmutable());
 
         $show = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
@@ -555,6 +554,31 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function ownCategoriesAreListedFilteredAndShownWithTheirLabels(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'bug,question=Question & answer';
+        $repository = $this->get(FeedbackRepository::class);
+        $question = $repository->add(new Submission('A question about the teaser', 'question', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        // Category removed from the configuration after it was sent
+        $idea = $repository->add(new Submission('An idea for the footer', 'idea', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+        $controller = $this->get(FeedbackModuleController::class);
+
+        $html = (string)$controller->listAction($this->createRequest('opinion_feedback'))->getBody();
+        self::assertMatchesRegularExpression('#<option\s+value="question"#', $html);
+        self::assertStringContainsString('Question &amp; answer', $html);
+        self::assertDoesNotMatchRegularExpression('#<option\s+value="idea"#', $html, 'the filter offers configured categories only');
+        self::assertStringContainsString('<td>Idea</td>', $html, 'a removed shipped category keeps its translation');
+
+        $filtered = (string)$controller->listAction($this->createRequest('opinion_feedback', ['category' => 'question']))->getBody();
+        self::assertStringContainsString('A question about the teaser', $filtered);
+        self::assertStringNotContainsString('An idea for the footer', $filtered);
+        self::assertStringContainsString('An idea for the footer', (string)$controller->listAction($this->createRequest('opinion_feedback', ['category' => 'idea']))->getBody(), 'unconfigured filter value ignored');
+
+        self::assertStringContainsString('Question &amp; answer', (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$question]))->getBody());
+        self::assertStringContainsString('Idea', (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$idea]))->getBody());
+    }
+
+    #[Test]
     public function listCanBeFilteredAndKeepsTheFilterInItsLinks(): void
     {
         $this->addFeedback('Teaser is cropped', '2026-10-01 10:00');
@@ -688,7 +712,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $this->get(ScreenshotStorageInstaller::class)->install();
         $screenshot = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
 
-        return $this->get(FeedbackRepository::class)->add(new Submission('With screenshot', Category::Bug, Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()), $screenshot);
+        return $this->get(FeedbackRepository::class)->add(new Submission('With screenshot', 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()), $screenshot);
     }
 
     private static function png(): string
@@ -700,7 +724,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         return $this->get(FeedbackRepository::class)->add(new Submission(
             message: $message,
-            category: Category::Bug,
+            category: 'bug',
             severity: Severity::High,
             source: Source::Frontend,
             backendUserUid: $senderUid,

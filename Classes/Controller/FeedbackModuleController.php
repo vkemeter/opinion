@@ -22,12 +22,12 @@ use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Factory\StoredSubmissionFactory;
+use Vkemeter\Opinion\Formatting\ConfiguredLabels;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Link\ReportedUrl;
@@ -62,6 +62,7 @@ final readonly class FeedbackModuleController
         private ConversationRepository $conversationRepository,
         private LinkableHosts $linkableHosts,
         private ClockInterface $clock,
+        private ConfiguredLabels $configuredLabels,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -70,14 +71,15 @@ final readonly class FeedbackModuleController
             return $this->accessDenied();
         }
         $senderUid = $this->getSenderFilter();
-        $filter = FeedbackFilter::fromQueryParameters($request->getQueryParams());
+        $configuration = $this->configurationProvider->getConfiguration();
+        $filter = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $configuration->categoryValues());
         $filterParameters = $filter->toQueryParameters();
         $total = $this->feedbackRepository->countAll($senderUid, $filter);
         $pages = max(1, (int)ceil($total / self::ITEMS_PER_PAGE));
         $currentPage = min($pages, max(1, (int)($request->getQueryParams()['page'] ?? 1)));
 
         $items = $this->feedbackRepository->findPage(self::ITEMS_PER_PAGE, ($currentPage - 1) * self::ITEMS_PER_PAGE, $senderUid, $filter);
-        $conversationEnabled = $this->configurationProvider->getConfiguration()->conversationEnabled;
+        $conversationEnabled = $configuration->conversationEnabled;
         $unreadUids = $conversationEnabled ? $this->conversationRepository->findUnreadFeedbackUids($this->getUserUid(), $senderUid) : [];
         $messageCounts = $conversationEnabled ? $this->conversationRepository->countByFeedbackUids(array_map(static fn(array $item): int => (int)$item['uid'], $items)) : [];
 
@@ -102,10 +104,17 @@ final readonly class FeedbackModuleController
             'filterForm' => $this->buildGetForm('opinion_feedback'),
             'filterOptions' => [
                 'status' => array_map(static fn(FeedbackStatus $case): string => $case->value, FeedbackStatus::cases()),
-                'category' => array_map(static fn(Category $case): string => $case->value, Category::cases()),
+                'category' => $configuration->categoryValues(),
                 'severity' => array_map(static fn(Severity $case): string => $case->value, Severity::cases()),
                 'source' => array_map(static fn(Source $case): string => $case->value, Source::cases()),
                 'deliveryStatus' => array_map(static fn(DeliveryStatus $case): string => $case->value, DeliveryStatus::cases()),
+            ],
+            // Configured categories have no fixed translation key
+            'filterLabels' => [
+                'category' => array_combine(
+                    $configuration->categoryValues(),
+                    array_map(fn(string $category): string => $this->configuredLabels->label('category', $category, $configuration, $this->getLanguageService()), $configuration->categoryValues()),
+                ),
             ],
             'pagination' => [
                 'current' => $currentPage,
@@ -142,7 +151,7 @@ final readonly class FeedbackModuleController
         $clientInfo = StoredSubmissionFactory::decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
-        $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams())->toQueryParameters();
+        $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $this->configurationProvider->getConfiguration()->categoryValues())->toQueryParameters();
         $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback', $filterParameters)));
         $view->assignMultiple([
             'record' => $record,
@@ -288,7 +297,7 @@ final readonly class FeedbackModuleController
     {
         $filter = is_array($body) && is_array($body['filter'] ?? null) ? $body['filter'] : [];
 
-        return FeedbackFilter::fromQueryParameters($filter)->toQueryParameters();
+        return FeedbackFilter::fromQueryParameters($filter, $this->configurationProvider->getConfiguration()->categoryValues())->toQueryParameters();
     }
 
     /**

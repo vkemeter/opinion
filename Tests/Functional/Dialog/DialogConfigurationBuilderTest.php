@@ -45,6 +45,30 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function categoriesFollowTheConfigurationWithTheirLabels(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'question=Question,bug,design';
+
+        $configuration = $this->get(DialogConfigurationBuilder::class)->build($this->setUpBackendUser(1), Source::Backend);
+
+        self::assertSame(
+            [['value' => 'question', 'label' => 'Question'], ['value' => 'bug', 'label' => 'Bug'], ['value' => 'design', 'label' => 'design']],
+            $configuration['categories'],
+            'configured order, the first one is preselected by the dialog',
+        );
+    }
+
+    #[Test]
+    public function numericCategoryValuesStayStrings(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = '1=First,2';
+
+        $configuration = $this->get(DialogConfigurationBuilder::class)->build($this->setUpBackendUser(1), Source::Backend);
+
+        self::assertSame([['value' => '1', 'label' => 'First'], ['value' => '2', 'label' => '2']], $configuration['categories']);
+    }
+
+    #[Test]
     public function switchedOffDetailsAreNeitherCollectedNorEmbedded(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion'] = ['collect_client_screen' => '0', 'collect_context_imagesOnPage' => '0', 'collect_context_page' => '0'];

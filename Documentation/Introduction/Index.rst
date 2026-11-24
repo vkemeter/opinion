@@ -27,8 +27,8 @@ Features
 
 *   **Two entry points:** the entry "Feedback" in the frontend admin panel and
     a button in the backend toolbar. Both open the same dialog.
-*   **Message, category and severity:** categories *Bug*, *Content*, *Idea*,
-    *Other*; severities *Low*, *Normal*, *High*.
+*   **Message, category and severity:** configurable categories (by default
+    *Bug*, *Content*, *Idea*, *Other*); severities *Low*, *Normal*, *High*.
 *   **Screenshot of the current tab** via the browser's screen capture
     (`getDisplayMedia()`), with preview, retake and remove.
 *   **Mark up the screenshot** in a full-screen editor: rectangle, arrow,

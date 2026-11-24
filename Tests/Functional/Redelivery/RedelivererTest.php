@@ -13,7 +13,6 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\DeliveryChannelInterface;
 use Vkemeter\Opinion\Delivery\DeliveryResult;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -42,7 +41,7 @@ final class RedelivererTest extends FunctionalTestCase
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission(
             message: 'The teaser image is cropped.',
-            category: Category::Content,
+            category: 'content',
             severity: Severity::High,
             source: Source::Backend,
             backendUserUid: 3,
@@ -67,7 +66,7 @@ final class RedelivererTest extends FunctionalTestCase
         [$submission, $file] = $received;
         self::assertInstanceOf(Submission::class, $submission);
         self::assertSame('The teaser image is cropped.', $submission->message);
-        self::assertSame(Category::Content, $submission->category);
+        self::assertSame('content', $submission->category);
         self::assertSame(Severity::High, $submission->severity);
         self::assertSame(Source::Backend, $submission->source);
         self::assertSame(3, $submission->backendUserUid);
@@ -89,14 +88,14 @@ final class RedelivererTest extends FunctionalTestCase
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission(
             message: 'The teaser image is cropped.',
-            category: Category::Content,
+            category: 'content',
             severity: Severity::High,
             source: Source::Backend,
             backendUserUid: 3,
             createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
         ), null);
         $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'test: FAILED Connection refused');
-        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['category' => 'feature'], ['uid' => $uid]);
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['severity' => 'urgent'], ['uid' => $uid]);
 
         $channel = self::createMock(DeliveryChannelInterface::class);
         $channel->expects(self::never())->method('deliver');
@@ -107,7 +106,25 @@ final class RedelivererTest extends FunctionalTestCase
         $record = $repository->findByUid($uid);
         self::assertSame('failed', $record['delivery_status'] ?? null);
         self::assertSame(2, (int)($record['delivery_attempts'] ?? 0));
-        self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] cannot be delivered again: .*feature/', (string)($record['delivery_log'] ?? ''));
+        self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] cannot be delivered again: .*urgent/', (string)($record['delivery_log'] ?? ''));
+    }
+
+    #[Test]
+    public function categoryThatIsNotConfiguredIsDeliveredAsStored(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $uid = $repository->add(new Submission('The teaser image is cropped.', 'feature', Severity::High, Source::Backend, 3, new \DateTimeImmutable('2026-10-09 12:00:00')), null);
+        $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'test: FAILED Connection refused');
+
+        $channel = self::createMock(DeliveryChannelInterface::class);
+        $channel->method('getIdentifier')->willReturn('test');
+        $channel->expects(self::once())->method('deliver')
+            ->with(self::callback(static fn(Submission $submission): bool => $submission->category === 'feature'))
+            ->willReturn(DeliveryResult::success('test', 'OK'));
+
+        $result = $this->createRedeliverer([$channel])->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
+
+        self::assertSame(DeliveryStatus::Sent, $result?->status);
     }
 
     #[Test]

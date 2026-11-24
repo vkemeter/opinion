@@ -1,5 +1,6 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:opinion="http://typo3.org/ns/Vkemeter/Opinion/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:layout name="Widget/Widget" />
 	<f:section name="main">
@@ -21,7 +22,7 @@
 								as="item">
 								<tr>
 									<td class="text-nowrap">{item.crdate -> f:format.date(format: 'd.m.Y H:i')}</td>
-									<td>{f:translate(domain: 'opinion.messages', key: 'category.{item.category}')}</td>
+									<td>{opinion:label(list: 'category', value: item.category)}</td>
 									<td>
 										<a href="{item.show_url}">{item.message -> f:format.crop(maxCharacters: 60)}</a>
 									</td>

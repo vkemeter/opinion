@@ -6,7 +6,6 @@ namespace Vkemeter\Opinion\Tests\Functional\Repository;
 
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -123,7 +122,7 @@ final class ConversationRepositoryTest extends FunctionalTestCase
     private function addFeedback(int $senderUid = self::SENDER): int
     {
         return $this->get(FeedbackRepository::class)->add(
-            new Submission('Teaser is cropped', Category::Bug, Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()),
+            new Submission('Teaser is cropped', 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()),
             null,
         );
     }

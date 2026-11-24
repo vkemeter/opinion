@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Validation;
 
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Screenshot;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
@@ -19,7 +18,7 @@ final readonly class ValidationResult
     public function __construct(
         public array $errors,
         public string $message = '',
-        public ?Category $category = null,
+        public string $category = '',
         public ?Severity $severity = null,
         public ?Source $source = null,
         public array $clientInfo = [],

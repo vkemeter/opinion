@@ -12,7 +12,6 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -44,7 +43,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
     public function buildSubjectContainsPrefixCategorySeverityAndMessageStart(string $prefix, string $message, string $expected): void
     {
         $subject = $this->createChannel()->buildSubject(
-            new Submission($message, Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
+            new Submission($message, 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
             new OpinionConfiguration(true, ['team@example.com'], $prefix, 180),
         );
 
@@ -55,7 +54,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
     public function deliverFailsWithoutRecipients(): void
     {
         $result = $this->createChannel()->deliver(
-            new Submission('Image is cropped.', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
+            new Submission('Image is cropped.', 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
             null,
             new OpinionConfiguration(true, [], '[Opinion]', 180),
         );

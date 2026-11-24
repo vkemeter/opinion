@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
@@ -59,12 +58,11 @@ return [
                 'readOnly' => true,
             ],
         ],
+        // Configured categories (extension configuration), shown as stored value
         'category' => [
             'label' => 'opinion.messages:tx_opinion_feedback.category',
             'config' => [
-                'type' => 'select',
-                'renderType' => 'selectSingle',
-                'items' => $enumItems('category', Category::cases()),
+                'type' => 'input',
                 'readOnly' => true,
             ],
         ],

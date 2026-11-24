@@ -106,7 +106,8 @@ Description
     What is wrong or what could be better, between 10 and 5000 characters.
 
 Category
-    *Bug*, *Content*, *Idea* or *Other*.
+    By default *Bug*, *Content*, *Idea* or *Other*; administrators can
+    configure their own list, see :confval:`extconf-categories`.
 
 Severity
     *Low*, *Normal* or *High*.

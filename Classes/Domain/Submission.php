@@ -13,7 +13,7 @@ final readonly class Submission
      */
     public function __construct(
         public string $message,
-        public Category $category,
+        public string $category,
         public Severity $severity,
         public Source $source,
         public int $backendUserUid,

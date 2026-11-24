@@ -42,6 +42,18 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationReadsTheCategories(): void
+    {
+        self::assertSame(['bug' => '', 'content' => '', 'idea' => '', 'other' => ''], $this->createSubject([])->getConfiguration()->categories);
+        self::assertSame(
+            ['bug' => '', 'question' => 'Question', 'design' => 'Design'],
+            $this->createSubject(['categories' => 'bug, question=Question , design=Design'])->getConfiguration()->categories,
+        );
+        self::assertSame(['bug' => '', 'idea' => ''], $this->createSubject(['categories' => 'bug,Bug Report,bug=Defect,<b>x</b>,idea'])->getConfiguration()->categories);
+        self::assertSame(['bug' => '', 'content' => '', 'idea' => '', 'other' => ''], $this->createSubject(['categories' => ' , ,=Label'])->getConfiguration()->categories);
+    }
+
+    #[Test]
     public function getConfigurationDropsInvalidRecipients(): void
     {
         $configuration = $this->createSubject(['recipients' => 'not-an-email, team@example.com, '])->getConfiguration();
