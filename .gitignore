@@ -27,3 +27,4 @@ Resources/Public/JavaScript/*.map
 # Talk slides (Marp), local only
 /presentation/
 .claude
+CLAUDE.md
