@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 – 2026-11-24
 
 - Processing statuses are configurable: `statuses` (default
   `new,in_progress,closed`, same syntax as `categories`, the first one is the
@@ -17,8 +17,10 @@
   `LANG/resourceOverrides` file) wins over the label. Feedback keeps its
   category when it is removed from the list later; it is still shown and
   delivered again, only the filter of the module offers the configured
-  categories. The email subject shows the category label as well, e.g.
-  `[Opinion] [Bug/high] …` instead of `[bug/high]`
+  categories
+- The email subject shows the label of the category instead of its value,
+  e.g. `[Opinion] [Bug/high] …` instead of `[Opinion] [bug/high] …` (in German
+  `[Fehler/high]`). Adjust mail filters that match the old subject
 - `opinion:cleanup --days=0` deletes feedback regardless of age, and the new
   option `--status` (e.g. `--status=closed` or `--status=new,closed`) deletes
   only feedback with these processing statuses, combined with the age
