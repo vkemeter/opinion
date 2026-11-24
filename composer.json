@@ -28,12 +28,14 @@
 		"typo3/cms-frontend": "^14.3"
 	},
 	"require-dev": {
+		"a9f/typo3-fractor": "^1.1",
 		"friendsofphp/php-cs-fixer": "^3.95",
 		"kubawerlos/php-cs-fixer-custom-fixers": "^3.37",
 		"phpstan/phpstan": "^2.1",
 		"phpstan/phpstan-phpunit": "^2.0",
 		"phpstan/phpstan-strict-rules": "^2.0",
 		"saschaegerer/phpstan-typo3": "^3.0",
+		"ssch/typo3-rector": "^3.17",
 		"typo3/cms-dashboard": "^14.3",
 		"typo3/testing-framework": "^9.5"
 	},
@@ -52,6 +54,7 @@
 	},
 	"config": {
 		"allow-plugins": {
+			"a9f/fractor-extension-installer": true,
 			"typo3/class-alias-loader": true,
 			"typo3/cms-composer-installers": true
 		},
@@ -72,10 +75,18 @@
 	"scripts": {
 		"check": [
 			"@check:cs",
-			"@check:stan"
+			"@check:stan",
+			"@check:rector",
+			"@check:fractor"
 		],
 		"check:cs": [
 			"php-cs-fixer fix --dry-run --diff -v"
+		],
+		"check:fractor": [
+			"fractor process -c Build/fractor/fractor.php --dry-run"
+		],
+		"check:rector": [
+			"rector process -c Build/rector/rector.php --dry-run"
 		],
 		"check:stan": [
 			"phpstan analyse -c Build/phpstan/phpstan.neon --memory-limit=-1"

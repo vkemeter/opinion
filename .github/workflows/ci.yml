@@ -39,6 +39,12 @@ jobs:
       - name: PHPStan
         run: Build/Scripts/runTests.sh -b docker -s phpstan
 
+      - name: Rector
+        run: Build/Scripts/runTests.sh -b docker -s rector -n
+
+      - name: Fractor
+        run: Build/Scripts/runTests.sh -b docker -s fractor -n
+
   tests:
     name: PHP ${{ matrix.php }}, ${{ matrix.dbms }}
     runs-on: ubuntu-latest

@@ -46,6 +46,8 @@ Options:
         functional        Functional tests
         phpstan           PHPStan
         cgl               PHP coding guidelines (php-cs-fixer), add -n for a dry run
+        rector            PHP refactorings (Rector, TYPO3 v14 + PHP 8.4 sets), add -n for a dry run
+        fractor           Non-PHP refactorings (Fractor: Fluid, YAML, XLIFF, TypoScript), add -n for a dry run
         lint              PHP syntax check
         clean             Remove .Build
 
@@ -62,7 +64,7 @@ Options:
         Container binary, default: podman if available, else docker.
 
     -x  Enable xdebug (port 9003).
-    -n  Dry run for -s cgl.
+    -n  Dry run for -s cgl, rector and fractor.
     -h  Show this help.
 
 Examples:
@@ -83,6 +85,7 @@ PHP_VERSION="8.4"
 CONTAINER_BIN=""
 PHP_XDEBUG_ON=0
 CGL_DRY_RUN=""
+DRY_RUN=""
 
 OPTIND=1
 while getopts "s:d:i:p:b:xnh" OPT; do
@@ -93,7 +96,7 @@ while getopts "s:d:i:p:b:xnh" OPT; do
         p) PHP_VERSION=${OPTARG} ;;
         b) CONTAINER_BIN=${OPTARG} ;;
         x) PHP_XDEBUG_ON=1 ;;
-        n) CGL_DRY_RUN="--dry-run --diff" ;;
+        n) CGL_DRY_RUN="--dry-run --diff"; DRY_RUN="--dry-run" ;;
         h) loadHelp; echo "${HELP}"; exit 0 ;;
         *) loadHelp; echo "${HELP}" >&2; exit 1 ;;
     esac
@@ -205,6 +208,14 @@ case ${TEST_SUITE} in
         ;;
     cgl)
         runPhp "PHP_CS_FIXER_IGNORE_ENV=1 .Build/bin/php-cs-fixer fix -v ${CGL_DRY_RUN} $*"
+        SUITE_EXIT_CODE=$?
+        ;;
+    rector)
+        runPhp ".Build/bin/rector process -c Build/rector/rector.php --no-progress-bar ${DRY_RUN} $*"
+        SUITE_EXIT_CODE=$?
+        ;;
+    fractor)
+        runPhp ".Build/bin/fractor process -c Build/fractor/fractor.php ${DRY_RUN} $*"
         SUITE_EXIT_CODE=$?
         ;;
     lint)

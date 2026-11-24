@@ -53,7 +53,7 @@ test-browser: ## Run the browser test of the dialog (headless Chromium)
 	node Tests/Browser/dialog.test.mjs
 
 .PHONY: check
-check: lint lint-js cgl phpstan docs-test ## Run all checks without changing files
+check: lint lint-js cgl phpstan rector fractor docs-test ## Run all checks without changing files
 
 .PHONY: lint
 lint: ## Check the PHP syntax
@@ -71,8 +71,22 @@ cgl: ## Check the PHP coding guidelines (php-cs-fixer dry run)
 phpstan: ## Run PHPStan
 	$(RUN_TESTS) -s phpstan
 
+.PHONY: rector
+rector: ## Check for Rector refactorings (dry run)
+	$(RUN_TESTS) -s rector -n
+
+.PHONY: fractor
+fractor: ## Check for Fractor refactorings in Fluid, YAML, XLIFF, TypoScript (dry run)
+	$(RUN_TESTS) -s fractor -n
+
 .PHONY: fix
 fix: ## Fix the PHP coding guidelines (php-cs-fixer)
+	$(RUN_TESTS) -s cgl
+
+.PHONY: fix-rector
+fix-rector: ## Apply the Rector and Fractor refactorings, then the coding guidelines
+	$(RUN_TESTS) -s rector
+	$(RUN_TESTS) -s fractor
 	$(RUN_TESTS) -s cgl
 
 .PHONY: docs
