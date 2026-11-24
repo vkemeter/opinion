@@ -30,41 +30,27 @@ final readonly class ScreenshotStorage
             throw new ScreenshotStorageException('Temporary screenshot file could not be written.', 1791561468);
         }
 
-        // Storing happens on behalf of the system, independent of the file mounts of the sender
-        $evaluatePermissions = $storage->getEvaluatePermissions();
-        $storage->setEvaluatePermissions(false);
-
         try {
-            $file = $storage->addFile(
+            // Storing happens on behalf of the system, independent of the file mounts of the sender
+            return $this->asSystem($storage, fn(): File => $storage->addFile(
                 $temporaryFile,
                 $this->getTargetFolder($storage, $date),
                 Uuid::v4()->toRfc4122() . '.' . $fileExtension,
                 DuplicationBehavior::RENAME,
-            );
+            ));
         } catch (\Throwable $exception) {
             // FAL and the local driver throw various exceptions (permissions, full disk); all mean "not stored"
             throw new ScreenshotStorageException('The screenshot could not be written into the storage: ' . $exception->getMessage(), 1795412871, $exception);
         } finally {
-            $storage->setEvaluatePermissions($evaluatePermissions);
             if (is_file($temporaryFile)) {
                 GeneralUtility::unlink_tempfile($temporaryFile);
             }
         }
-
-        return $file;
     }
 
     public function delete(File $file): void
     {
-        $storage = $file->getStorage();
-        $evaluatePermissions = $storage->getEvaluatePermissions();
-        $storage->setEvaluatePermissions(false);
-
-        try {
-            $storage->deleteFile($file);
-        } finally {
-            $storage->setEvaluatePermissions($evaluatePermissions);
-        }
+        $this->asSystem($file->getStorage(), static fn(): bool => $file->getStorage()->deleteFile($file));
     }
 
     /**
@@ -72,15 +58,7 @@ final readonly class ScreenshotStorage
      */
     public function getContents(File $file): string
     {
-        $storage = $file->getStorage();
-        $evaluatePermissions = $storage->getEvaluatePermissions();
-        $storage->setEvaluatePermissions(false);
-
-        try {
-            return $file->getContents();
-        } finally {
-            $storage->setEvaluatePermissions($evaluatePermissions);
-        }
+        return $this->asSystem($file->getStorage(), static fn(): string => $file->getContents());
     }
 
     /**
@@ -88,15 +66,7 @@ final readonly class ScreenshotStorage
      */
     public function stream(File $file): ResponseInterface
     {
-        $storage = $file->getStorage();
-        $evaluatePermissions = $storage->getEvaluatePermissions();
-        $storage->setEvaluatePermissions(false);
-
-        try {
-            return $storage->streamFile($file);
-        } finally {
-            $storage->setEvaluatePermissions($evaluatePermissions);
-        }
+        return $this->asSystem($file->getStorage(), static fn(): ResponseInterface => $file->getStorage()->streamFile($file));
     }
 
     public function isAvailable(): bool
@@ -124,5 +94,24 @@ final readonly class ScreenshotStorage
         }
 
         return $folder;
+    }
+
+    /**
+     * Runs the action with the permission checks of the storage disabled and restores them afterwards.
+     *
+     * @template T
+     * @param \Closure(): T $action
+     * @return T
+     */
+    private function asSystem(ResourceStorage $storage, \Closure $action): mixed
+    {
+        $evaluatePermissions = $storage->getEvaluatePermissions();
+        $storage->setEvaluatePermissions(false);
+
+        try {
+            return $action();
+        } finally {
+            $storage->setEvaluatePermissions($evaluatePermissions);
+        }
     }
 }

@@ -23,7 +23,7 @@ return static function (ContainerConfigurator $configurator, ContainerBuilder $c
     $services->defaults()->autowire()->autoconfigure()->private();
     $services->load('Vkemeter\\Opinion\\Dashboard\\', '../Classes/Dashboard/*');
 
-    $label = static fn(string $key): string => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:dashboard.' . $key;
+    $label = static fn(string $key): string => 'opinion.messages:dashboard.' . $key;
     $widgets = [
         'opinion-openFeedback' => [
             'class' => NumberWithButtonWidget::class,

@@ -28,16 +28,18 @@ final readonly class StoredSubmissionFactory
             source: Source::from((string)($record['source'] ?? '')),
             backendUserUid: (int)($record['be_user'] ?? 0),
             createdAt: new \DateTimeImmutable('@' . (int)($record['crdate'] ?? 0))->setTimezone(new \DateTimeZone(date_default_timezone_get())),
-            clientInfo: $this->decode($record['client_info'] ?? null),
-            systemInfo: $this->decode($record['system_info'] ?? null),
-            context: $this->decode($record['context'] ?? null),
+            clientInfo: self::decode($record['client_info'] ?? null),
+            systemInfo: self::decode($record['system_info'] ?? null),
+            context: self::decode($record['context'] ?? null),
         );
     }
 
     /**
+     * A JSON column of tx_opinion_feedback as array; invalid or empty values give [].
+     *
      * @return array<string, mixed>
      */
-    private function decode(mixed $json): array
+    public static function decode(mixed $json): array
     {
         if (is_array($json)) {
             return $json;

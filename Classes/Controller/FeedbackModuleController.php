@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Controller;
 
+use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
@@ -26,6 +27,7 @@ use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Factory\StoredSubmissionFactory;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Link\ReportedUrl;
@@ -59,6 +61,7 @@ final readonly class FeedbackModuleController
         private ScreenshotStorage $screenshotStorage,
         private ConversationRepository $conversationRepository,
         private LinkableHosts $linkableHosts,
+        private ClockInterface $clock,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -86,7 +89,7 @@ final readonly class FeedbackModuleController
                     'message_count' => $messageCounts[(int)$item['uid']] ?? 0,
                     'unread' => in_array((int)$item['uid'], $unreadUids, true),
                     // The address at submission time, also for senders deleted since
-                    'sender_email' => $this->getSenderEmail($this->decode($item['system_info'] ?? null)),
+                    'sender_email' => $this->getSenderEmail(StoredSubmissionFactory::decode($item['system_info'] ?? null)),
                     'show_url' => $this->buildUri('opinion_feedback.show', ['uid' => (int)$item['uid'], ...$filterParameters]),
                 ],
                 $items,
@@ -134,9 +137,9 @@ final readonly class FeedbackModuleController
             // Only the viewer's own read state changes
             $this->conversationRepository->markRead($uid, $this->getUserUid());
         }
-        $systemInfo = $this->decode($record['system_info'] ?? null);
-        $context = $this->decode($record['context'] ?? null);
-        $clientInfo = $this->decode($record['client_info'] ?? null);
+        $systemInfo = StoredSubmissionFactory::decode($record['system_info'] ?? null);
+        $context = StoredSubmissionFactory::decode($record['context'] ?? null);
+        $clientInfo = StoredSubmissionFactory::decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
         $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams())->toQueryParameters();
@@ -219,7 +222,7 @@ final readonly class FeedbackModuleController
         $userUid = $this->getUserUid();
         // A reply of the sender reopens closed feedback, unless a status was chosen in the same form
         $reopen = !$statusChosen && (int)$record['be_user'] === $userUid && $record['status'] === FeedbackStatus::Closed->value;
-        $this->conversationRepository->add($uid, $userUid, $message, new \DateTimeImmutable(), $reopen ? FeedbackStatus::InProgress : $status);
+        $this->conversationRepository->add($uid, $userUid, $message, \DateTimeImmutable::createFromInterface($this->clock->now()), $reopen ? FeedbackStatus::InProgress : $status);
         $key = match (true) {
             $status !== null => 'module.save.saved',
             $reopen => 'module.conversation.reopened',
@@ -366,19 +369,6 @@ final readonly class FeedbackModuleController
         $sender = $systemInfo['backendUser'] ?? null;
 
         return is_array($sender) && is_string($sender['email'] ?? null) ? $sender['email'] : '';
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function decode(mixed $json): array
-    {
-        if (is_array($json)) {
-            return $json;
-        }
-        $decoded = is_string($json) && $json !== '' ? json_decode($json, true) : null;
-
-        return is_array($decoded) ? $decoded : [];
     }
 
     private function getLanguageService(): LanguageService

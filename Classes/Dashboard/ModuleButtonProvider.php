@@ -14,7 +14,7 @@ final readonly class ModuleButtonProvider implements ButtonProviderInterface
 {
     public function __construct(
         private UriBuilder $uriBuilder,
-        private string $title = 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:dashboard.button',
+        private string $title = 'opinion.messages:dashboard.button',
     ) {}
 
     public function getTitle(): string
