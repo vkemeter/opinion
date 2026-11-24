@@ -41,6 +41,10 @@ the latest feedback.
   (this is the branch `typo3-v13`; TYPO3 v14 is supported by the main branch)
 - HTTPS for screenshots (`getDisplayMedia()` needs a secure context)
 
+> [!WARNING]
+> The branch `typo3-v13` is not maintained and gets no releases. Use it at your own
+> risk: `composer require vkemeter/opinion:dev-typo3-v13`.
+
 ## Installation
 
 ```bash
