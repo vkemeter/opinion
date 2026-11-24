@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `opinion:cleanup --days=0` deletes feedback regardless of age, and the new
+  option `--status` (e.g. `--status=closed` or `--status=new,closed`) deletes
+  only feedback with these processing statuses, combined with the age
+  (`--days`, default `retentionDays`)
+
 ## 2.0.1 – 2026-11-24
 
 - Security: the reported URL is linked in the detail view and the email only

@@ -135,6 +135,7 @@ feedback has a button "Deliver again" for a single record.
 ```bash
 vendor/bin/typo3 opinion:cleanup             # older than retentionDays
 vendor/bin/typo3 opinion:cleanup --days=30
+vendor/bin/typo3 opinion:cleanup --days=0 --status=closed   # all closed feedback
 vendor/bin/typo3 opinion:cleanup --dry-run
 ```
 

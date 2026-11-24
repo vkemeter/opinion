@@ -12,6 +12,7 @@ use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Domain\Category;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -102,11 +103,71 @@ final class CleanupCommandTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function invalidDaysAreRejected(): void
+    public function daysZeroDeletesFeedbackOfAnyAge(): void
     {
-        self::assertSame(Command::INVALID, $this->runCommand(['--days' => '0'])->getStatusCode());
+        $now = $this->get(FeedbackRepository::class)->add($this->createSubmission(new \DateTimeImmutable()), null);
+
+        $tester = $this->runCommand(['--days' => '0']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Deleted 3 feedback record(s), 2 screenshot(s) and 4 message(s) regardless of age.', $this->display($tester));
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid($now), 'created in the current second');
+        self::assertFileDoesNotExist($this->screenshotPaths['recent']);
+    }
+
+    #[Test]
+    public function statusRestrictsTheDeletionAtAnyAge(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+        $inProgress = $repository->add($this->createSubmission(new \DateTimeImmutable('-20 days')), null);
+        $repository->updateStatus($inProgress, FeedbackStatus::InProgress);
+
+        $tester = $this->runCommand(['--days' => '0', '--status' => 'closed']);
+
+        self::assertStringContainsString('Deleted 1 feedback record(s), 1 screenshot(s) and 1 message(s) regardless of age with status closed.', $this->display($tester));
+        self::assertNull($repository->findByUid($this->feedbackUids['recent']));
+        self::assertNotNull($repository->findByUid($this->feedbackUids['old']), 'new');
+        self::assertNotNull($repository->findByUid($inProgress), 'in progress');
+    }
+
+    #[Test]
+    public function statusKeepsTheRetentionPeriod(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $repository->updateStatus($this->feedbackUids['old'], FeedbackStatus::Closed);
+        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+
+        $tester = $this->runCommand(['--status' => 'closed']);
+
+        self::assertStringContainsString('Deleted 1 feedback record(s)', $tester->getDisplay());
+        self::assertNull($repository->findByUid($this->feedbackUids['old']));
+        self::assertNotNull($repository->findByUid($this->feedbackUids['recent']), 'younger than retentionDays');
+    }
+
+    #[Test]
+    public function severalStatusesCanBeGiven(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+        $inProgress = $repository->add($this->createSubmission(new \DateTimeImmutable('-20 days')), null);
+        $repository->updateStatus($inProgress, FeedbackStatus::InProgress);
+
+        $tester = $this->runCommand(['--days' => '0', '--status' => 'new, closed', '--dry-run' => true]);
+
+        self::assertStringContainsString('Would delete 2 feedback record(s), 2 screenshot(s) and 4 message(s) regardless of age with status new, closed.', $this->display($tester));
+    }
+
+    #[Test]
+    public function invalidOptionsAreRejected(): void
+    {
+        self::assertSame(Command::INVALID, $this->runCommand(['--days' => '-1'])->getStatusCode());
         self::assertSame(Command::INVALID, $this->runCommand(['--days' => 'many'])->getStatusCode());
+        $tester = $this->runCommand(['--days' => '0', '--status' => 'closed,done']);
+        self::assertSame(Command::INVALID, $tester->getStatusCode());
+        self::assertStringContainsString('done', $tester->getDisplay());
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
+        self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
     }
 
     #[Test]
@@ -124,6 +185,14 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester->execute($input);
 
         return $tester;
+    }
+
+    /**
+     * The output with the line breaks of the console style collapsed.
+     */
+    private function display(CommandTester $tester): string
+    {
+        return (string)preg_replace('/\s+/', ' ', $tester->getDisplay());
     }
 
     private function countReferences(int $feedbackUid): int

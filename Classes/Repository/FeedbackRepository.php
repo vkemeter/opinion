@@ -209,20 +209,25 @@ final readonly class FeedbackRepository
     }
 
     /**
+     * Feedback to delete by opinion:cleanup, oldest first.
+     *
+     * @param int|null $createdBefore only feedback created before this timestamp, null = any age
+     * @param list<string> $statuses only feedback with one of these processing statuses, [] = all
      * @return list<int>
      */
-    public function findUidsCreatedBefore(int $timestamp): array
+    public function findUidsForCleanup(?int $createdBefore, array $statuses = []): array
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
         $queryBuilder->getRestrictions()->removeAll();
+        $queryBuilder->select('uid')->from(self::TABLE)->orderBy('uid');
+        if ($createdBefore !== null) {
+            $queryBuilder->andWhere($queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($createdBefore, Connection::PARAM_INT)));
+        }
+        if ($statuses !== []) {
+            $queryBuilder->andWhere($queryBuilder->expr()->in('status', $queryBuilder->createNamedParameter($statuses, Connection::PARAM_STR_ARRAY)));
+        }
 
-        return array_map(intval(...), $queryBuilder
-            ->select('uid')
-            ->from(self::TABLE)
-            ->where($queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)))
-            ->orderBy('uid')
-            ->executeQuery()
-            ->fetchFirstColumn());
+        return array_map(intval(...), $queryBuilder->executeQuery()->fetchFirstColumn());
     }
 
     /**

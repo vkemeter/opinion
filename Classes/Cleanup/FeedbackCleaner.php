@@ -11,8 +11,8 @@ use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 
 /**
- * Deletes feedback records created before a given date together with their
- * screenshots and conversation. A record is only removed after its screenshots are gone.
+ * Deletes feedback records together with their screenshots and conversation, filtered by
+ * age and processing status. A record is only removed after its screenshots are gone.
  */
 final readonly class FeedbackCleaner
 {
@@ -23,14 +23,18 @@ final readonly class FeedbackCleaner
         private ConversationRepository $conversationRepository,
     ) {}
 
-    public function cleanup(\DateTimeImmutable $createdBefore, bool $dryRun): CleanupResult
+    /**
+     * @param \DateTimeImmutable|null $createdBefore null = any age
+     * @param list<string> $statuses only these processing statuses, [] = all
+     */
+    public function cleanup(?\DateTimeImmutable $createdBefore, bool $dryRun, array $statuses = []): CleanupResult
     {
         $records = 0;
         $screenshots = 0;
         $messages = 0;
         $errors = [];
 
-        foreach ($this->feedbackRepository->findUidsCreatedBefore($createdBefore->getTimestamp()) as $feedbackUid) {
+        foreach ($this->feedbackRepository->findUidsForCleanup($createdBefore?->getTimestamp(), $statuses) as $feedbackUid) {
             $fileUids = $this->feedbackRepository->findScreenshotFileUids($feedbackUid);
             if ($dryRun) {
                 $records++;

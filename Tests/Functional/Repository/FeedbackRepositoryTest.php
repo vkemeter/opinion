@@ -161,6 +161,26 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function findUidsForCleanupHonoursAgeAndStatus(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $oldClosed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Old closed', '-40 days'), null);
+        $repository->updateStatus($oldClosed, FeedbackStatus::Closed);
+        $oldNew = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Old new', '-40 days'), null);
+        $nowClosed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Closed now', 'now'), null);
+        $repository->updateStatus($nowClosed, FeedbackStatus::Closed);
+        $nowInProgress = $repository->add($this->createPageSubmission(12, Source::Frontend, 'In progress now', 'now'), null);
+        $repository->updateStatus($nowInProgress, FeedbackStatus::InProgress);
+        $tenDaysAgo = new \DateTimeImmutable('-10 days')->getTimestamp();
+
+        self::assertSame([$oldClosed, $oldNew], $repository->findUidsForCleanup($tenDaysAgo));
+        self::assertSame([$oldClosed, $oldNew, $nowClosed, $nowInProgress], $repository->findUidsForCleanup(null), 'any age, also the current second');
+        self::assertSame([$oldClosed, $nowClosed], $repository->findUidsForCleanup(null, ['closed']));
+        self::assertSame([$oldClosed], $repository->findUidsForCleanup($tenDaysAgo, ['closed']));
+        self::assertSame([$oldClosed, $oldNew, $nowClosed], $repository->findUidsForCleanup(null, ['new', 'closed']));
+    }
+
+    #[Test]
     public function tableIsReadOnlyAdminOnlyRootLevel(): void
     {
         $ctrl = $GLOBALS['TCA'][FeedbackRepository::TABLE]['ctrl'];

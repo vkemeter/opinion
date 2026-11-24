@@ -11,8 +11,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Vkemeter\Opinion\Cleanup\FeedbackCleaner;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
+use Vkemeter\Opinion\Domain\FeedbackStatus;
 
 #[AsCommand(
     name: 'opinion:cleanup',
@@ -31,7 +33,8 @@ final class CleanupCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('days', 'd', InputOption::VALUE_REQUIRED, 'Delete feedback older than this number of days (default: retentionDays of the extension configuration)')
+            ->addOption('days', 'd', InputOption::VALUE_REQUIRED, 'Delete feedback older than this number of days, 0 = regardless of age (default: retentionDays of the extension configuration)')
+            ->addOption('status', 's', InputOption::VALUE_REQUIRED, 'Only feedback with one of these processing statuses, comma-separated (e.g. closed)')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Only report what would be deleted');
     }
 
@@ -41,26 +44,34 @@ final class CleanupCommand extends Command
 
         $days = $input->getOption('days');
         $days = $days === null ? $this->configurationProvider->getConfiguration()->retentionDays : filter_var($days, FILTER_VALIDATE_INT);
-        if (!is_int($days) || $days < 1) {
-            $io->error('The option --days must be a positive integer.');
+        if (!is_int($days) || $days < 0) {
+            $io->error('The option --days must be zero or a positive integer.');
+            return Command::INVALID;
+        }
+
+        $statuses = array_values(array_unique(GeneralUtility::trimExplode(',', (string)$input->getOption('status'), true)));
+        $unknownStatuses = array_filter($statuses, static fn(string $status): bool => FeedbackStatus::tryFrom($status) === null);
+        if ($unknownStatuses !== []) {
+            $io->error(sprintf('Unknown status in --status: %s. Known statuses: %s.', implode(', ', $unknownStatuses), implode(', ', array_column(FeedbackStatus::cases(), 'value'))));
             return Command::INVALID;
         }
 
         $dryRun = (bool)$input->getOption('dry-run');
-        $createdBefore = \DateTimeImmutable::createFromInterface($this->clock->now())->modify(sprintf('-%d days', $days));
-        $result = $this->feedbackCleaner->cleanup($createdBefore, $dryRun);
+        $createdBefore = $days === 0 ? null : \DateTimeImmutable::createFromInterface($this->clock->now())->modify(sprintf('-%d days', $days));
+        $result = $this->feedbackCleaner->cleanup($createdBefore, $dryRun, $statuses);
 
         foreach ($result->errors as $error) {
             $io->error($error);
         }
 
         $io->success(sprintf(
-            '%s %d feedback record(s), %d screenshot(s) and %d message(s) created before %s.',
+            '%s %d feedback record(s), %d screenshot(s) and %d message(s) %s%s.',
             $dryRun ? 'Would delete' : 'Deleted',
             $result->records,
             $result->screenshots,
             $result->messages,
-            $createdBefore->format('Y-m-d H:i'),
+            $createdBefore === null ? 'regardless of age' : 'created before ' . $createdBefore->format('Y-m-d H:i'),
+            $statuses !== [] ? ' with status ' . implode(', ', $statuses) : '',
         ));
 
         return $result->errors === [] ? Command::SUCCESS : Command::FAILURE;

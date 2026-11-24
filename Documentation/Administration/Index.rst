@@ -156,8 +156,21 @@ screenshot files, conversation messages and read state.
     # Older than 30 days
     vendor/bin/typo3 opinion:cleanup --days=30
 
+    # All feedback, regardless of age
+    vendor/bin/typo3 opinion:cleanup --days=0
+
+    # Closed feedback older than retentionDays
+    vendor/bin/typo3 opinion:cleanup --status=closed
+
+    # All closed feedback, regardless of age
+    vendor/bin/typo3 opinion:cleanup --days=0 --status=closed
+
     # Only report what would be deleted
     vendor/bin/typo3 opinion:cleanup --dry-run
+
+`--status` takes one or more processing statuses, comma-separated
+(`new`, `in_progress`, `closed`), and is combined with the age. An unknown
+status or a negative `--days` stops the command before anything is deleted.
 
 The command exits with a non-zero code when a record or file could not be
 deleted.
