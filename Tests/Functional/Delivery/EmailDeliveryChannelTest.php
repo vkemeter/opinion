@@ -13,6 +13,7 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
+use Vkemeter\Opinion\Configuration\ConfiguredValueList;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
 use Vkemeter\Opinion\Domain\Severity;
@@ -68,7 +69,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertSame('editor@example.com', $email->getReplyTo()[0]->getAddress());
         self::assertSame('Eddie Editor', $email->getReplyTo()[0]->getName());
         self::assertSame('noreply@example.com', $email->getFrom()[0]->getAddress());
-        self::assertSame('[Opinion] [content/low] Teaser <b>image</b> is cropped.', $email->getSubject());
+        self::assertSame('[Opinion] [Content/low] Teaser <b>image</b> is cropped.', $email->getSubject());
 
         $html = (string)$email->getHtmlBody();
         self::assertStringContainsString('Teaser &lt;b&gt;image&lt;/b&gt; is cropped.', $html);
@@ -86,19 +87,20 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function ownAndRemovedCategoriesAreLabelledAndTheSubjectKeepsTheValue(): void
+    public function ownAndRemovedCategoriesAreLabelledAlsoInTheSubject(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'bug,question=Question & answer';
         $channel = $this->get(EmailDeliveryChannel::class);
+        $configuration = new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180, categories: ConfiguredValueList::parse('bug,question=Question & answer', []));
 
-        $channel->deliver($this->createSubmission(category: 'question'), null, $this->configuration());
+        $channel->deliver($this->createSubmission(category: 'question'), null, $configuration);
         $email = $this->getSentEmail();
-        self::assertSame('[Opinion] [question/low] Teaser <b>image</b> is cropped.', $email->getSubject());
+        self::assertSame('[Opinion] [Question & answer/low] Teaser <b>image</b> is cropped.', $email->getSubject());
         self::assertStringContainsString('Question &amp; answer', (string)$email->getHtmlBody());
         self::assertStringContainsString('Question & answer', (string)$email->getTextBody());
 
         // Removed from the configuration after it was sent: the shipped translation stays
-        $channel->deliver($this->createSubmission(category: 'idea'), null, $this->configuration());
+        $channel->deliver($this->createSubmission(category: 'idea'), null, $configuration);
         self::assertStringContainsString('Idea', (string)$this->getSentEmail()->getHtmlBody());
     }
 
@@ -151,7 +153,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = '127.0.0.1:1';
 
         $this->expectException(\Throwable::class);
-        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener(), $this->get(ScreenshotStorage::class), $this->get(LinkableHosts::class))->deliver($this->createSubmission(), null, $this->configuration());
+        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener(), $this->get(ScreenshotStorage::class), $this->get(LinkableHosts::class), $this->get(\Vkemeter\Opinion\Formatting\ConfiguredLabels::class))->deliver($this->createSubmission(), null, $this->configuration());
     }
 
     private function setBackendRequest(): void

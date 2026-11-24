@@ -6,6 +6,8 @@ namespace Vkemeter\Opinion\Tests\Unit\Delivery;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Localization\Locales;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -15,6 +17,7 @@ use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Formatting\ConfiguredLabels;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
@@ -28,14 +31,14 @@ final class EmailDeliveryChannelTest extends UnitTestCase
      */
     public static function subjectDataProvider(): iterable
     {
-        yield 'short message' => ['[Opinion]', 'Image is cropped.', '[Opinion] [bug/high] Image is cropped.'];
-        yield 'whitespace is collapsed' => ['[Opinion]', "Image\n\nis   cropped.", '[Opinion] [bug/high] Image is cropped.'];
+        yield 'short message' => ['[Opinion]', 'Image is cropped.', '[Opinion] [Bug/high] Image is cropped.'];
+        yield 'whitespace is collapsed' => ['[Opinion]', "Image\n\nis   cropped.", '[Opinion] [Bug/high] Image is cropped.'];
         yield 'long message is cut after 60 characters' => [
             '[Opinion]',
             str_repeat('ä', 70),
-            '[Opinion] [bug/high] ' . str_repeat('ä', 60) . '…',
+            '[Opinion] [Bug/high] ' . str_repeat('ä', 60) . '…',
         ];
-        yield 'empty prefix' => ['', 'Image is cropped.', '[bug/high] Image is cropped.'];
+        yield 'empty prefix' => ['', 'Image is cropped.', '[Bug/high] Image is cropped.'];
     }
 
     #[Test]
@@ -45,6 +48,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
         $subject = $this->createChannel()->buildSubject(
             new Submission($message, 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable()),
             new OpinionConfiguration(true, ['team@example.com'], $prefix, 180),
+            'Bug',
         );
 
         self::assertSame($expected, $subject);
@@ -71,6 +75,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
             new DataFlattener(),
             new ScreenshotStorage(new ScreenshotStorageResolver(self::createStub(StorageRepository::class), new ScreenshotStorageLocation())),
             new LinkableHosts(self::createStub(SiteFinder::class)),
+            new ConfiguredLabels(self::createStub(LanguageServiceFactory::class), self::createStub(Locales::class)),
         );
     }
 }

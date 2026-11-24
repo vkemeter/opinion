@@ -13,6 +13,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MailUtility;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Formatting\ConfiguredLabels;
 use Vkemeter\Opinion\Formatting\DataFlattener;
 use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Link\ReportedUrl;
@@ -27,6 +28,7 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         private DataFlattener $dataFlattener,
         private ScreenshotStorage $screenshotStorage,
         private LinkableHosts $linkableHosts,
+        private ConfiguredLabels $configuredLabels,
     ) {}
 
     public function getIdentifier(): string
@@ -43,11 +45,13 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         $sender = $submission->systemInfo['backendUser'] ?? [];
         $sender = is_array($sender) ? $sender : [];
 
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        $request = $request instanceof ServerRequestInterface ? $request : null;
         $email = new FluidEmail();
         $email
             ->to(...$configuration->recipients)
             ->from(new Address(MailUtility::getSystemFromAddress(), MailUtility::getSystemFromName() ?? ''))
-            ->subject($this->buildSubject($submission, $configuration))
+            ->subject($this->buildSubject($submission, $configuration, $this->configuredLabels->labelForRequest('category', $submission->category, $configuration, $request)))
             ->format(FluidEmail::FORMAT_BOTH)
             ->setTemplate('Opinion/Feedback')
             ->assignMultiple([
@@ -75,8 +79,7 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
                 ->attach($content, 'screenshot.' . $screenshot->getExtension(), $screenshot->getMimeType());
         }
 
-        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
-        if ($request instanceof ServerRequestInterface) {
+        if ($request !== null) {
             $email->setRequest($request);
         }
 
@@ -85,13 +88,16 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         return DeliveryResult::success($this->getIdentifier(), 'sent to ' . implode(', ', $configuration->recipients));
     }
 
-    public function buildSubject(Submission $submission, OpinionConfiguration $configuration): string
+    /**
+     * @param string $categoryLabel label of the category in the language of the email body
+     */
+    public function buildSubject(Submission $submission, OpinionConfiguration $configuration, string $categoryLabel): string
     {
         $message = trim((string)preg_replace('/\s+/u', ' ', $submission->message));
         if (mb_strlen($message) > self::SUBJECT_MESSAGE_LENGTH) {
             $message = rtrim(mb_substr($message, 0, self::SUBJECT_MESSAGE_LENGTH)) . '…';
         }
 
-        return ltrim(sprintf('%s [%s/%s] %s', $configuration->subjectPrefix, $submission->category, $submission->severity->value, $message));
+        return ltrim(sprintf('%s [%s/%s] %s', $configuration->subjectPrefix, $categoryLabel, $submission->severity->value, $message));
     }
 }

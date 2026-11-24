@@ -53,8 +53,8 @@ Extension configuration
     *   Feedback keeps its category when the value is removed later. It is
         still listed and delivered again, but the filter of the module only
         offers the configured categories.
-    *   The email subject contains the value, not the label, so mail filters
-        keep working when a label changes.
+    *   The email subject contains the label too, in the language of the email
+        body, for example `[Opinion] [Question/normal] …`.
 
     To translate an own category, add the translation to a language file and
     register it as override of the domain `opinion.messages`, for example in
@@ -130,7 +130,8 @@ Extension configuration
 
     Prefix of the email subject. The subject continues with category,
     severity and the beginning of the message, for example
-    `[Opinion] [bug/high] The teaser image is cropped`.
+    `[Opinion] [Bug/high] The teaser image is cropped`; the category is shown with
+    its label.
 
 ..  confval:: redeliverMaxAttempts
     :name: extconf-redelivermaxattempts

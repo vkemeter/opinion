@@ -17,7 +17,8 @@
   `LANG/resourceOverrides` file) wins over the label. Feedback keeps its
   category when it is removed from the list later; it is still shown and
   delivered again, only the filter of the module offers the configured
-  categories. The email subject keeps the value
+  categories. The email subject shows the category label as well, e.g.
+  `[Opinion] [Bug/high] …` instead of `[bug/high]`
 - `opinion:cleanup --days=0` deletes feedback regardless of age, and the new
   option `--status` (e.g. `--status=closed` or `--status=new,closed`) deletes
   only feedback with these processing statuses, combined with the age

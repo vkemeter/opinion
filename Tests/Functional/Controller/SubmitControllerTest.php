@@ -76,7 +76,7 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame('sent', $this->get(FeedbackRepository::class)->findByUid(1)['delivery_status'] ?? null);
         $email = $this->get(MailerInterface::class)->getSentMessage()?->getOriginalMessage();
         self::assertInstanceOf(FluidEmail::class, $email);
-        self::assertSame('[Opinion] [bug/normal] The teaser image is cropped.', $email->getSubject());
+        self::assertSame('[Opinion] [Bug/normal] The teaser image is cropped.', $email->getSubject());
     }
 
     #[Test]

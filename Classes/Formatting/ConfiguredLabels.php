@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Formatting;
 
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Localization\Locales;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 
 /**
@@ -13,6 +16,19 @@ use Vkemeter\Opinion\Configuration\OpinionConfiguration;
  */
 final readonly class ConfiguredLabels
 {
+    public function __construct(
+        private LanguageServiceFactory $languageServiceFactory,
+        private Locales $locales,
+    ) {}
+
+    /**
+     * The label in the language f:translate would use for this request (default language without one).
+     */
+    public function labelForRequest(string $list, string $value, OpinionConfiguration $configuration, ?ServerRequestInterface $request): string
+    {
+        return $this->label($list, $value, $configuration, $this->languageServiceFactory->create($request !== null ? $this->locales->createLocaleFromRequest($request) : 'default'));
+    }
+
     public function label(string $list, string $value, OpinionConfiguration $configuration, LanguageService $languageService): string
     {
         $configured = match ($list) {
