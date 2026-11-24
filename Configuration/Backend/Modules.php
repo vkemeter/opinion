@@ -12,7 +12,7 @@ return [
         'access' => 'user',
         'path' => '/module/opinion/feedback',
         'iconIdentifier' => 'opinion-feedback',
-        'labels' => 'opinion.module',
+        'labels' => 'LLL:EXT:opinion/Resources/Private/Language/module.xlf',
         'routes' => [
             '_default' => [
                 'target' => FeedbackModuleController::class . '::listAction',

@@ -35,6 +35,17 @@
     { capture: true },
   );
 
+  // TYPO3 13 decides on the entry "Feedback on this page" before the page is known;
+  // its content marks a page without open feedback, so the entry is removed here
+  const removeEmptyPageFeedback = () => {
+    document.querySelectorAll('[data-opinion-no-page-feedback]').forEach((marker) => marker.closest('.typo3-adminPanel-module')?.remove());
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', removeEmptyPageFeedback);
+  } else {
+    removeEmptyPageFeedback();
+  }
+
   document.addEventListener('click', (event) => {
     const button = event.target instanceof Element ? event.target.closest('[data-opinion-config]') : null;
     if (!button) {

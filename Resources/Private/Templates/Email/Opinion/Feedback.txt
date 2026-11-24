@@ -1,0 +1,15 @@
+<f:layout name="SystemEmail" />
+<f:section name="Title">{f:translate(extensionName: 'opinion', key: 'email.headline')}</f:section>
+<f:section name="Main">{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.category')}: {f:translate(extensionName: 'opinion', key: 'category.{submission.category.value}')}
+{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.severity')}: {f:translate(extensionName: 'opinion', key: 'severity.{submission.severity.value}')}
+{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.source')}: {f:translate(extensionName: 'opinion', key: 'source.{submission.source.value}')}
+{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.be_user')}: {sender.realName -> f:format.raw()} ({sender.username -> f:format.raw()}) {sender.email -> f:format.raw()}
+<f:if condition="{reportedUrl}">{f:translate(extensionName: 'opinion', key: 'reportedUrl')}: {reportedUrl.url -> f:format.raw()}
+</f:if>
+{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.message')}:
+{submission.message -> f:format.raw()}
+<f:for each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">
+
+{f:translate(extensionName: 'opinion', key: 'email.section.{section}')}:
+<f:for each="{rows}" as="value" key="label">{label -> f:format.raw()}: {value -> f:format.raw()}
+</f:for></f:if></f:for></f:section>

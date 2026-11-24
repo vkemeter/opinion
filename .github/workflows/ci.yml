@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, typo3-v13]
   pull_request:
   workflow_dispatch:
   workflow_call:

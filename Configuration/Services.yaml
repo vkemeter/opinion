@@ -8,3 +8,9 @@ services:
         resource: '../Classes/*'
         # Needs EXT:dashboard, registered in Services.php only when it is installed
         exclude: '../Classes/Dashboard/*'
+
+    # TYPO3 13 registers no PSR-20 clock (TYPO3 14 does); symfony/clock comes with the Core
+    Psr\Clock\ClockInterface:
+        alias: Symfony\Component\Clock\NativeClock
+
+    Symfony\Component\Clock\NativeClock: ~

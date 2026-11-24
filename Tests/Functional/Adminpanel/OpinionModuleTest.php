@@ -15,7 +15,7 @@ use Vkemeter\Opinion\Adminpanel\OpinionModule;
 
 final class OpinionModuleTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 

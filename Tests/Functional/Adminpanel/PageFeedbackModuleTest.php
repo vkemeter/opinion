@@ -8,7 +8,6 @@ use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Adminpanel\ModuleApi\ModuleInterface;
 use TYPO3\CMS\Adminpanel\Service\ModuleLoader;
 use TYPO3\CMS\Core\Http\NormalizedParams;
-use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Routing\PageArguments;
@@ -24,7 +23,7 @@ use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 final class PageFeedbackModuleTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
@@ -62,8 +61,11 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         $this->renderPage(12);
         self::assertArrayNotHasKey('opinion_page', $this->loadModules(), 'backend feedback only');
 
+        // TYPO3 13 loads the modules before the page is resolved; the empty list then removes the entry in the browser
         $GLOBALS['TYPO3_REQUEST'] = new ServerRequest('https://example.com/');
-        self::assertArrayNotHasKey('opinion_page', $this->loadModules(), 'no page resolved yet');
+        self::assertArrayHasKey('opinion_page', $this->loadModules(), 'no page resolved yet');
+        $subModule = $this->get(PageFeedbackSubModule::class);
+        self::assertStringContainsString('data-opinion-no-page-feedback', $subModule->getContent($subModule->getDataToStore($this->renderPage(12))));
 
         $this->renderPage(14);
         $this->setUpBackendUser(2);
@@ -77,7 +79,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         $this->addFeedback(12, Source::Backend, 'From the page module', 1);
         $subModule = $this->get(PageFeedbackSubModule::class);
 
-        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12), new Response()));
+        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12)));
 
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $content);
         self::assertStringNotContainsString('<script>', $content);
@@ -95,7 +97,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         $this->setUpBackendUser(1);
         $subModule = $this->get(PageFeedbackSubModule::class);
 
-        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12), new Response()));
+        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12)));
 
         self::assertMatchesRegularExpression('#<a href="[^"]*/typo3/module/opinion/feedback/show\?[^"]*uid=\d+[^"]*" target="_blank" rel="noopener"[^>]*>Teaser is cropped</a>#', $content);
         self::assertStringNotContainsString('token=', $content, 'shareable URL');
@@ -109,7 +111,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         }
         $subModule = $this->get(PageFeedbackSubModule::class);
 
-        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12), new Response()));
+        $content = $subModule->getContent($subModule->getDataToStore($this->renderPage(12)));
 
         self::assertSame(PageFeedbackSubModule::LIMIT, substr_count($content, '<tr><td'));
         self::assertStringContainsString('and 2 more', $content);

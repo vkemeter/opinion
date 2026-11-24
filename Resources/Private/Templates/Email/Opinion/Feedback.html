@@ -2,7 +2,7 @@
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:layout name="SystemEmail" />
-	<f:section name="Title">{f:translate(domain: 'opinion.messages', key: 'email.headline')}</f:section>
+	<f:section name="Title">{f:translate(extensionName: 'opinion', key: 'email.headline')}</f:section>
 	<f:section name="Main">
 		<table
 			cellpadding="4"
@@ -13,31 +13,31 @@
 				<th
 					align="left"
 					valign="top">
-					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}
+					{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.category')}
 				</th>
-				<td>{f:translate(domain: 'opinion.messages', key: 'category.{submission.category.value}')}</td>
+				<td>{f:translate(extensionName: 'opinion', key: 'category.{submission.category.value}')}</td>
 			</tr>
 			<tr>
 				<th
 					align="left"
 					valign="top">
-					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.severity')}
+					{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.severity')}
 				</th>
-				<td>{f:translate(domain: 'opinion.messages', key: 'severity.{submission.severity.value}')}</td>
+				<td>{f:translate(extensionName: 'opinion', key: 'severity.{submission.severity.value}')}</td>
 			</tr>
 			<tr>
 				<th
 					align="left"
 					valign="top">
-					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.source')}
+					{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.source')}
 				</th>
-				<td>{f:translate(domain: 'opinion.messages', key: 'source.{submission.source.value}')}</td>
+				<td>{f:translate(extensionName: 'opinion', key: 'source.{submission.source.value}')}</td>
 			</tr>
 			<tr>
 				<th
 					align="left"
 					valign="top">
-					{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.be_user')}
+					{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.be_user')}
 				</th>
 				<td>{sender.realName} ({sender.username}) {sender.email}</td>
 			</tr>
@@ -45,7 +45,7 @@
 
 		<f:if condition="{reportedUrl}">
 			<p style="word-break: break-all">
-				{f:translate(domain: 'opinion.messages', key: 'reportedUrl')}:
+				{f:translate(extensionName: 'opinion', key: 'reportedUrl')}:
 				<f:if condition="{reportedUrl.linked}">
 					<f:then><a href="{reportedUrl.url}">{reportedUrl.url}</a></f:then>
 					<f:else>{reportedUrl.url}</f:else>
@@ -53,11 +53,11 @@
 			</p>
 		</f:if>
 
-		<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</h4>
+		<h4>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.message')}</h4>
 		<p>{submission.message -> f:format.nl2br()}</p>
 
 		<f:if condition="{hasScreenshot}">
-			<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h4>
+			<h4>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.screenshot')}</h4>
 			<p>
 				<img
 					src="cid:screenshot"
@@ -72,7 +72,7 @@
 			as="rows"
 			key="section">
 			<f:if condition="{rows}">
-				<h4>{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</h4>
+				<h4>{f:translate(extensionName: 'opinion', key: 'email.section.{section}')}</h4>
 				<table
 					cellpadding="4"
 					cellspacing="0"

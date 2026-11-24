@@ -1,131 +1,131 @@
-# cat=basic; type=boolean; label=opinion.messages:extconf.enabled
+# cat=basic; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.enabled
 enabled = 1
 
-# cat=basic; type=boolean; label=opinion.messages:extconf.conversation
+# cat=basic; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.conversation
 conversation = 1
 
-# cat=basic; type=int+; label=opinion.messages:extconf.rateLimit
+# cat=basic; type=int+; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.rateLimit
 rateLimit = 10
 
-# cat=basic; type=string; label=opinion.messages:extconf.disabledDeliveryChannels
+# cat=basic; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.disabledDeliveryChannels
 disabledDeliveryChannels =
 
-# customcategory=email=opinion.messages:extconf.category.email
-# customcategory=storage=opinion.messages:extconf.category.storage
+# customcategory=email=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.category.email
+# customcategory=storage=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.category.storage
 
-# cat=email; type=string; label=opinion.messages:extconf.recipients
+# cat=email; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.recipients
 recipients =
 
-# cat=email; type=string; label=opinion.messages:extconf.subjectPrefix
+# cat=email; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.subjectPrefix
 subjectPrefix = [Opinion]
 
-# cat=email; type=int+; label=opinion.messages:extconf.redeliverMaxAttempts
+# cat=email; type=int+; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.redeliverMaxAttempts
 redeliverMaxAttempts = 5
 
-# cat=storage; type=int+; label=opinion.messages:extconf.retentionDays
+# cat=storage; type=int+; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.retentionDays
 retentionDays = 180
 
-# customcategory=collect=opinion.messages:extconf.category.collect
-# customsubcategory=client=opinion.messages:extconf.collect.client
-# customsubcategory=system=opinion.messages:extconf.collect.system
-# customsubcategory=context=opinion.messages:extconf.collect.context
-# customsubcategory=url=opinion.messages:extconf.collect.url
+# customcategory=collect=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.category.collect
+# customsubcategory=client=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect.client
+# customsubcategory=system=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect.system
+# customsubcategory=context=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect.context
+# customsubcategory=url=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect.url
 
-# cat=collect/url/001; type=string; label=opinion.messages:extconf.deniedUrlParameters
+# cat=collect/url/001; type=string; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.deniedUrlParameters
 deniedUrlParameters = ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login
 
-# cat=collect/client/101; type=boolean; label=opinion.messages:extconf.collect_client_url
+# cat=collect/client/101; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_url
 collect_client_url = 1
 
-# cat=collect/client/102; type=boolean; label=opinion.messages:extconf.collect_client_title
+# cat=collect/client/102; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_title
 collect_client_title = 1
 
-# cat=collect/client/103; type=boolean; label=opinion.messages:extconf.collect_client_userAgent
+# cat=collect/client/103; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_userAgent
 collect_client_userAgent = 1
 
-# cat=collect/client/104; type=boolean; label=opinion.messages:extconf.collect_client_userAgentData
+# cat=collect/client/104; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_userAgentData
 collect_client_userAgentData = 1
 
-# cat=collect/client/105; type=boolean; label=opinion.messages:extconf.collect_client_language
+# cat=collect/client/105; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_language
 collect_client_language = 1
 
-# cat=collect/client/106; type=boolean; label=opinion.messages:extconf.collect_client_languages
+# cat=collect/client/106; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_languages
 collect_client_languages = 1
 
-# cat=collect/client/107; type=boolean; label=opinion.messages:extconf.collect_client_timezone
+# cat=collect/client/107; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_timezone
 collect_client_timezone = 1
 
-# cat=collect/client/108; type=boolean; label=opinion.messages:extconf.collect_client_screen
+# cat=collect/client/108; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_screen
 collect_client_screen = 1
 
-# cat=collect/client/109; type=boolean; label=opinion.messages:extconf.collect_client_viewport
+# cat=collect/client/109; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_viewport
 collect_client_viewport = 1
 
-# cat=collect/client/110; type=boolean; label=opinion.messages:extconf.collect_client_devicePixelRatio
+# cat=collect/client/110; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_devicePixelRatio
 collect_client_devicePixelRatio = 1
 
-# cat=collect/client/111; type=boolean; label=opinion.messages:extconf.collect_client_colorScheme
+# cat=collect/client/111; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_colorScheme
 collect_client_colorScheme = 1
 
-# cat=collect/client/112; type=boolean; label=opinion.messages:extconf.collect_client_reducedMotion
+# cat=collect/client/112; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_reducedMotion
 collect_client_reducedMotion = 1
 
-# cat=collect/client/113; type=boolean; label=opinion.messages:extconf.collect_client_online
+# cat=collect/client/113; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_online
 collect_client_online = 1
 
-# cat=collect/client/114; type=boolean; label=opinion.messages:extconf.collect_client_timestamp
+# cat=collect/client/114; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_client_timestamp
 collect_client_timestamp = 1
 
-# cat=collect/system/201; type=boolean; label=opinion.messages:extconf.collect_system_typo3Version
+# cat=collect/system/201; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_system_typo3Version
 collect_system_typo3Version = 1
 
-# cat=collect/system/202; type=boolean; label=opinion.messages:extconf.collect_system_applicationContext
+# cat=collect/system/202; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_system_applicationContext
 collect_system_applicationContext = 1
 
-# cat=collect/system/203; type=boolean; label=opinion.messages:extconf.collect_system_phpVersion
+# cat=collect/system/203; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_system_phpVersion
 collect_system_phpVersion = 1
 
-# cat=collect/system/204; type=boolean; label=opinion.messages:extconf.collect_system_ipAddress
+# cat=collect/system/204; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_system_ipAddress
 collect_system_ipAddress = 1
 
-# cat=collect/system/205; type=boolean; label=opinion.messages:extconf.collect_system_requestUserAgent
+# cat=collect/system/205; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_system_requestUserAgent
 collect_system_requestUserAgent = 1
 
-# cat=collect/context/301; type=boolean; label=opinion.messages:extconf.collect_context_page
+# cat=collect/context/301; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_page
 collect_context_page = 1
 
-# cat=collect/context/302; type=boolean; label=opinion.messages:extconf.collect_context_site
+# cat=collect/context/302; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_site
 collect_context_site = 1
 
-# cat=collect/context/303; type=boolean; label=opinion.messages:extconf.collect_context_language
+# cat=collect/context/303; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_language
 collect_context_language = 1
 
-# cat=collect/context/304; type=boolean; label=opinion.messages:extconf.collect_context_workspace
+# cat=collect/context/304; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_workspace
 collect_context_workspace = 1
 
-# cat=collect/context/305; type=boolean; label=opinion.messages:extconf.collect_context_module
+# cat=collect/context/305; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_module
 collect_context_module = 1
 
-# cat=collect/context/306; type=boolean; label=opinion.messages:extconf.collect_context_url
+# cat=collect/context/306; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_url
 collect_context_url = 1
 
-# cat=collect/context/307; type=boolean; label=opinion.messages:extconf.collect_context_pageType
+# cat=collect/context/307; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_pageType
 collect_context_pageType = 1
 
-# cat=collect/context/308; type=boolean; label=opinion.messages:extconf.collect_context_cacheState
+# cat=collect/context/308; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_cacheState
 collect_context_cacheState = 1
 
-# cat=collect/context/309; type=boolean; label=opinion.messages:extconf.collect_context_uncachedElements
+# cat=collect/context/309; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_uncachedElements
 collect_context_uncachedElements = 1
 
-# cat=collect/context/310; type=boolean; label=opinion.messages:extconf.collect_context_parseTime
+# cat=collect/context/310; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_parseTime
 collect_context_parseTime = 1
 
-# cat=collect/context/311; type=boolean; label=opinion.messages:extconf.collect_context_documentSize
+# cat=collect/context/311; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_documentSize
 collect_context_documentSize = 1
 
-# cat=collect/context/312; type=boolean; label=opinion.messages:extconf.collect_context_frontendUser
+# cat=collect/context/312; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_frontendUser
 collect_context_frontendUser = 1
 
-# cat=collect/context/313; type=boolean; label=opinion.messages:extconf.collect_context_imagesOnPage
+# cat=collect/context/313; type=boolean; label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.collect_context_imagesOnPage
 collect_context_imagesOnPage = 1

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Adminpanel;
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Adminpanel\ModuleApi\ContentProviderInterface;
@@ -40,10 +39,10 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
 
     public function getLabel(): string
     {
-        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser())->sL('opinion.messages:adminpanel.pageFeedback.label');
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser())->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:adminpanel.pageFeedback.label');
     }
 
-    public function getDataToStore(ServerRequestInterface $request, ResponseInterface $response): ModuleData
+    public function getDataToStore(ServerRequestInterface $request): ModuleData
     {
         $routing = $request->getAttribute('routing');
         $pageUid = $routing instanceof PageArguments ? $routing->getPageId() : 0;
@@ -58,6 +57,10 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
     {
         $languageService = $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser());
         $items = is_array($data['items'] ?? null) ? $data['items'] : [];
+        if ($items === []) {
+            // Read by adminpanel-module.js, which removes the entry from the bar
+            return '<div data-opinion-no-page-feedback hidden></div>';
+        }
         $isAdmin = $this->getBackendUser()?->isAdmin() ?? false;
         $rows = '';
         foreach ($items as $item) {
@@ -67,7 +70,7 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
                 $message = sprintf(
                     '<a href="%s" target="_blank" rel="noopener" title="%s">%s</a>',
                     htmlspecialchars((string)$this->uriBuilder->buildUriFromRoute('opinion_feedback.show', ['uid' => (int)$item['uid']], UriBuilder::SHAREABLE_URL)),
-                    htmlspecialchars($languageService->sL('opinion.messages:pageFeedback.show')),
+                    htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:pageFeedback.show')),
                     $message,
                 );
             }
@@ -75,19 +78,19 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
                 '<tr><td class="typo3-adminPanel-table-cell-key">%s</td><td>%s</td><td>%s</td></tr>',
                 htmlspecialchars(date('d.m.Y H:i', (int)$item['crdate'])),
                 $message,
-                htmlspecialchars($languageService->sL('opinion.messages:status.' . $item['status'])),
+                htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:status.' . $item['status'])),
             );
         }
         $more = (int)($data['total'] ?? 0) - count($items);
 
         return sprintf(
             '<p>%s</p><div class="typo3-adminPanel-table-overflow"><table class="typo3-adminPanel-table"><thead><tr><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table></div>%s',
-            htmlspecialchars($languageService->sL('opinion.messages:adminpanel.pageFeedback.description')),
-            htmlspecialchars($languageService->sL('opinion.messages:module.list.date')),
-            htmlspecialchars($languageService->sL('opinion.messages:tx_opinion_feedback.message')),
-            htmlspecialchars($languageService->sL('opinion.messages:tx_opinion_feedback.status')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:adminpanel.pageFeedback.description')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:module.list.date')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.message')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.status')),
             $rows,
-            $more > 0 ? '<p>' . htmlspecialchars(sprintf($languageService->sL('opinion.messages:pageFeedback.more'), $more)) . '</p>' : '',
+            $more > 0 ? '<p>' . htmlspecialchars(sprintf($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:pageFeedback.more'), $more)) . '</p>' : '',
         );
     }
 

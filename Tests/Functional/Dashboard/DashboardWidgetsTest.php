@@ -25,7 +25,7 @@ final class DashboardWidgetsTest extends FunctionalTestCase
 {
     private const array WIDGETS = ['opinion-openFeedback', 'opinion-newMessages', 'opinion-latestFeedback'];
 
-    protected array $coreExtensionsToLoad = ['adminpanel', 'dashboard'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'dashboard', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
@@ -130,7 +130,6 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         $request = $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
         $GLOBALS['TYPO3_REQUEST'] = $request;
         $widget = $this->get(WidgetRegistry::class)->getAvailableWidget($request, $identifier);
-        self::assertTrue(method_exists($widget, 'renderWidgetContent'));
 
         return $widget->renderWidgetContent();
     }

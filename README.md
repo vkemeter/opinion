@@ -37,7 +37,8 @@ the latest feedback.
 
 ## Requirements
 
-- TYPO3 v14.3, PHP 8.4 or 8.5
+- TYPO3 v13.4 with the system extension `setup`, PHP 8.4 or 8.5
+  (this is the branch `typo3-v13`; TYPO3 v14 is supported by the main branch)
 - HTTPS for screenshots (`getDisplayMedia()` needs a secure context)
 
 ## Installation
@@ -53,8 +54,7 @@ Changes are listed in the [changelog](CHANGELOG.md).
 
 `extension:setup` creates the tables `tx_opinion_feedback`, `tx_opinion_message`
 and `tx_opinion_read` and the file storage "Opinion screenshots" (see below).
-Updating from version 1, also run `vendor/bin/typo3 upgrade:run opinion_pageUid`
-once. For the dashboard widgets, install `typo3/cms-dashboard`.
+For the dashboard widgets, install `typo3/cms-dashboard`.
 
 ## Configuration
 

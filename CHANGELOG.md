@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased (branch typo3-v13)
+
+TYPO3 v13.4 LTS support on its own branch, with the features of 2.0.0. The
+main branch stays on TYPO3 v14.
+
+- Requires TYPO3 v13.4 and the system extension `setup` (link to the user
+  settings).
+- No upgrade wizard: installations on TYPO3 v13 start with this version.
+
 ## 2.0.0 – 2026-11-23
 
 Upgrade from 1.x:
@@ -7,8 +16,7 @@ Upgrade from 1.x:
 1. Update the database schema: `vendor/bin/typo3 extension:setup`
    (new tables `tx_opinion_message`, `tx_opinion_read`, new column
    `tx_opinion_feedback.page_uid`).
-2. Run the upgrade wizard once: `vendor/bin/typo3 upgrade:run opinion_pageUid`.
-3. Optional: `composer require typo3/cms-dashboard` for the dashboard widgets;
+2. Optional: `composer require typo3/cms-dashboard` for the dashboard widgets;
    allow editors the widgets and add `admPanel.enable.opinion = 1` where the
    admin panel list should appear.
 

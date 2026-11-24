@@ -359,7 +359,7 @@
                 <source>No feedback has been sent yet.</source>
             </trans-unit>
             <trans-unit id="module.list.total">
-                <source>{count} feedback entries</source>
+                <source>%d feedback entries</source>
             </trans-unit>
             <trans-unit id="module.list.date">
                 <source>Date</source>
@@ -377,7 +377,7 @@
                 <source>Next</source>
             </trans-unit>
             <trans-unit id="module.list.page">
-                <source>Page {current} of {pages}</source>
+                <source>Page %1$d of %2$d</source>
             </trans-unit>
             <trans-unit id="module.show.openScreenshot">
                 <source>Open screenshot in full size</source>
@@ -395,7 +395,7 @@
                 <source>You have sent a lot of feedback in a short time. Please try again later.</source>
             </trans-unit>
             <trans-unit id="module.show.attempts">
-                <source>{count} attempt(s)</source>
+                <source>%d attempt(s)</source>
             </trans-unit>
             <trans-unit id="module.show.redeliver">
                 <source>Deliver again</source>

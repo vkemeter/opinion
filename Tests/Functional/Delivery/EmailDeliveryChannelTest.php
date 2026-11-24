@@ -25,7 +25,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
 {
     private const string PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 

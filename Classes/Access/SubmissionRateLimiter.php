@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Access;
 
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\RateLimiter\RateLimiterFactoryInterface;
+use TYPO3\CMS\Core\RateLimiter\Storage\CachingFrameworkStorage;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 
 /**
@@ -17,7 +18,7 @@ final readonly class SubmissionRateLimiter
     private const string INTERVAL = '1 hour';
 
     public function __construct(
-        private RateLimiterFactoryInterface $rateLimiterFactory,
+        private CachingFrameworkStorage $storage,
     ) {}
 
     /**
@@ -31,10 +32,11 @@ final readonly class SubmissionRateLimiter
             return null;
         }
 
-        $limit = $this->rateLimiterFactory->createLimiter(
+        // TYPO3 13 has no generic limiter factory; this is what createLimiter() of TYPO3 14 does
+        $limit = new RateLimiterFactory(
             ['id' => 'opinion-submit', 'policy' => 'sliding_window', 'limit' => $configuration->rateLimit, 'interval' => self::INTERVAL],
-            'be-user-' . (int)($backendUser->user['uid'] ?? 0),
-        )->consume();
+            $this->storage,
+        )->create('be-user-' . (int)($backendUser->user['uid'] ?? 0))->consume();
 
         return $limit->isAccepted() ? null : $limit->getRetryAfter();
     }

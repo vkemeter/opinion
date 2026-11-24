@@ -477,8 +477,8 @@
                 <target>Bisher wurde kein Feedback gesendet.</target>
             </trans-unit>
             <trans-unit id="module.list.total">
-                <source>{count} feedback entries</source>
-                <target>{count} Feedback-Einträge</target>
+                <source>%d feedback entries</source>
+                <target>%d Feedback-Einträge</target>
             </trans-unit>
             <trans-unit id="module.list.date">
                 <source>Date</source>
@@ -501,8 +501,8 @@
                 <target>Weiter</target>
             </trans-unit>
             <trans-unit id="module.list.page">
-                <source>Page {current} of {pages}</source>
-                <target>Seite {current} von {pages}</target>
+                <source>Page %1$d of %2$d</source>
+                <target>Seite %1$d von %2$d</target>
             </trans-unit>
             <trans-unit id="module.show.openScreenshot">
                 <source>Open screenshot in full size</source>
@@ -525,8 +525,8 @@
                 <target>Sie haben in kurzer Zeit sehr viel Feedback gesendet. Bitte versuchen Sie es später noch einmal.</target>
             </trans-unit>
             <trans-unit id="module.show.attempts">
-                <source>{count} attempt(s)</source>
-                <target>{count} Versuch(e)</target>
+                <source>%d attempt(s)</source>
+                <target>%d Versuch(e)</target>
             </trans-unit>
             <trans-unit id="module.show.redeliver">
                 <source>Deliver again</source>

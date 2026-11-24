@@ -36,7 +36,7 @@ final class PageFeedbackModule extends AbstractModule implements ShortInfoProvid
 
     public function getLabel(): string
     {
-        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUserOrNull())->sL('opinion.messages:adminpanel.pageFeedback.label');
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUserOrNull())->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:adminpanel.pageFeedback.label');
     }
 
     public function getIconIdentifier(): string
@@ -51,7 +51,8 @@ final class PageFeedbackModule extends AbstractModule implements ShortInfoProvid
 
     public function isEnabled(): bool
     {
-        return $this->accessChecker->hasAccess($this->getBackendUserOrNull()) && $this->countOpenFeedback() > 0;
+        // TYPO3 13 asks before the page is resolved; then the entry is removed in the browser when the page has no open feedback
+        return $this->accessChecker->hasAccess($this->getBackendUserOrNull()) && (self::getCurrentPageUid() === 0 || $this->countOpenFeedback() > 0);
     }
 
     public static function getCurrentPageUid(): int

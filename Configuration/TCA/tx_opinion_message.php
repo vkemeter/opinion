@@ -5,7 +5,7 @@ declare(strict_types=1);
 // Messages of the conversation of a feedback; written by ConversationRepository only
 return [
     'ctrl' => [
-        'title' => 'opinion.messages:tx_opinion_message',
+        'title' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_message',
         'label' => 'message',
         'crdate' => 'crdate',
         'default_sortby' => 'crdate ASC',
@@ -24,7 +24,7 @@ return [
     ],
     'columns' => [
         'feedback' => [
-            'label' => 'opinion.messages:tx_opinion_message.feedback',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_message.feedback',
             'config' => [
                 'type' => 'number',
                 'default' => 0,
@@ -32,7 +32,7 @@ return [
             ],
         ],
         'be_user' => [
-            'label' => 'opinion.messages:tx_opinion_message.be_user',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_message.be_user',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -43,7 +43,7 @@ return [
             ],
         ],
         'message' => [
-            'label' => 'opinion.messages:tx_opinion_message.message',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_message.message',
             'config' => [
                 'type' => 'text',
                 'rows' => 5,

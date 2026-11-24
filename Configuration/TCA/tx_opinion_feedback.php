@@ -9,14 +9,14 @@ use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 
 $enumItems = static fn(string $prefix, array $cases): array => array_map(
-    static fn(\BackedEnum $case): array => ['label' => 'opinion.messages:' . $prefix . '.' . $case->value, 'value' => $case->value],
+    static fn(\BackedEnum $case): array => ['label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:' . $prefix . '.' . $case->value, 'value' => $case->value],
     $cases,
 );
 $readOnlyJson = ['type' => 'json', 'readOnly' => true, 'searchable' => false];
 
 return [
     'ctrl' => [
-        'title' => 'opinion.messages:tx_opinion_feedback',
+        'title' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback',
         'label' => 'message',
         'label_alt' => 'category,severity',
         'label_alt_force' => true,
@@ -35,13 +35,13 @@ return [
     'types' => [
         1 => [
             'showitem' => 'status,source,category,severity,be_user,message,
-            --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context,
-            --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
+            --div--;LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.tab.details, client_info, system_info, context,
+            --div--;LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
         ],
     ],
     'columns' => [
         'status' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.status',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.status',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -51,7 +51,7 @@ return [
             ],
         ],
         'source' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.source',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.source',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -60,7 +60,7 @@ return [
             ],
         ],
         'category' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.category',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.category',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -69,7 +69,7 @@ return [
             ],
         ],
         'severity' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.severity',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.severity',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -78,7 +78,7 @@ return [
             ],
         ],
         'be_user' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.be_user',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.be_user',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -89,7 +89,7 @@ return [
             ],
         ],
         'message' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.message',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.message',
             'config' => [
                 'type' => 'text',
                 'rows' => 8,
@@ -97,7 +97,7 @@ return [
             ],
         ],
         'screenshot' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.screenshot',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.screenshot',
             'config' => [
                 'type' => 'file',
                 'maxitems' => 1,
@@ -106,20 +106,20 @@ return [
             ],
         ],
         'client_info' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.client_info',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.client_info',
             'config' => $readOnlyJson,
         ],
         'system_info' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.system_info',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.system_info',
             'config' => $readOnlyJson,
         ],
         'context' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.context',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.context',
             'config' => $readOnlyJson,
         ],
         // The page of the collected context, for the lists per page; 0 = no page collected
         'page_uid' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.page_uid',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.page_uid',
             'config' => [
                 'type' => 'number',
                 'default' => 0,
@@ -127,7 +127,7 @@ return [
             ],
         ],
         'delivery_status' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.delivery_status',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.delivery_status',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -137,7 +137,7 @@ return [
             ],
         ],
         'delivery_attempts' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.delivery_attempts',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.delivery_attempts',
             'config' => [
                 'type' => 'number',
                 'default' => 0,
@@ -145,7 +145,7 @@ return [
             ],
         ],
         'delivery_log' => [
-            'label' => 'opinion.messages:tx_opinion_feedback.delivery_log',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_feedback.delivery_log',
             'config' => [
                 'type' => 'text',
                 'rows' => 5,

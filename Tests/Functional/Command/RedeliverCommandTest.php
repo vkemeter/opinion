@@ -19,7 +19,7 @@ use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 final class RedeliverCommandTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 

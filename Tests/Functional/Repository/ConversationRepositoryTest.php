@@ -20,7 +20,7 @@ final class ConversationRepositoryTest extends FunctionalTestCase
     private const int SECOND_ADMIN = 4;
     private const int SENDER = 3;
 
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 

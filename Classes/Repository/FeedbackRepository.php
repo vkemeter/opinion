@@ -36,6 +36,8 @@ final readonly class FeedbackRepository
                 'pid' => 0,
                 'crdate' => $timestamp,
                 'tstamp' => $timestamp,
+                // TYPO3 13 creates no column default from the TCA default of string select fields
+                'status' => FeedbackStatus::New->value,
                 'source' => $submission->source->value,
                 'category' => $submission->category->value,
                 'severity' => $submission->severity->value,

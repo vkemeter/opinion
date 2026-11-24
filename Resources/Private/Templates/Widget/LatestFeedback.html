@@ -9,10 +9,10 @@
 					<table class="table table-striped table-hover mb-0">
 						<thead>
 							<tr>
-								<th>{f:translate(domain: 'opinion.messages', key: 'module.list.date')}</th>
-								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.category')}</th>
-								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</th>
-								<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</th>
+								<th>{f:translate(extensionName: 'opinion', key: 'module.list.date')}</th>
+								<th>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.category')}</th>
+								<th>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.message')}</th>
+								<th>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.status')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -21,7 +21,7 @@
 								as="item">
 								<tr>
 									<td class="text-nowrap">{item.crdate -> f:format.date(format: 'd.m.Y H:i')}</td>
-									<td>{f:translate(domain: 'opinion.messages', key: 'category.{item.category}')}</td>
+									<td>{f:translate(extensionName: 'opinion', key: 'category.{item.category}')}</td>
 									<td>
 										<a href="{item.show_url}">{item.message -> f:format.crop(maxCharacters: 60)}</a>
 									</td>
@@ -38,7 +38,7 @@
 				</div>
 			</f:then>
 			<f:else>
-				<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'dashboard.latest.empty')}</p>
+				<p class="text-body-secondary">{f:translate(extensionName: 'opinion', key: 'dashboard.latest.empty')}</p>
 			</f:else>
 		</f:if>
 	</f:section>

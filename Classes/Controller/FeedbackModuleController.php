@@ -8,11 +8,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
+use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
@@ -50,7 +52,7 @@ final readonly class FeedbackModuleController
         private FileRepository $fileRepository,
         private DataFlattener $dataFlattener,
         private UriBuilder $uriBuilder,
-        private ComponentFactory $componentFactory,
+        private IconFactory $iconFactory,
         private Redeliverer $redeliverer,
         private ConfigurationProviderInterface $configurationProvider,
         private FlashMessageService $flashMessageService,
@@ -138,7 +140,15 @@ final readonly class FeedbackModuleController
 
         $view = $this->moduleTemplateFactory->create($request);
         $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams())->toQueryParameters();
-        $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback', $filterParameters)));
+        $buttonBar = $view->getDocHeaderComponent()->getButtonBar();
+        $buttonBar->addButton(
+            $buttonBar->makeLinkButton()
+                ->setHref($this->buildUri('opinion_feedback', $filterParameters))
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.goBack'))
+                ->setIcon($this->iconFactory->getIcon('actions-view-go-back', IconSize::SMALL))
+                ->setShowLabelText(true),
+            ButtonBar::BUTTON_POSITION_LEFT,
+        );
         $view->assignMultiple([
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
@@ -322,7 +332,7 @@ final readonly class FeedbackModuleController
 
     private function accessDenied(): ResponseInterface
     {
-        return new HtmlResponse($this->getLanguageService()->sL('opinion.messages:module.accessDenied'), 403);
+        return new HtmlResponse($this->getLanguageService()->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:module.accessDenied'), 403);
     }
 
     private function getUserUid(): int
@@ -341,8 +351,8 @@ final readonly class FeedbackModuleController
     {
         $languageService = $this->getLanguageService();
         $this->flashMessageService->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
-            $languageService->sL('opinion.messages:' . $key),
-            $languageService->sL('opinion.messages:' . $titleKey),
+            $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:' . $key),
+            $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:' . $titleKey),
             $severity,
             true,
         ));

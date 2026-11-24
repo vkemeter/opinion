@@ -13,7 +13,7 @@ use Vkemeter\Opinion\Domain\Source;
 
 final class ContextProviderTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 

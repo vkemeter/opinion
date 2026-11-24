@@ -9,6 +9,7 @@ use TYPO3\CMS\Backend\Toolbar\ToolbarItemsRegistry;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Backend\ToolbarItem\OpinionToolbarItem;
 use Vkemeter\Opinion\Domain\Category;
@@ -20,7 +21,7 @@ use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 final class OpinionToolbarItemTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
@@ -28,6 +29,8 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
     {
         parent::setUp();
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        // The TYPO3 13 shortcut toolbar item needs a language service when the registry builds it
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
     }
 
     #[Test]

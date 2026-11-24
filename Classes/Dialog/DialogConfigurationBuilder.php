@@ -82,7 +82,7 @@ final readonly class DialogConfigurationBuilder
     public function build(BackendUserAuthentication $backendUser, Source $source, array $context = []): array
     {
         $languageService = $this->languageServiceFactory->createFromUserPreferences($backendUser);
-        $translate = static fn(string $key): string => $languageService->sL('opinion.messages:' . $key);
+        $translate = static fn(string $key): string => $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:' . $key);
         $configuration = $this->configurationProvider->getConfiguration();
 
         return [

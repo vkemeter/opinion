@@ -5,7 +5,7 @@ declare(strict_types=1);
 // Read state of a conversation per backend user; written by ConversationRepository only
 return [
     'ctrl' => [
-        'title' => 'opinion.messages:tx_opinion_read',
+        'title' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_read',
         'label' => 'feedback',
         'rootLevel' => 1,
         'adminOnly' => true,
@@ -22,7 +22,7 @@ return [
     ],
     'columns' => [
         'feedback' => [
-            'label' => 'opinion.messages:tx_opinion_read.feedback',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_read.feedback',
             'config' => [
                 'type' => 'number',
                 'default' => 0,
@@ -30,7 +30,7 @@ return [
             ],
         ],
         'be_user' => [
-            'label' => 'opinion.messages:tx_opinion_read.be_user',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_read.be_user',
             'config' => [
                 'type' => 'number',
                 'default' => 0,
@@ -38,7 +38,7 @@ return [
             ],
         ],
         'last_message' => [
-            'label' => 'opinion.messages:tx_opinion_read.last_message',
+            'label' => 'LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:tx_opinion_read.last_message',
             'config' => [
                 'type' => 'number',
                 'default' => 0,

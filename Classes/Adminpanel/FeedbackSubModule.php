@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Adminpanel;
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Adminpanel\ModuleApi\ContentProviderInterface;
@@ -42,10 +41,10 @@ final readonly class FeedbackSubModule implements ModuleInterface, DataProviderI
 
     public function getLabel(): string
     {
-        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser())->sL('opinion.messages:dialog.title');
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser())->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:dialog.title');
     }
 
-    public function getDataToStore(ServerRequestInterface $request, ResponseInterface $response): ModuleData
+    public function getDataToStore(ServerRequestInterface $request): ModuleData
     {
         $routing = $request->getAttribute('routing');
         $site = $request->getAttribute('site');
@@ -56,7 +55,7 @@ final readonly class FeedbackSubModule implements ModuleInterface, DataProviderI
             'siteIdentifier' => $site instanceof Site ? $site->getIdentifier() : '',
             'languageId' => $language instanceof SiteLanguage ? $language->getLanguageId() : 0,
             'workspaceId' => (int)$this->context->getPropertyFromAspect('workspace', 'id', 0),
-            'pageInfo' => $this->collectPageInfo($request, $response),
+            'pageInfo' => $this->collectPageInfo($request),
         ]);
     }
 
@@ -81,9 +80,9 @@ final readonly class FeedbackSubModule implements ModuleInterface, DataProviderI
 
         return sprintf(
             '<p>%s</p><button type="button" class="typo3-adminPanel-btn typo3-adminPanel-btn-primary" data-opinion-config="%s">%s</button>',
-            htmlspecialchars($languageService->sL('opinion.messages:adminpanel.description')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:adminpanel.description')),
             htmlspecialchars(json_encode($configuration, JSON_THROW_ON_ERROR)),
-            htmlspecialchars($languageService->sL('opinion.messages:dialog.title')),
+            htmlspecialchars($languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:dialog.title')),
         );
     }
 
@@ -93,9 +92,9 @@ final readonly class FeedbackSubModule implements ModuleInterface, DataProviderI
      *
      * @return array<string, mixed>
      */
-    private function collectPageInfo(ServerRequestInterface $request, ResponseInterface $response): array
+    private function collectPageInfo(ServerRequestInterface $request): array
     {
-        $info = $this->generalInformation->getDataToStore($request, $response)['info'] ?? [];
+        $info = $this->generalInformation->getDataToStore($request)['info'] ?? [];
         if (!is_array($info)) {
             return [];
         }

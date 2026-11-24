@@ -47,9 +47,6 @@ This creates
     conversations and their read state,
 *   the file storage "Opinion screenshots" with the base path `var/opinion/`.
 
-Updating from version 1, also run the upgrade wizard, see
-:ref:`administration-upgrade`.
-
 The dashboard widgets need the TYPO3 dashboard, which is optional:
 
 ..  code-block:: bash

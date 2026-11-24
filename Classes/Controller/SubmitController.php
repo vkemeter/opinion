@@ -53,7 +53,7 @@ final readonly class SubmitController
         } catch (InvalidSubmissionException $exception) {
             $errors = [];
             foreach ($exception->errors as $field => $code) {
-                $errors[$field] = $languageService->sL('opinion.messages:error.' . $field . '.' . $code);
+                $errors[$field] = $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:error.' . $field . '.' . $code);
             }
 
             return $this->createResponse($languageService, 422, false, 'response.invalid', ['errors' => $errors]);
@@ -89,8 +89,8 @@ final readonly class SubmitController
     {
         return new JsonResponse([
             'success' => $success,
-            'title' => $languageService->sL('opinion.messages:response.title'),
-            'message' => $languageService->sL('opinion.messages:' . $messageKey),
+            'title' => $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:response.title'),
+            'message' => $languageService->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:' . $messageKey),
             ...$additionalData,
         ], $statusCode);
     }

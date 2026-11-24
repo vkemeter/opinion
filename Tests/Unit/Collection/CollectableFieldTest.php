@@ -17,7 +17,7 @@ final class CollectableFieldTest extends UnitTestCase
 
         foreach (CollectableField::cases() as $field) {
             self::assertMatchesRegularExpression('/^' . preg_quote($field->getConfigurationKey(), '/') . ' = 1$/m', $template, $field->value);
-            self::assertStringContainsString('label=opinion.messages:extconf.' . $field->getConfigurationKey(), $template);
+            self::assertStringContainsString('label=LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:extconf.' . $field->getConfigurationKey(), $template);
         }
     }
 

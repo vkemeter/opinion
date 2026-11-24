@@ -6,7 +6,6 @@ namespace Vkemeter\Opinion\Tests\Functional\EventListener;
 
 use PHPUnit\Framework\Attributes\Test;
 use Psr\EventDispatcher\EventDispatcherInterface;
-use TYPO3\CMS\Backend\Context\PageContextFactory;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -27,7 +26,7 @@ use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
@@ -101,7 +100,6 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
             ->withAttribute('route', $this->get(Router::class)->getRoute('web_layout'));
         $request = $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
         $GLOBALS['TYPO3_REQUEST'] = $request;
-        $pageContext = $this->get(PageContextFactory::class)->createFromRequest($request, $pageUid, $admin);
         $moduleTemplate = $this->get(ModuleTemplateFactory::class)->create($request);
 
         $backendUser = $this->setUpBackendUser($userUid);
@@ -109,7 +107,7 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
             $backendUser->groupData['webmounts'] = $webMounts;
         }
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
-        $event = new ModifyPageLayoutContentEvent($request, $moduleTemplate, $pageContext);
+        $event = new ModifyPageLayoutContentEvent($request, $moduleTemplate);
         $this->get(EventDispatcherInterface::class)->dispatch($event);
 
         return $event->getHeaderContent();

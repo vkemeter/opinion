@@ -121,24 +121,6 @@ undelivered afterwards.
 To retry regularly, add a Scheduler task :guilabel:`Execute console commands`
 with the command `opinion:redeliver`, for example every 30 minutes.
 
-..  _administration-upgrade:
-
-Upgrade to version 2
-====================
-
-Version 2 stores the page of a feedback in its own field. After the database
-schema update (:bash:`vendor/bin/typo3 extension:setup`), run the upgrade
-wizard :guilabel:`Opinion: page of existing feedback` once, so feedback sent
-before is listed per page as well:
-
-..  code-block:: bash
-
-    vendor/bin/typo3 upgrade:run opinion_pageUid
-
-Feedback without collected page (`collect_context_page`, see
-:ref:`configuration-collected-details-context`)
-belongs to no page and is never listed per page.
-
 ..  _administration-cleanup:
 
 Clean up old feedback

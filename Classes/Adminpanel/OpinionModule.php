@@ -31,7 +31,7 @@ final class OpinionModule extends AbstractModule implements ShortInfoProviderInt
 
     public function getLabel(): string
     {
-        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUserOrNull())->sL('opinion.messages:adminpanel.label');
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendUserOrNull())->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:adminpanel.label');
     }
 
     public function getIconIdentifier(): string

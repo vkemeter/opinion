@@ -64,7 +64,7 @@ final class OpinionToolbarItem implements ToolbarItemInterface, RequestAwareTool
         $view->assignMultiple([
             'configuration' => json_encode($configuration, JSON_THROW_ON_ERROR),
             'unread' => $unread,
-            'unreadLabel' => sprintf($this->languageServiceFactory->createFromUserPreferences($backendUser)->sL('opinion.messages:toolbar.unread'), $unread),
+            'unreadLabel' => sprintf($this->languageServiceFactory->createFromUserPreferences($backendUser)->sL('LLL:EXT:opinion/Resources/Private/Language/locallang.xlf:toolbar.unread'), $unread),
         ]);
 
         return $view->render('ToolbarItems/OpinionToolbarItem');

@@ -6,19 +6,19 @@
 
 	<f:section name="Content">
 		<h1>
-			{f:translate(domain: 'opinion.messages', key: 'category.{record.category}')}
+			{f:translate(extensionName: 'opinion', key: 'category.{record.category}')}
 			<f:render
 				partial="FeedbackModule/Badges"
 				section="Severity"
 				arguments="{severity: record.severity}" />
 		</h1>
 		<p class="text-body-secondary">
-			{record.crdate -> f:format.date(format: 'd.m.Y H:i')} · {f:translate(domain: 'opinion.messages', key: 'source.{record.source}')} · {sender.realName ?: sender.username}
+			{record.crdate -> f:format.date(format: 'd.m.Y H:i')} · {f:translate(extensionName: 'opinion', key: 'source.{record.source}')} · {sender.realName ?: sender.username}
 			<f:if condition="{sender.email}"> (<a href="mailto:{sender.email}">{sender.email}</a>) </f:if>
 		</p>
 		<f:if condition="{reportedUrl}">
 			<p class="text-break">
-				{f:translate(domain: 'opinion.messages', key: 'reportedUrl')}:
+				{f:translate(extensionName: 'opinion', key: 'reportedUrl')}:
 				<f:comment>New tab: backend URLs without token only open as top-level page</f:comment>
 				<f:if condition="{reportedUrl.linked}">
 					<f:then
@@ -36,12 +36,12 @@
 
 		<div class="row g-4">
 			<div class="col-12 col-xl-6">
-				<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}</h2>
+				<h2>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.message')}</h2>
 				<div class="card">
 					<div class="card-body">{record.message -> f:format.nl2br()}</div>
 				</div>
 
-				<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}</h2>
+				<h2 class="mt-4">{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.status')}</h2>
 				<p>
 					<f:render
 						partial="FeedbackModule/Badges"
@@ -50,14 +50,14 @@
 				</p>
 				<f:comment>Delivery details contain the recipient addresses: administrators only</f:comment>
 				<f:if condition="{isAdmin}">
-					<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</h2>
+					<h2 class="mt-4">{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.delivery_status')}</h2>
 					<p>
 						<f:render
 							partial="FeedbackModule/Badges"
 							section="Delivery"
 							arguments="{status: record.delivery_status}" />
 						<span class="text-body-secondary ms-2"
-							>{f:translate(domain: 'opinion.messages', key: 'module.show.attempts', arguments: {count: record.delivery_attempts})}</span
+							>{f:translate(extensionName: 'opinion', key: 'module.show.attempts', arguments: {count: record.delivery_attempts})}</span
 						>
 					</p>
 					<f:if condition="{record.delivery_log}">
@@ -77,7 +77,7 @@
 							<button
 								type="submit"
 								class="btn btn-default">
-								{f:translate(domain: 'opinion.messages', key: 'module.show.redeliver')}
+								{f:translate(extensionName: 'opinion', key: 'module.show.redeliver')}
 							</button>
 						</form>
 					</f:if>
@@ -85,22 +85,22 @@
 			</div>
 
 			<div class="col-12 col-xl-6">
-				<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h2>
+				<h2>{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.screenshot')}</h2>
 				<f:if condition="{screenshot}">
 					<f:then>
 						<a
 							href="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
 							target="_blank"
 							rel="noopener"
-							title="{f:translate(domain: 'opinion.messages', key: 'module.show.openScreenshot')}">
+							title="{f:translate(extensionName: 'opinion', key: 'module.show.openScreenshot')}">
 							<img
 								class="img-fluid img-thumbnail"
 								src="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
-								alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
+								alt="{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.screenshot')}" />
 						</a>
 					</f:then>
 					<f:else>
-						<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.show.noScreenshot')}</p>
+						<p class="text-body-secondary">{f:translate(extensionName: 'opinion', key: 'module.show.noScreenshot')}</p>
 					</f:else>
 				</f:if>
 			</div>
@@ -110,7 +110,7 @@
 			<div class="row justify-content-center mt-4">
 				<div class="col-12 col-xl-8">
 					<f:if condition="{conversationEnabled}">
-						<h2>{f:translate(domain: 'opinion.messages', key: 'module.conversation.title')}</h2>
+						<h2>{f:translate(extensionName: 'opinion', key: 'module.conversation.title')}</h2>
 						<f:if condition="{messages}">
 							<f:then>
 								<ol class="list-unstyled d-flex flex-column gap-3">
@@ -126,7 +126,7 @@
 														<strong>
 															<f:if condition="{entry.author_username}">
 																<f:then>{entry.author_name ?: entry.author_username}</f:then>
-																<f:else>{f:translate(domain: 'opinion.messages', key: 'module.conversation.deletedUser')}</f:else>
+																<f:else>{f:translate(extensionName: 'opinion', key: 'module.conversation.deletedUser')}</f:else>
 															</f:if>
 														</strong>
 														· <time datetime="{entry.crdate -> f:format.date(format: 'c')}">{entry.crdate -> f:format.date(format: 'd.m.Y H:i')}</time>
@@ -139,7 +139,7 @@
 								</ol>
 							</f:then>
 							<f:else>
-								<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.conversation.empty')}</p>
+								<p class="text-body-secondary">{f:translate(extensionName: 'opinion', key: 'module.conversation.empty')}</p>
 							</f:else>
 						</f:if>
 					</f:if>
@@ -161,7 +161,7 @@
 									<label
 										class="form-label"
 										for="opinion-conversation-message">
-										{f:translate(domain: 'opinion.messages', key: 'module.conversation.message')}
+										{f:translate(extensionName: 'opinion', key: 'module.conversation.message')}
 									</label>
 									<textarea
 										id="opinion-conversation-message"
@@ -173,7 +173,7 @@
 									<p
 										id="opinion-conversation-hint"
 										class="form-text mb-0">
-										{f:translate(domain: 'opinion.messages', key: 'module.conversation.hint')}
+										{f:translate(extensionName: 'opinion', key: 'module.conversation.hint')}
 									</p>
 								</div>
 							</f:if>
@@ -183,7 +183,7 @@
 										<label
 											class="form-label"
 											for="opinion-status">
-											{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.status')}
+											{f:translate(extensionName: 'opinion', key: 'tx_opinion_feedback.status')}
 										</label>
 										<select
 											id="opinion-status"
@@ -195,7 +195,7 @@
 												<option
 													value="{status}"
 													{f:if(condition: '{status} == {record.status}', then: 'selected')}>
-													{f:translate(domain: 'opinion.messages', key: 'status.{status}')}
+													{f:translate(extensionName: 'opinion', key: 'status.{status}')}
 												</option>
 											</f:for>
 										</select>
@@ -204,7 +204,7 @@
 								<button
 									type="submit"
 									class="btn btn-primary ms-auto">
-									{f:translate(domain: 'opinion.messages', key: 'module.save.submit')}
+									{f:translate(extensionName: 'opinion', key: 'module.save.submit')}
 								</button>
 							</div>
 						</div>
@@ -213,7 +213,7 @@
 			</div>
 		</f:if>
 
-		<h2 class="mt-4">{f:translate(domain: 'opinion.messages', key: 'module.details.title')}</h2>
+		<h2 class="mt-4">{f:translate(extensionName: 'opinion', key: 'module.details.title')}</h2>
 		<f:for
 			each="{sections}"
 			as="rows"
@@ -221,7 +221,7 @@
 			<f:if condition="{rows}">
 				<f:comment>Collapsed by default, the details are rarely needed</f:comment>
 				<details class="card mb-2">
-					<summary class="card-header fw-semibold p-2">{f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}</summary>
+					<summary class="card-header fw-semibold p-2">{f:translate(extensionName: 'opinion', key: 'email.section.{section}')}</summary>
 					<div class="table-fit mb-0">
 						<table class="table table-sm table-striped mb-0">
 							<tbody>

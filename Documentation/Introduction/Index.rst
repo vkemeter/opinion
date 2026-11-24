@@ -60,7 +60,8 @@ Features
 Requirements
 ============
 
-*   TYPO3 v14.3
+*   TYPO3 v13.4 with the system extension `setup` (branch `typo3-v13`; TYPO3 v14
+    is supported by the main branch)
 *   PHP 8.4 or 8.5
 *   HTTPS for screenshots: browsers allow screen capture in secure contexts only
 *   A configured mail transport for the email delivery

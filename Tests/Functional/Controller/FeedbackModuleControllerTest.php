@@ -32,7 +32,7 @@ use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 
 final class FeedbackModuleControllerTest extends FunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = ['adminpanel'];
+    protected array $coreExtensionsToLoad = ['adminpanel', 'setup'];
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
@@ -60,6 +60,8 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertFalse($module->hasParentModule());
         self::assertSame('user', $module->getAccess());
         self::assertSame('/module/opinion/feedback', $module->getPath());
+        // TYPO3 13 reads the module labels by the fixed mlang_* keys
+        self::assertSame('Feedback', $GLOBALS['LANG']->sL($module->getTitle()));
         self::assertTrue($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(1)));
         // Editors need the module granted in their group
         self::assertFalse($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(3)));
@@ -381,6 +383,16 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $this->setUpBackendUser(3);
         $this->postMessage($uid, 'Still broken.');
         self::assertSame('in_progress', $this->statusOf($uid), 'sender');
+    }
+
+    #[Test]
+    public function backButtonOfTheDetailViewKeepsTheFilter(): void
+    {
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Filtered', Category::Bug, Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null);
+
+        $show = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid, 'status' => 'new']))->getBody();
+
+        self::assertMatchesRegularExpression('#<a[^>]+href="[^"]*/module/opinion/feedback\?[^"]*status=new[^"]*"[^>]*>(?:(?!</a>).)*Go back#s', $show);
     }
 
     #[Test]

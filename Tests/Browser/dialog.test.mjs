@@ -490,8 +490,8 @@ await scenario('users without email address see a notice instead of the form', [
   await page.waitForFunction(() => !document.querySelector('dialog'));
 });
 
-// Markup of the admin panel bar as rendered by EXT:adminpanel (Partials/Modules/Item.fluid.html), reduced
-function adminPanelHtml(withConfig) {
+// Markup of the admin panel bar as rendered by EXT:adminpanel (Partials/Modules/Item.html), reduced
+function adminPanelHtml(withConfig, pageFeedback = '') {
   const dialogConfig = { ...config, labels: { title: 'Send feedback', message: 'Message', charactersLeft: '{count}', send: 'Send', cancel: 'Cancel' } };
   const content = withConfig
     ? `<button type="button" id="panel-button" data-opinion-config="${JSON.stringify(dialogConfig).replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">Send feedback</button>`
@@ -501,7 +501,7 @@ function adminPanelHtml(withConfig) {
     <div class="typo3-adminPanel-content" data-typo3-role="typo3-adminPanel-content"><div class="typo3-adminPanel-content-nav"><a href="#" data-typo3-role="typo3-adminPanel-content-tab" data-typo3-tab-target="${tab}">${label}</a></div>
     <div class="typo3-adminPanel-content-panes-item" data-typo3-tab-id="${tab}">${inner}</div></div></div>`;
   return `<!doctype html><html><head><link rel="stylesheet" href="/Css/opinion-dialog.css"></head><body>
-<form id="TSFE_ADMIN_PANEL_FORM" data-typo3-role="typo3-adminPanel">${module(0, 'Info', 'info_general', '<p>General</p>')}${module(1, 'Feedback', 'opinion_feedback', content)}</form>
+<form id="TSFE_ADMIN_PANEL_FORM" data-typo3-role="typo3-adminPanel">${module(0, 'Info', 'info_general', '<p>General</p>')}${module(1, 'Feedback', 'opinion_feedback', content)}${pageFeedback ? module(2, 'Feedback on this page', 'opinion_page_list', pageFeedback) : ''}</form>
 <script>
 // Stand-in for EXT:adminpanel: a click on a trigger opens the module panel
 window.openedPanels = [];
@@ -535,6 +535,19 @@ await scenario('admin panel: without dialog configuration the panel opens as usu
   await page.click('#trigger-opinion_feedback');
   assert(JSON.stringify(await page.evaluate(() => window.openedPanels)) === '["trigger-opinion_feedback"]', 'panel not opened');
   assert(await page.locator('dialog').count() === 0, 'dialog opened without configuration');
+});
+
+await scenario('admin panel: "Feedback on this page" is removed without open feedback', [], async (page) => {
+  await page.route(`${BASE}/adminpanel.html`, (route) => route.fulfill({ contentType: 'text/html', body: adminPanelHtml(true, '<div data-opinion-no-page-feedback hidden></div>') }));
+  await page.goto(`${BASE}/adminpanel.html`);
+  assert(await page.locator('#trigger-opinion_page_list').count() === 0, 'empty entry still in the bar');
+  assert(await page.locator('#trigger-opinion_feedback').count() === 1, 'feedback entry removed as well');
+});
+
+await scenario('admin panel: "Feedback on this page" stays with open feedback', [], async (page) => {
+  await page.route(`${BASE}/adminpanel.html`, (route) => route.fulfill({ contentType: 'text/html', body: adminPanelHtml(true, '<table><tr><td>Open</td></tr></table>') }));
+  await page.goto(`${BASE}/adminpanel.html`);
+  assert(await page.locator('#trigger-opinion_page_list').count() === 1, 'entry with feedback removed');
 });
 
 server.close();
