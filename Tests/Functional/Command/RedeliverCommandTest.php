@@ -56,7 +56,7 @@ final class RedeliverCommandTest extends FunctionalTestCase
         $record = $this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed']);
         self::assertSame('sent', $record['delivery_status'] ?? null);
         self::assertSame(2, (int)($record['delivery_attempts'] ?? 0));
-        self::assertMatchesRegularExpression('/^email: FAILED Connection refused\n\[\d{4}-\d\d-\d\d \d\d:\d\d\] email: OK sent to team@example.com$/', (string)($record['delivery_log'] ?? ''));
+        self::assertMatchesRegularExpression('/^email: FAILED Connection refused\n\[\d{4}-\d\d\-\d\d \d\d:\d\d\] email: OK sent to team@example.com$/', (string)($record['delivery_log'] ?? ''));
         self::assertSame('sent', $this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['pending'])['delivery_status'] ?? null);
 
         // Too young, already sent, or out of attempts

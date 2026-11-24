@@ -198,7 +198,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(2, $repository->countOpenByPage(12, Source::Frontend));
         self::assertSame(1, $repository->countOpenByPage(12, Source::Backend));
         self::assertSame(0, $repository->countOpenByPage(0, null), 'feedback without page belongs to no page');
-        self::assertSame(['uid' => $newFrontend, 'crdate' => (new \DateTimeImmutable('2026-11-03'))->getTimestamp(), 'source' => 'frontend', 'message' => 'New frontend', 'status' => 'new'], $repository->findOpenByPage(12, null, 1)[0]);
+        self::assertSame(['uid' => $newFrontend, 'crdate' => new \DateTimeImmutable('2026-11-03')->getTimestamp(), 'source' => 'frontend', 'message' => 'New frontend', 'status' => 'new'], $repository->findOpenByPage(12, null, 1)[0]);
     }
 
     private function createPageSubmission(?int $pageUid, Source $source, string $message, string $date = 'now'): Submission

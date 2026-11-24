@@ -76,12 +76,6 @@ final readonly class UrlParameterFilter
      */
     private function isDenied(string $name, array $patterns): bool
     {
-        foreach ($patterns as $pattern) {
-            if (str_ends_with($pattern, '*') ? str_starts_with($name, substr($pattern, 0, -1)) : $name === $pattern) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($patterns, fn($pattern) => str_ends_with($pattern, '*') ? str_starts_with($name, substr($pattern, 0, -1)) : $name === $pattern);
     }
 }
