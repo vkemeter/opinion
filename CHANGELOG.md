@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.1 – 2026-11-24
 
 - Security: the reported URL is linked in the detail view and the email only
   when its host belongs to a configured site (site or language base), in the
