@@ -17,7 +17,8 @@ On a frontend page, click :guilabel:`Feedback` in the admin panel. The dialog
 opens directly. The page, site, language and workspace as well as the details
 of the admin panel tab :guilabel:`Info > General` are attached.
 
-When the page already has open feedback (*New* or *In progress*) sent from the
+When the page already has open feedback (any status that is not closed, by
+default *New* or *In progress*) sent from the
 frontend, the admin panel shows :guilabel:`Feedback on this page` with the
 number. It lists that feedback with text, date and status, so you see whether
 a problem was reported already. The list shows the feedback of every sender,
@@ -71,7 +72,8 @@ With the TYPO3 dashboard installed (Composer package `typo3/cms-dashboard`),
 add the widgets of the group :guilabel:`Feedback` to your dashboard:
 
 :guilabel:`Open feedback`
-    The number of feedback that is *New* or *In progress*.
+    The number of open feedback: every status that is not closed, by default
+    *New* or *In progress*.
 
 :guilabel:`New messages`
     The number of feedback entries with messages you have not read yet; 0

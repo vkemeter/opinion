@@ -18,7 +18,6 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Site\Entity\NullSite;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -43,7 +42,7 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         $this->addFeedback(12, Source::Frontend, 'Frontend one');
         $this->addFeedback(12, Source::Frontend, 'Frontend two');
         $this->addFeedback(12, Source::Backend, 'Backend <b>one</b>');
-        $this->addFeedback(12, Source::Frontend, 'Closed one', FeedbackStatus::Closed);
+        $this->addFeedback(12, Source::Frontend, 'Closed one', 'closed');
         $this->addFeedback(1, Source::Frontend, 'Other page');
 
         $html = $this->renderHeader(12, 1);
@@ -55,6 +54,20 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         self::assertStringNotContainsString('Closed one', $html);
         self::assertStringNotContainsString('Other page', $html);
         self::assertSame(3, substr_count($html, '/typo3/module/opinion/feedback/show?'));
+    }
+
+    #[Test]
+    public function ownClosedStatusesAreLeftOutAndOwnStatusesLabelled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,waiting=Waiting for reply,closed,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'closed,rejected';
+        $this->addFeedback(12, Source::Frontend, 'Waiting one', 'waiting');
+        $this->addFeedback(12, Source::Frontend, 'Rejected one', 'rejected');
+
+        $html = $this->renderHeader(12, 1);
+
+        self::assertStringContainsString('Waiting for reply', $html);
+        self::assertStringNotContainsString('Rejected one', $html);
     }
 
     #[Test]
@@ -79,7 +92,7 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
     #[Test]
     public function noBoxWithoutOpenFeedbackOrWithoutPermissionToSendFeedback(): void
     {
-        $this->addFeedback(12, Source::Frontend, 'Closed one', FeedbackStatus::Closed);
+        $this->addFeedback(12, Source::Frontend, 'Closed one', 'closed');
         self::assertSame('', $this->renderHeader(12, 1), 'nothing open');
 
         $this->addFeedback(12, Source::Frontend, 'Open one');
@@ -114,7 +127,7 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         return $event->getHeaderContent();
     }
 
-    private function addFeedback(int $pageUid, Source $source, string $message, FeedbackStatus $status = FeedbackStatus::New): void
+    private function addFeedback(int $pageUid, Source $source, string $message, string $status = 'new'): void
     {
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission($message, 'bug', Severity::Low, $source, 3, new \DateTimeImmutable(), context: ['pageUid' => $pageUid]), null);

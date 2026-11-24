@@ -13,6 +13,15 @@ disabledDeliveryChannels =
 # cat=basic; type=string; label=opinion.messages:extconf.categories
 categories = bug,content,idea,other
 
+# cat=basic; type=string; label=opinion.messages:extconf.statuses
+statuses = new,in_progress,closed
+
+# cat=basic; type=string; label=opinion.messages:extconf.closedStatuses
+closedStatuses = closed
+
+# cat=basic; type=string; label=opinion.messages:extconf.reopenStatus
+reopenStatus = in_progress
+
 # customcategory=email=opinion.messages:extconf.category.email
 # customcategory=storage=opinion.messages:extconf.category.storage
 

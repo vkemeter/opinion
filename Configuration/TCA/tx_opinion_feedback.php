@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Vkemeter\Opinion\Domain\DeliveryStatus;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 
@@ -41,11 +40,10 @@ return [
     'columns' => [
         'status' => [
             'label' => 'opinion.messages:tx_opinion_feedback.status',
+            // Configured statuses (extension configuration), shown as stored value; new records get the first one
             'config' => [
-                'type' => 'select',
-                'renderType' => 'selectSingle',
-                'items' => $enumItems('status', FeedbackStatus::cases()),
-                'default' => FeedbackStatus::New->value,
+                'type' => 'input',
+                'default' => 'new',
                 'readOnly' => true,
             ],
         ],

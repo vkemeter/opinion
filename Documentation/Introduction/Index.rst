@@ -41,7 +41,8 @@ Features
 *   **Email delivery** to configurable recipients, the sender as reply-to,
     the screenshot inline and attached.
 *   **Module "Feedback"** with search, filters, a list and a detail view, and a
-    processing status *New*, *In progress* or *Closed*. Administrators see all
+    configurable processing status (by default *New*, *In progress*,
+    *Closed*). Administrators see all
     feedback, editors their own.
 *   **Conversation** per feedback between administrators and the sender, in
     the module and without email; unread messages are counted on the module

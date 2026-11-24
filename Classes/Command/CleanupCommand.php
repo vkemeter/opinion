@@ -14,7 +14,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Vkemeter\Opinion\Cleanup\FeedbackCleaner;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 
 #[AsCommand(
     name: 'opinion:cleanup',
@@ -50,9 +49,10 @@ final class CleanupCommand extends Command
         }
 
         $statuses = array_values(array_unique(GeneralUtility::trimExplode(',', (string)$input->getOption('status'), true)));
-        $unknownStatuses = array_filter($statuses, static fn(string $status): bool => FeedbackStatus::tryFrom($status) === null);
+        $knownStatuses = $this->configurationProvider->getConfiguration()->statusValues();
+        $unknownStatuses = array_diff($statuses, $knownStatuses);
         if ($unknownStatuses !== []) {
-            $io->error(sprintf('Unknown status in --status: %s. Known statuses: %s.', implode(', ', $unknownStatuses), implode(', ', array_column(FeedbackStatus::cases(), 'value'))));
+            $io->error(sprintf('Unknown status in --status: %s. Known statuses: %s.', implode(', ', $unknownStatuses), implode(', ', $knownStatuses)));
             return Command::INVALID;
         }
 

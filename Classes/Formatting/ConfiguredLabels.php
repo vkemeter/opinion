@@ -8,7 +8,7 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 
 /**
- * Label of a value of a configured list (categories): the translation
+ * Label of a value of a configured list (categories, statuses): the translation
  * opinion.messages:<list>.<value>, otherwise the configured label, otherwise the value.
  */
 final readonly class ConfiguredLabels
@@ -17,6 +17,7 @@ final readonly class ConfiguredLabels
     {
         $configured = match ($list) {
             'category' => $configuration->categories,
+            'status' => $configuration->statuses,
             default => throw new \InvalidArgumentException(sprintf('Unknown configured list "%s".', $list), 1795551289),
         };
         $translation = $languageService->sL('LLL:opinion.messages:' . $list . '.' . $value);

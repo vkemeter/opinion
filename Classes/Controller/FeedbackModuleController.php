@@ -22,8 +22,8 @@ use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use Vkemeter\Opinion\Access\AccessChecker;
 use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
+use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Factory\StoredSubmissionFactory;
@@ -72,7 +72,7 @@ final readonly class FeedbackModuleController
         }
         $senderUid = $this->getSenderFilter();
         $configuration = $this->configurationProvider->getConfiguration();
-        $filter = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $configuration->categoryValues());
+        $filter = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $configuration);
         $filterParameters = $filter->toQueryParameters();
         $total = $this->feedbackRepository->countAll($senderUid, $filter);
         $pages = max(1, (int)ceil($total / self::ITEMS_PER_PAGE));
@@ -103,18 +103,16 @@ final readonly class FeedbackModuleController
             'filterActive' => $filter->isActive(),
             'filterForm' => $this->buildGetForm('opinion_feedback'),
             'filterOptions' => [
-                'status' => array_map(static fn(FeedbackStatus $case): string => $case->value, FeedbackStatus::cases()),
+                'status' => $configuration->statusValues(),
                 'category' => $configuration->categoryValues(),
                 'severity' => array_map(static fn(Severity $case): string => $case->value, Severity::cases()),
                 'source' => array_map(static fn(Source $case): string => $case->value, Source::cases()),
                 'deliveryStatus' => array_map(static fn(DeliveryStatus $case): string => $case->value, DeliveryStatus::cases()),
             ],
-            // Configured categories have no fixed translation key
+            // Configured values have no fixed translation key
             'filterLabels' => [
-                'category' => array_combine(
-                    $configuration->categoryValues(),
-                    array_map(fn(string $category): string => $this->configuredLabels->label('category', $category, $configuration, $this->getLanguageService()), $configuration->categoryValues()),
-                ),
+                'category' => $this->labelsOf('category', $configuration->categoryValues(), $configuration),
+                'status' => $this->labelsOf('status', $configuration->statusValues(), $configuration),
             ],
             'pagination' => [
                 'current' => $currentPage,
@@ -151,7 +149,7 @@ final readonly class FeedbackModuleController
         $clientInfo = StoredSubmissionFactory::decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
-        $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $this->configurationProvider->getConfiguration()->categoryValues())->toQueryParameters();
+        $filterParameters = FeedbackFilter::fromQueryParameters($request->getQueryParams(), $this->configurationProvider->getConfiguration())->toQueryParameters();
         $view->addButtonToButtonBar($this->componentFactory->createBackButton($this->buildUri('opinion_feedback', $filterParameters)));
         $view->assignMultiple([
             'record' => $record,
@@ -164,7 +162,8 @@ final readonly class FeedbackModuleController
             // Passed through the forms, so the way back to the list keeps the filter
             'filterParameters' => $filterParameters,
             'canRedeliver' => $this->isAdmin() && $this->redeliverer->isUndelivered($record),
-            'statuses' => array_map(static fn(FeedbackStatus $status): string => $status->value, FeedbackStatus::cases()),
+            // A status that is no longer configured stays selectable as the current one, so saving a message keeps it
+            'statuses' => array_values(array_unique([...$this->configurationProvider->getConfiguration()->statusValues(), (string)$record['status']])),
             'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, $this->linkableHosts->forRequest($request), true),
             // The URLs are shown once as reportedUrl
             'sections' => [
@@ -199,13 +198,18 @@ final readonly class FeedbackModuleController
         $statusChosen = isset($body['status']);
         $status = null;
         if ($statusChosen) {
-            $status = FeedbackStatus::tryFrom((string)$body['status']);
-            if ($status === null || (!$this->isAdmin() && $status->value !== $record['status'])) {
-                $this->addFlashMessage($status === null ? 'module.status.invalid' : 'module.status.denied', 'module.save.title', ContextualFeedbackSeverity::ERROR);
+            $status = (string)$body['status'];
+            $unchanged = $status === $record['status'];
+            if (!$unchanged && !in_array($status, $this->configurationProvider->getConfiguration()->statusValues(), true)) {
+                $this->addFlashMessage('module.status.invalid', 'module.save.title', ContextualFeedbackSeverity::ERROR);
+                return $redirect;
+            }
+            if (!$unchanged && !$this->isAdmin()) {
+                $this->addFlashMessage('module.status.denied', 'module.save.title', ContextualFeedbackSeverity::ERROR);
                 return $redirect;
             }
             // Unchanged status: nothing to write
-            $status = $status->value === $record['status'] ? null : $status;
+            $status = $unchanged ? null : $status;
         }
 
         $message = trim((string)($body['message'] ?? ''));
@@ -230,8 +234,9 @@ final readonly class FeedbackModuleController
 
         $userUid = $this->getUserUid();
         // A reply of the sender reopens closed feedback, unless a status was chosen in the same form
-        $reopen = !$statusChosen && (int)$record['be_user'] === $userUid && $record['status'] === FeedbackStatus::Closed->value;
-        $this->conversationRepository->add($uid, $userUid, $message, \DateTimeImmutable::createFromInterface($this->clock->now()), $reopen ? FeedbackStatus::InProgress : $status);
+        $configuration = $this->configurationProvider->getConfiguration();
+        $reopen = !$statusChosen && (int)$record['be_user'] === $userUid && $configuration->isClosed((string)$record['status']);
+        $this->conversationRepository->add($uid, $userUid, $message, \DateTimeImmutable::createFromInterface($this->clock->now()), $reopen ? $configuration->reopenStatus : $status);
         $key = match (true) {
             $status !== null => 'module.save.saved',
             $reopen => 'module.conversation.reopened',
@@ -297,7 +302,7 @@ final readonly class FeedbackModuleController
     {
         $filter = is_array($body) && is_array($body['filter'] ?? null) ? $body['filter'] : [];
 
-        return FeedbackFilter::fromQueryParameters($filter, $this->configurationProvider->getConfiguration()->categoryValues())->toQueryParameters();
+        return FeedbackFilter::fromQueryParameters($filter, $this->configurationProvider->getConfiguration())->toQueryParameters();
     }
 
     /**
@@ -349,6 +354,20 @@ final readonly class FeedbackModuleController
         $backendUser = $GLOBALS['BE_USER'] ?? null;
 
         return $backendUser instanceof BackendUserAuthentication ? $backendUser : null;
+    }
+
+    /**
+     * @param list<string> $values
+     * @return array<string, string> value => label
+     */
+    private function labelsOf(string $list, array $values, OpinionConfiguration $configuration): array
+    {
+        $labels = [];
+        foreach ($values as $value) {
+            $labels[$value] = $this->configuredLabels->label($list, $value, $configuration, $this->getLanguageService());
+        }
+
+        return $labels;
     }
 
     private function addFlashMessage(string $key, string $titleKey, ContextualFeedbackSeverity $severity): void

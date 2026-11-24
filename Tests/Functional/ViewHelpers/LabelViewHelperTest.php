@@ -19,7 +19,7 @@ final class LabelViewHelperTest extends FunctionalTestCase
 
     protected array $configurationToUseInTestInstance = [
         'EXTENSIONS' => [
-            'opinion' => ['categories' => 'bug,question=<b>Question</b>'],
+            'opinion' => ['categories' => 'bug,question=<b>Question</b>', 'statuses' => 'open,waiting,done', 'closedStatuses' => 'done'],
         ],
     ];
 
@@ -29,6 +29,15 @@ final class LabelViewHelperTest extends FunctionalTestCase
         self::assertSame(
             'Bug|&lt;b&gt;Question&lt;/b&gt;|feature',
             $this->render("{opinion:label(list: 'category', value: 'bug')}|{opinion:label(list: 'category', value: 'question')}|{opinion:label(list: 'category', value: 'feature')}"),
+        );
+    }
+
+    #[Test]
+    public function statusBadgeFollowsTheRoleOfTheStatus(): void
+    {
+        self::assertSame(
+            'info|warning|success|warning',
+            $this->render("{opinion:statusBadge(value: 'open')}|{opinion:statusBadge(value: 'waiting')}|{opinion:statusBadge(value: 'done')}|{opinion:statusBadge(value: 'removed')}"),
         );
     }
 

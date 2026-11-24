@@ -10,6 +10,15 @@
             <trans-unit id="extconf.categories">
                 <source>Categories offered in the dialog, in this order: comma-separated entries value or value=Label (value: a-z, 0-9, _ and -, at most 30 characters). A translation category.&lt;value&gt; wins over the label. Empty or invalid = bug,content,idea,other.</source>
             </trans-unit>
+            <trans-unit id="extconf.statuses">
+                <source>Processing statuses, in this order: comma-separated entries value or value=Label (same rules as the categories). The first one is the status of new feedback. A translation status.&lt;value&gt; wins over the label. Empty or invalid = new,in_progress,closed.</source>
+            </trans-unit>
+            <trans-unit id="extconf.closedStatuses">
+                <source>Closed statuses: comma-separated statuses that count as done; all others count as open (page module, admin panel, dashboard). The first status can never be closed. Empty = no status is closed.</source>
+            </trans-unit>
+            <trans-unit id="extconf.reopenStatus">
+                <source>Status a closed feedback gets when its sender replies. If it is not configured or closed, the first status is used.</source>
+            </trans-unit>
             <trans-unit id="extconf.recipients">
                 <source>Recipients: comma-separated email addresses that receive the feedback</source>
             </trans-unit>

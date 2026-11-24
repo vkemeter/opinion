@@ -13,7 +13,6 @@ use TYPO3\CMS\Dashboard\WidgetRegistry;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Dashboard\OpenFeedbackDataProvider;
 use Vkemeter\Opinion\Dashboard\UnreadConversationsDataProvider;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -46,10 +45,10 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     #[Test]
     public function openFeedbackCountsNewAndInProgressWithTheRulesOfTheModule(): void
     {
-        $this->addFeedback(3, FeedbackStatus::New);
-        $this->addFeedback(1, FeedbackStatus::New);
-        $this->addFeedback(1, FeedbackStatus::InProgress);
-        $this->addFeedback(1, FeedbackStatus::Closed);
+        $this->addFeedback(3, 'new');
+        $this->addFeedback(1, 'new');
+        $this->addFeedback(1, 'in_progress');
+        $this->addFeedback(1, 'closed');
         $provider = $this->get(OpenFeedbackDataProvider::class);
 
         $this->setUpAdmin();
@@ -63,11 +62,24 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function openFeedbackFollowsTheClosedStatuses(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,waiting,closed,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'closed,rejected';
+        foreach (['new', 'waiting', 'closed', 'rejected'] as $status) {
+            $this->addFeedback(1, $status);
+        }
+        $this->setUpAdmin();
+
+        self::assertSame(2, $this->get(OpenFeedbackDataProvider::class)->getNumber());
+    }
+
+    #[Test]
     public function newMessagesCountsUnreadFeedbackAndIsZeroWhileTheConversationIsOff(): void
     {
         $conversation = $this->get(ConversationRepository::class);
         foreach ([1, 2] as $ignored) {
-            $conversation->add($this->addFeedback(3, FeedbackStatus::New), 1, 'Answer of the admin', new \DateTimeImmutable());
+            $conversation->add($this->addFeedback(3, 'new'), 1, 'Answer of the admin', new \DateTimeImmutable());
         }
         $provider = $this->get(UnreadConversationsDataProvider::class);
 
@@ -82,7 +94,7 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     public function latestFeedbackListsTheFiveNewestLinkedToTheDetailView(): void
     {
         for ($day = 1; $day <= 7; $day++) {
-            $this->addFeedback(1, FeedbackStatus::New, sprintf('Feedback of day %d <b>bold</b>', $day), sprintf('2026-11-%02d 10:00', $day));
+            $this->addFeedback(1, 'new', sprintf('Feedback of day %d <b>bold</b>', $day), sprintf('2026-11-%02d 10:00', $day));
         }
         $this->setUpAdmin();
 
@@ -99,8 +111,8 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     #[Test]
     public function latestFeedbackOfAnEditorShowsOnlyOwnFeedback(): void
     {
-        $this->addFeedback(1, FeedbackStatus::New, 'Feedback of the admin');
-        $this->addFeedback(3, FeedbackStatus::New, 'Feedback of the reporter');
+        $this->addFeedback(1, 'new', 'Feedback of the admin');
+        $this->addFeedback(3, 'new', 'Feedback of the reporter');
         $this->setUpEditorWithModule();
 
         $html = $this->renderWidget('opinion-latestFeedback');
@@ -127,7 +139,7 @@ final class DashboardWidgetsTest extends FunctionalTestCase
     #[Test]
     public function numberWidgetShowsTheNumberAndTheButtonToTheModule(): void
     {
-        $this->addFeedback(1, FeedbackStatus::New);
+        $this->addFeedback(1, 'new');
         $this->setUpAdmin();
 
         $html = $this->renderWidget('opinion-openFeedback');
@@ -178,7 +190,7 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
     }
 
-    private function addFeedback(int $senderUid, FeedbackStatus $status, string $message = 'Teaser is cropped', string $date = 'now'): int
+    private function addFeedback(int $senderUid, string $status, string $message = 'Teaser is cropped', string $date = 'now'): int
     {
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission($message, 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable($date)), null);

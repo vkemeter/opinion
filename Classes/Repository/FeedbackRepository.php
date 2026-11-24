@@ -9,8 +9,8 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\File;
+use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
 
@@ -24,6 +24,7 @@ final readonly class FeedbackRepository
 
     public function __construct(
         private ConnectionPool $connectionPool,
+        private ConfigurationProviderInterface $configurationProvider,
     ) {}
 
     public function add(Submission $submission, ?File $screenshot): int
@@ -46,6 +47,7 @@ final readonly class FeedbackRepository
                 'system_info' => $submission->systemInfo,
                 'context' => $submission->context,
                 'page_uid' => self::pageUidOf($submission->context),
+                'status' => $this->configurationProvider->getConfiguration()->initialStatus(),
                 'delivery_status' => DeliveryStatus::Pending->value,
                 'delivery_log' => '',
                 'delivery_attempts' => 0,
@@ -102,7 +104,7 @@ final readonly class FeedbackRepository
     }
 
     /**
-     * Open feedback (new or in progress) of a page, newest first.
+     * Open feedback (status not closed) of a page, newest first.
      *
      * @param Source|null $source only feedback of this source, null = both
      * @return list<array{uid: int, crdate: int, source: string, message: string, status: string}>
@@ -146,11 +148,8 @@ final readonly class FeedbackRepository
             ->where(
                 // A page uid of 0 means "no page" and never matches
                 $queryBuilder->expr()->eq('page_uid', $queryBuilder->createNamedParameter($pageUid > 0 ? $pageUid : -1, Connection::PARAM_INT)),
-                $queryBuilder->expr()->in('status', $queryBuilder->createNamedParameter(
-                    [FeedbackStatus::New->value, FeedbackStatus::InProgress->value],
-                    Connection::PARAM_STR_ARRAY,
-                )),
             );
+        $this->restrictToOpen($queryBuilder, 'status');
         if ($source !== null) {
             $queryBuilder->andWhere($queryBuilder->expr()->eq('source', $queryBuilder->createNamedParameter($source->value)));
         }
@@ -158,11 +157,11 @@ final readonly class FeedbackRepository
         return $queryBuilder;
     }
 
-    public function updateStatus(int $uid, FeedbackStatus $status): void
+    public function updateStatus(int $uid, string $status): void
     {
         $this->connectionPool->getConnectionForTable(self::TABLE)->update(
             self::TABLE,
-            ['status' => $status->value, 'tstamp' => time()],
+            ['status' => $status, 'tstamp' => time()],
             ['uid' => $uid],
         );
     }
@@ -267,7 +266,7 @@ final readonly class FeedbackRepository
             return $queryBuilder;
         }
 
-        foreach (['status' => $filter->status?->value, 'category' => $filter->category, 'severity' => $filter->severity?->value, 'source' => $filter->source?->value, 'delivery_status' => $filter->deliveryStatus?->value] as $field => $value) {
+        foreach (['status' => $filter->status, 'category' => $filter->category, 'severity' => $filter->severity?->value, 'source' => $filter->source?->value, 'delivery_status' => $filter->deliveryStatus?->value] as $field => $value) {
             if ($value !== null) {
                 $queryBuilder->andWhere($queryBuilder->expr()->eq('feedback.' . $field, $queryBuilder->createNamedParameter($value)));
             }
@@ -302,6 +301,19 @@ final readonly class FeedbackRepository
     }
 
     /**
+     * Open feedback (status not closed).
+     *
+     * @param int|null $senderUid only feedback of this backend user, null = all
+     */
+    public function countOpen(?int $senderUid = null): int
+    {
+        $queryBuilder = $this->createListQuery($senderUid, null);
+        $this->restrictToOpen($queryBuilder, 'feedback.status');
+
+        return (int)$queryBuilder->count('feedback.uid')->executeQuery()->fetchOne();
+    }
+
+    /**
      * @param int|null $senderUid only feedback of this backend user, null = all
      */
     public function countAll(?int $senderUid = null, ?FeedbackFilter $filter = null): int
@@ -328,5 +340,16 @@ final readonly class FeedbackRepository
             ->setFirstResult($offset)
             ->executeQuery()
             ->fetchAllAssociative();
+    }
+
+    /**
+     * Statuses that are not configured as closed are open, also ones that are no longer configured.
+     */
+    private function restrictToOpen(QueryBuilder $queryBuilder, string $field): void
+    {
+        $closedStatuses = $this->configurationProvider->getConfiguration()->closedStatuses;
+        if ($closedStatuses !== []) {
+            $queryBuilder->andWhere($queryBuilder->expr()->notIn($field, $queryBuilder->createNamedParameter($closedStatuses, Connection::PARAM_STR_ARRAY)));
+        }
     }
 }

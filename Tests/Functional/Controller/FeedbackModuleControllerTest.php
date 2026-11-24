@@ -20,7 +20,6 @@ use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\FeedbackModuleController;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -69,7 +68,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         $this->addFeedback('First <script>alert(1)</script> feedback text', '2026-10-01 10:00');
         $this->addFeedback('Second feedback text', '2026-10-02 10:00');
-        $this->get(FeedbackRepository::class)->updateStatus($this->addFeedback('Third feedback text', '2026-10-03 10:00'), FeedbackStatus::InProgress);
+        $this->get(FeedbackRepository::class)->updateStatus($this->addFeedback('Third feedback text', '2026-10-03 10:00'), 'in_progress');
 
         $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
 
@@ -254,6 +253,28 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function ownStatusesCanBeSetAndRemovedOnesAreKept(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,waiting=Waiting for reply,closed';
+        $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
+
+        $this->postStatus($uid, 'waiting');
+        self::assertSame('waiting', $this->statusOf($uid));
+        $show = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+        self::assertStringContainsString('Waiting for reply', $show);
+        self::assertStringContainsString('badge badge-warning', $show);
+
+        $this->postStatus($uid, 'in_progress');
+        self::assertSame('waiting', $this->statusOf($uid), 'a status that is not configured cannot be set');
+
+        // Removed from the configuration: still shown, kept when the form is saved with a message
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,closed';
+        $this->postSave($uid, ['status' => 'waiting', 'message' => 'Any news?']);
+        self::assertSame('waiting', $this->statusOf($uid));
+        self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid));
+    }
+
+    #[Test]
     public function statusActionRejectsNonAdmins(): void
     {
         $uid = $this->addFeedback('Feedback', '2026-10-01 10:00');
@@ -389,7 +410,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     public function replyOfTheSenderReopensClosedFeedbackAndOneOfTheAdminDoesNot(): void
     {
         $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
-        $this->get(FeedbackRepository::class)->updateStatus($uid, FeedbackStatus::Closed);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, 'closed');
 
         $this->postMessage($uid, 'Fixed.');
         self::assertSame('closed', $this->statusOf($uid), 'admin');
@@ -397,6 +418,27 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $this->setUpBackendUser(3);
         $this->postMessage($uid, 'Still broken.');
         self::assertSame('in_progress', $this->statusOf($uid), 'sender');
+    }
+
+    #[Test]
+    public function replyReopensWithTheConfiguredStatus(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,waiting,closed,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'closed,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['reopenStatus'] = 'waiting';
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, 'rejected');
+        $this->setUpBackendUser(3);
+
+        $this->postMessage($uid, 'Why rejected?');
+        self::assertSame('waiting', $this->statusOf($uid), 'own reopen status');
+
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,closed';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'closed';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['reopenStatus'] = 'in_progress';
+        $this->get(FeedbackRepository::class)->updateStatus($uid, 'closed');
+        $this->postMessage($uid, 'Still broken.');
+        self::assertSame('new', $this->statusOf($uid), 'reopen status not configured: the initial status');
     }
 
     #[Test]
@@ -443,7 +485,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         // The administrator is the sender here; a closed feedback stays closed when it is kept in the form
         $uid = $this->addFeedback('Own feedback of the admin', '2026-10-01 10:00', 1);
-        $this->get(FeedbackRepository::class)->updateStatus($uid, FeedbackStatus::Closed);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, 'closed');
 
         $this->postSave($uid, ['status' => 'closed', 'message' => 'Note to myself']);
 
@@ -583,7 +625,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     {
         $this->addFeedback('Teaser is cropped', '2026-10-01 10:00');
         $closed = $this->addFeedback('Old bug', '2026-10-02 10:00');
-        $this->get(FeedbackRepository::class)->updateStatus($closed, FeedbackStatus::Closed);
+        $this->get(FeedbackRepository::class)->updateStatus($closed, 'closed');
 
         $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['status' => 'closed', 'search' => '<b>bug</b>', 'category' => 'nonsense']))->getBody();
 

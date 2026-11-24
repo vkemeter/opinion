@@ -12,6 +12,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
+use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\DeliveryChannelInterface;
 use Vkemeter\Opinion\Delivery\DeliveryResult;
@@ -120,7 +121,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             return DeliveryResult::success('test');
         });
 
-        $result = new SubmissionProcessor(new FeedbackRepository($connectionPool), $this->get(ScreenshotStorage::class), [$channel], new NullLogger())
+        $result = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [$channel], new NullLogger())
             ->process($this->createSubmission(), $this->configuration());
 
         self::assertSame(DeliveryStatus::Sent, $result->status);

@@ -196,7 +196,7 @@
 												<option
 													value="{status}"
 													{f:if(condition: '{status} == {record.status}', then: 'selected')}>
-													{f:translate(domain: 'opinion.messages', key: 'status.{status}')}
+													{opinion:label(list: 'status', value: status)}
 												</option>
 											</f:for>
 										</select>

@@ -76,6 +76,44 @@ Extension configuration
             <target>Frage</target>
         </trans-unit>
 
+..  confval:: statuses
+    :name: extconf-statuses
+    :type: string
+    :default: `new,in_progress,closed`
+
+    Processing statuses of feedback, in this order, with the same syntax and
+    rules as :confval:`extconf-categories`, for example
+    `new,in_progress,waiting=Waiting for reply,closed,rejected=Rejected`.
+
+    *   The **first** status is the status of new feedback. Putting another
+        value first changes the status of every feedback sent from then on.
+    *   Labels follow the translation `opinion.messages:status.<value>`, then
+        the configured label, then the value. Own statuses are translated with
+        a `LANG/resourceOverrides` file as shown for the categories.
+    *   Administrators can set every configured status. Feedback keeps a status
+        that is removed later; it is still shown, counts as open and can no
+        longer be chosen or filtered.
+
+..  confval:: closedStatuses
+    :name: extconf-closedstatuses
+    :type: string
+    :default: `closed`
+
+    Comma-separated statuses that count as done. Every other status is open:
+    open feedback is listed in the page module and the admin panel and counted
+    by the dashboard widget "Open feedback". The first status of
+    :confval:`extconf-statuses` and values that are not configured are
+    ignored. Empty means no status is closed, so every feedback stays open.
+
+..  confval:: reopenStatus
+    :name: extconf-reopenstatus
+    :type: string
+    :default: `in_progress`
+
+    Status a closed feedback gets when its sender writes a message in the
+    conversation. If the value is not a configured, open status, the first
+    status of :confval:`extconf-statuses` is used.
+
 ..  confval:: recipients
     :name: extconf-recipients
     :type: string

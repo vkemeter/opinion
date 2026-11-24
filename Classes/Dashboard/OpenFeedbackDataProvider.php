@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Dashboard;
 
 use TYPO3\CMS\Dashboard\Widgets\NumberWithIconDataProviderInterface;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
-use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 /**
- * Number of feedback that is new or in progress.
+ * Number of open feedback (status not closed).
  */
 final readonly class OpenFeedbackDataProvider implements NumberWithIconDataProviderInterface
 {
@@ -26,7 +24,6 @@ final readonly class OpenFeedbackDataProvider implements NumberWithIconDataProvi
             return 0;
         }
 
-        return $this->feedbackRepository->countAll($senderUid, new FeedbackFilter(status: FeedbackStatus::New))
-            + $this->feedbackRepository->countAll($senderUid, new FeedbackFilter(status: FeedbackStatus::InProgress));
+        return $this->feedbackRepository->countOpen($senderUid);
     }
 }

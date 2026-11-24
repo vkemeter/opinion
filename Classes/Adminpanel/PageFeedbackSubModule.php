@@ -15,7 +15,9 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Routing\PageArguments;
+use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Formatting\ConfiguredLabels;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 
 /**
@@ -31,6 +33,8 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
         private LanguageServiceFactory $languageServiceFactory,
         private FeedbackRepository $feedbackRepository,
         private UriBuilder $uriBuilder,
+        private ConfiguredLabels $configuredLabels,
+        private ConfigurationProviderInterface $configurationProvider,
     ) {}
 
     public function getIdentifier(): string
@@ -59,6 +63,7 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
         $languageService = $this->languageServiceFactory->createFromUserPreferences($this->getBackendUser());
         $items = is_array($data['items'] ?? null) ? $data['items'] : [];
         $isAdmin = $this->getBackendUser()?->isAdmin() ?? false;
+        $configuration = $this->configurationProvider->getConfiguration();
         $rows = '';
         foreach ($items as $item) {
             $message = nl2br(htmlspecialchars((string)$item['message']));
@@ -75,7 +80,7 @@ final readonly class PageFeedbackSubModule implements ModuleInterface, DataProvi
                 '<tr><td class="typo3-adminPanel-table-cell-key">%s</td><td>%s</td><td>%s</td></tr>',
                 htmlspecialchars(date('d.m.Y H:i', (int)$item['crdate'])),
                 $message,
-                htmlspecialchars($languageService->sL('opinion.messages:status.' . $item['status'])),
+                htmlspecialchars($this->configuredLabels->label('status', (string)$item['status'], $configuration, $languageService)),
             );
         }
         $more = (int)($data['total'] ?? 0) - count($items);

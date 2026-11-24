@@ -47,8 +47,10 @@ Detail view
     message and appended to the log.
 
 Status
-    Every feedback starts as *New*. Administrators set it to *New*,
-    *In progress* or *Closed* in the form below the conversation and save it
+    Every feedback starts with the first configured status, by default *New*.
+    Administrators set any configured status (by default *New*,
+    *In progress* or *Closed*, see :confval:`extconf-statuses`) in the form
+    below the conversation and save it
     with :guilabel:`Save`, together with a message or alone, so neither gets
     lost. When the form is invalid, nothing of it is saved. The status is independent of the delivery: it
     neither starts nor changes a delivery. Feedback stored before version 1.2
@@ -63,7 +65,8 @@ Conversation
     Administrators write in every conversation, editors in the conversations
     of their own feedback. Messages cannot be edited or deleted. No email is
     sent for them; the email for new feedback stays as it is. When the sender
-    answers a *Closed* feedback, its status changes to *In progress*; a
+    answers a closed feedback, its status changes to
+    :confval:`extconf-reopenstatus` (by default *In progress*); a
     message of an administrator does not change the status, the status
     selected in the form is saved as it is. The conversation can be switched
     off with :confval:`extconf-conversation`.
@@ -169,7 +172,8 @@ screenshot files, conversation messages and read state.
     vendor/bin/typo3 opinion:cleanup --dry-run
 
 `--status` takes one or more processing statuses, comma-separated
-(`new`, `in_progress`, `closed`), and is combined with the age. An unknown
+(one of :confval:`extconf-statuses`, by default `new`, `in_progress`,
+`closed`), and is combined with the age. An unknown
 status or a negative `--days` stops the command before anything is deleted.
 
 The command exits with a non-zero code when a record or file could not be

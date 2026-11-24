@@ -7,7 +7,6 @@ namespace Vkemeter\Opinion\Repository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 
 /**
  * Messages of the conversation of a feedback and the read state per backend user.
@@ -26,7 +25,7 @@ final readonly class ConversationRepository
     /**
      * Stores a message; a given status is set on the feedback in the same transaction.
      */
-    public function add(int $feedbackUid, int $authorUid, string $message, \DateTimeImmutable $createdAt, ?FeedbackStatus $status = null): int
+    public function add(int $feedbackUid, int $authorUid, string $message, \DateTimeImmutable $createdAt, ?string $status = null): int
     {
         return $this->connectionPool->getConnectionForTable(self::MESSAGE_TABLE)->transactional(
             function (Connection $connection) use ($feedbackUid, $authorUid, $message, $createdAt, $status): int {
@@ -41,7 +40,7 @@ final readonly class ConversationRepository
                 if ($status !== null) {
                     $connection->update(
                         FeedbackRepository::TABLE,
-                        ['status' => $status->value, 'tstamp' => $createdAt->getTimestamp()],
+                        ['status' => $status, 'tstamp' => $createdAt->getTimestamp()],
                         ['uid' => $feedbackUid],
                     );
                 }

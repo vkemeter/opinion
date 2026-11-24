@@ -54,6 +54,34 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationResolvesTheStatusRoles(): void
+    {
+        $defaults = $this->createSubject([])->getConfiguration();
+        self::assertSame(['new' => '', 'in_progress' => '', 'closed' => ''], $defaults->statuses);
+        self::assertSame('new', $defaults->initialStatus());
+        self::assertSame(['closed'], $defaults->closedStatuses);
+        self::assertSame('in_progress', $defaults->reopenStatus);
+
+        $own = $this->createSubject([
+            'statuses' => 'new, waiting=Waiting for reply, closed, rejected=Rejected',
+            'closedStatuses' => 'closed, rejected, unknown',
+            'reopenStatus' => 'waiting',
+        ])->getConfiguration();
+        self::assertSame(['new', 'waiting', 'closed', 'rejected'], $own->statusValues());
+        self::assertSame(['closed', 'rejected'], $own->closedStatuses, 'unconfigured closed status ignored');
+        self::assertSame('waiting', $own->reopenStatus);
+        self::assertTrue($own->isClosed('rejected'));
+        self::assertFalse($own->isClosed('removed'), 'a status that is no longer configured counts as open');
+
+        self::assertSame(['closed'], $this->createSubject(['closedStatuses' => 'new,closed'])->getConfiguration()->closedStatuses, 'initial status cannot be closed');
+        self::assertSame([], $this->createSubject(['closedStatuses' => ''])->getConfiguration()->closedStatuses, 'no closed status');
+        self::assertSame('new', $this->createSubject(['statuses' => 'new,closed'])->getConfiguration()->reopenStatus, 'reopen status not configured');
+        self::assertSame('new', $this->createSubject(['reopenStatus' => 'closed'])->getConfiguration()->reopenStatus, 'reopen status closed');
+        self::assertSame('open', $this->createSubject(['statuses' => ' , Done!,open=Open,done=Done'])->getConfiguration()->initialStatus());
+        self::assertSame(['new', 'in_progress', 'closed'], $this->createSubject(['statuses' => ' , Done!'])->getConfiguration()->statusValues(), 'nothing valid left');
+    }
+
+    #[Test]
     public function getConfigurationDropsInvalidRecipients(): void
     {
         $configuration = $this->createSubject(['recipients' => 'not-an-email, team@example.com, '])->getConfiguration();

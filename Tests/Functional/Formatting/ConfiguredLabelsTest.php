@@ -44,6 +44,18 @@ final class ConfiguredLabelsTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function statusLabelsFollowTheSameRule(): void
+    {
+        $configuration = new OpinionConfiguration(true, [], '', 180, statuses: ['new' => '', 'waiting' => 'Waiting for reply']);
+        $subject = $this->get(ConfiguredLabels::class);
+        $german = $this->get(LanguageServiceFactory::class)->create('de');
+
+        self::assertSame('Abgeschlossen', $subject->label('status', 'closed', $configuration, $german), 'shipped, also when removed');
+        self::assertSame('Waiting for reply', $subject->label('status', 'waiting', $configuration, $german));
+        self::assertSame('gone', $subject->label('status', 'gone', $configuration, $german));
+    }
+
+    #[Test]
     public function unknownListIsRejected(): void
     {
         $this->expectException(\InvalidArgumentException::class);

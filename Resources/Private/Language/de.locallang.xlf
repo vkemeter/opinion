@@ -12,6 +12,18 @@
                 <source>Categories offered in the dialog, in this order: comma-separated entries value or value=Label (value: a-z, 0-9, _ and -, at most 30 characters). A translation category.&lt;value&gt; wins over the label. Empty or invalid = bug,content,idea,other.</source>
                 <target>Kategorien im Dialog, in dieser Reihenfolge: kommagetrennte Einträge wert oder wert=Label (wert: a-z, 0-9, _ und -, höchstens 30 Zeichen). Eine Übersetzung category.&lt;wert&gt; hat Vorrang vor dem Label. Leer oder ungültig = bug,content,idea,other.</target>
             </trans-unit>
+            <trans-unit id="extconf.statuses">
+                <source>Processing statuses, in this order: comma-separated entries value or value=Label (same rules as the categories). The first one is the status of new feedback. A translation status.&lt;value&gt; wins over the label. Empty or invalid = new,in_progress,closed.</source>
+                <target>Bearbeitungsstatus, in dieser Reihenfolge: kommagetrennte Einträge wert oder wert=Label (gleiche Regeln wie bei den Kategorien). Der erste ist der Status neuer Feedbacks. Eine Übersetzung status.&lt;wert&gt; hat Vorrang vor dem Label. Leer oder ungültig = new,in_progress,closed.</target>
+            </trans-unit>
+            <trans-unit id="extconf.closedStatuses">
+                <source>Closed statuses: comma-separated statuses that count as done; all others count as open (page module, admin panel, dashboard). The first status can never be closed. Empty = no status is closed.</source>
+                <target>Geschlossene Status: kommagetrennte Status, die als erledigt gelten; alle anderen gelten als offen (Seitenmodul, Admin Panel, Dashboard). Der erste Status kann nie geschlossen sein. Leer = kein Status ist geschlossen.</target>
+            </trans-unit>
+            <trans-unit id="extconf.reopenStatus">
+                <source>Status a closed feedback gets when its sender replies. If it is not configured or closed, the first status is used.</source>
+                <target>Status, den ein geschlossenes Feedback bekommt, wenn der Absender antwortet. Ist er nicht konfiguriert oder geschlossen, wird der erste Status verwendet.</target>
+            </trans-unit>
             <trans-unit id="extconf.recipients">
                 <source>Recipients: comma-separated email addresses that receive the feedback</source>
                 <target>Empfänger: kommagetrennte E-Mail-Adressen, an die das Feedback geschickt wird</target>

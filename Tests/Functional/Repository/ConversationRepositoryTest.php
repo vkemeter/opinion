@@ -6,7 +6,6 @@ namespace Vkemeter\Opinion\Tests\Functional\Repository;
 
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -85,13 +84,13 @@ final class ConversationRepositoryTest extends FunctionalTestCase
     {
         $feedback = $this->addFeedback();
         $feedbackRepository = $this->get(FeedbackRepository::class);
-        $feedbackRepository->updateStatus($feedback, FeedbackStatus::Closed);
+        $feedbackRepository->updateStatus($feedback, 'closed');
         $repository = $this->get(ConversationRepository::class);
 
         $repository->add($feedback, self::ADMIN, 'Done', new \DateTimeImmutable());
         self::assertSame('closed', $this->statusOf($feedback));
 
-        $repository->add($feedback, self::SENDER, 'Not fixed', new \DateTimeImmutable(), FeedbackStatus::InProgress);
+        $repository->add($feedback, self::SENDER, 'Not fixed', new \DateTimeImmutable(), 'in_progress');
         self::assertSame('in_progress', $this->statusOf($feedback));
     }
 

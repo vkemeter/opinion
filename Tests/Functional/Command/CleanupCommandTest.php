@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -118,9 +117,9 @@ final class CleanupCommandTest extends FunctionalTestCase
     public function statusRestrictsTheDeletionAtAnyAge(): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+        $repository->updateStatus($this->feedbackUids['recent'], 'closed');
         $inProgress = $repository->add($this->createSubmission(new \DateTimeImmutable('-20 days')), null);
-        $repository->updateStatus($inProgress, FeedbackStatus::InProgress);
+        $repository->updateStatus($inProgress, 'in_progress');
 
         $tester = $this->runCommand(['--days' => '0', '--status' => 'closed']);
 
@@ -134,8 +133,8 @@ final class CleanupCommandTest extends FunctionalTestCase
     public function statusKeepsTheRetentionPeriod(): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $repository->updateStatus($this->feedbackUids['old'], FeedbackStatus::Closed);
-        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+        $repository->updateStatus($this->feedbackUids['old'], 'closed');
+        $repository->updateStatus($this->feedbackUids['recent'], 'closed');
 
         $tester = $this->runCommand(['--status' => 'closed']);
 
@@ -148,9 +147,9 @@ final class CleanupCommandTest extends FunctionalTestCase
     public function severalStatusesCanBeGiven(): void
     {
         $repository = $this->get(FeedbackRepository::class);
-        $repository->updateStatus($this->feedbackUids['recent'], FeedbackStatus::Closed);
+        $repository->updateStatus($this->feedbackUids['recent'], 'closed');
         $inProgress = $repository->add($this->createSubmission(new \DateTimeImmutable('-20 days')), null);
-        $repository->updateStatus($inProgress, FeedbackStatus::InProgress);
+        $repository->updateStatus($inProgress, 'in_progress');
 
         $tester = $this->runCommand(['--days' => '0', '--status' => 'new, closed', '--dry-run' => true]);
 
@@ -167,6 +166,17 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertStringContainsString('done', $tester->getDisplay());
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
+    }
+
+    #[Test]
+    public function statusFollowsTheConfiguredStatuses(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,rejected,closed';
+        $this->get(FeedbackRepository::class)->updateStatus($this->feedbackUids['recent'], 'rejected');
+
+        self::assertSame(Command::SUCCESS, $this->runCommand(['--days' => '0', '--status' => 'rejected'])->getStatusCode());
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
+        self::assertSame(Command::INVALID, $this->runCommand(['--days' => '0', '--status' => 'in_progress'])->getStatusCode(), 'not configured');
     }
 
     #[Test]

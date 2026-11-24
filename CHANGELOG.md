@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Processing statuses are configurable: `statuses` (default
+  `new,in_progress,closed`, same syntax as `categories`, the first one is the
+  status of new feedback), `closedStatuses` (default `closed`, every other
+  status counts as open in the page module, the admin panel and the
+  dashboard) and `reopenStatus` (default `in_progress`, the status after a
+  reply of the sender to closed feedback). Badges follow the role: first
+  status *info*, closed *success*, others *warning*. `opinion:cleanup --status`
+  accepts the configured statuses. No database change: the column keeps its
+  default `new`
 - Categories are configurable: the new setting `categories` (default
   `bug,content,idea,other`) lists the categories of the dialog as `value` or
   `value=Label`, in their order. A translation `category.<value>` (also from a

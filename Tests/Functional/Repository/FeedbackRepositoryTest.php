@@ -8,7 +8,6 @@ use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -85,7 +84,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         $teaser = $repository->add(new Submission('Teaser is cropped', 'bug', Severity::High, Source::Frontend, 1, new \DateTimeImmutable(), ['url' => 'https://example.com/produkte/über'], [], ['pageTitle' => 'Produkte']), null);
         $idea = $repository->add(new Submission('Add a 100% better search', 'idea', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
         $closed = $repository->add(new Submission('Old bug', 'bug', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null);
-        $repository->updateStatus($closed, FeedbackStatus::Closed);
+        $repository->updateStatus($closed, 'closed');
         $repository->updateDeliveryStatus($closed, DeliveryStatus::Failed, '');
 
         $find = static fn(FeedbackFilter $filter, ?int $senderUid = null): array => array_map(
@@ -94,7 +93,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         );
 
         self::assertEqualsCanonicalizing([$teaser, $closed], $find(new FeedbackFilter(category: 'bug')));
-        self::assertSame([$closed], $find(new FeedbackFilter(status: FeedbackStatus::Closed)));
+        self::assertSame([$closed], $find(new FeedbackFilter(status: 'closed')));
         self::assertSame([$closed], $find(new FeedbackFilter(category: 'bug', severity: Severity::Low)));
         self::assertSame([$closed], $find(new FeedbackFilter(deliveryStatus: DeliveryStatus::Failed)));
         self::assertSame([$teaser], $find(new FeedbackFilter(source: Source::Frontend)));
@@ -118,7 +117,7 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         $uid = $repository->add($this->createSubmission(), null);
         $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'email: Connection refused');
 
-        $repository->updateStatus($uid, FeedbackStatus::Closed);
+        $repository->updateStatus($uid, 'closed');
 
         $record = $repository->findByUid($uid);
         self::assertSame('closed', $record['status'] ?? null);
@@ -164,12 +163,12 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     {
         $repository = $this->get(FeedbackRepository::class);
         $oldClosed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Old closed', '-40 days'), null);
-        $repository->updateStatus($oldClosed, FeedbackStatus::Closed);
+        $repository->updateStatus($oldClosed, 'closed');
         $oldNew = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Old new', '-40 days'), null);
         $nowClosed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Closed now', 'now'), null);
-        $repository->updateStatus($nowClosed, FeedbackStatus::Closed);
+        $repository->updateStatus($nowClosed, 'closed');
         $nowInProgress = $repository->add($this->createPageSubmission(12, Source::Frontend, 'In progress now', 'now'), null);
-        $repository->updateStatus($nowInProgress, FeedbackStatus::InProgress);
+        $repository->updateStatus($nowInProgress, 'in_progress');
         $tenDaysAgo = new \DateTimeImmutable('-10 days')->getTimestamp();
 
         self::assertSame([$oldClosed, $oldNew], $repository->findUidsForCleanup($tenDaysAgo));
@@ -177,6 +176,27 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame([$oldClosed, $nowClosed], $repository->findUidsForCleanup(null, ['closed']));
         self::assertSame([$oldClosed], $repository->findUidsForCleanup($tenDaysAgo, ['closed']));
         self::assertSame([$oldClosed, $oldNew, $nowClosed], $repository->findUidsForCleanup(null, ['new', 'closed']));
+    }
+
+    #[Test]
+    public function addStoresTheConfiguredInitialStatusAndOpenMeansNotClosed(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'open=Open,waiting,done,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'done,rejected';
+        $repository = $this->get(FeedbackRepository::class);
+        $open = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Open'), null);
+        $rejected = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Rejected'), null);
+        $repository->updateStatus($rejected, 'rejected');
+        $removed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Removed status'), null);
+        $repository->updateStatus($removed, 'in_progress');
+
+        self::assertSame('open', $repository->findByUid($open)['status'] ?? null);
+        self::assertEqualsCanonicalizing([$open, $removed], array_column($repository->findOpenByPage(12, null, 10), 'uid'), 'a status that is not configured counts as open');
+        self::assertSame(2, $repository->countOpen());
+        self::assertSame(0, $repository->countOpen(99));
+
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = '';
+        self::assertSame(3, $repository->countOpen(), 'no closed status');
     }
 
     #[Test]
@@ -206,8 +226,8 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         $newFrontend = $repository->add($this->createPageSubmission(12, Source::Frontend, 'New frontend', '2026-11-03'), null);
         $backend = $repository->add($this->createPageSubmission(12, Source::Backend, 'Backend', '2026-11-02'), null);
         $closed = $repository->add($this->createPageSubmission(12, Source::Frontend, 'Closed', '2026-11-04'), null);
-        $repository->updateStatus($closed, FeedbackStatus::Closed);
-        $repository->updateStatus($oldFrontend, FeedbackStatus::InProgress);
+        $repository->updateStatus($closed, 'closed');
+        $repository->updateStatus($oldFrontend, 'in_progress');
         $repository->add($this->createPageSubmission(13, Source::Frontend, 'Other page'), null);
         $repository->add($this->createPageSubmission(null, Source::Frontend, 'No page'), null);
 

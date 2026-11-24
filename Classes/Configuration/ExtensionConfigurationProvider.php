@@ -33,6 +33,15 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
         $settings = is_array($settings) ? $settings : [];
 
         $retentionDays = (int)($settings['retentionDays'] ?? self::DEFAULT_RETENTION_DAYS);
+        $statuses = ConfiguredValueList::parse((string)($settings['statuses'] ?? ''), OpinionConfiguration::DEFAULT_STATUSES);
+        $statusValues = array_map(strval(...), array_keys($statuses));
+        // The initial status cannot be closed, the reopen status must be open
+        $closedStatuses = array_values(array_unique(array_filter(
+            GeneralUtility::trimExplode(',', (string)($settings['closedStatuses'] ?? 'closed'), true),
+            static fn(string $status): bool => in_array($status, $statusValues, true) && $status !== $statusValues[0],
+        )));
+        $reopenStatus = trim((string)($settings['reopenStatus'] ?? 'in_progress'));
+        $reopenStatus = in_array($reopenStatus, $statusValues, true) && !in_array($reopenStatus, $closedStatuses, true) ? $reopenStatus : $statusValues[0];
 
         return new OpinionConfiguration(
             enabled: (bool)($settings['enabled'] ?? true),
@@ -49,6 +58,9 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
             disabledDeliveryChannels: GeneralUtility::trimExplode(',', (string)($settings['disabledDeliveryChannels'] ?? ''), true),
             conversationEnabled: (bool)($settings['conversation'] ?? true),
             categories: ConfiguredValueList::parse((string)($settings['categories'] ?? ''), OpinionConfiguration::DEFAULT_CATEGORIES),
+            statuses: $statuses,
+            closedStatuses: $closedStatuses,
+            reopenStatus: $reopenStatus,
         );
     }
 

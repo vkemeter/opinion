@@ -15,7 +15,6 @@ use TYPO3\CMS\Core\Routing\PageArguments;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Adminpanel\PageFeedbackModule;
 use Vkemeter\Opinion\Adminpanel\PageFeedbackSubModule;
-use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
@@ -40,7 +39,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         $this->addFeedback(12, Source::Frontend, 'Teaser of the admin', 1);
         $this->addFeedback(12, Source::Frontend, 'Teaser of the reporter', 3);
         $this->addFeedback(12, Source::Backend, 'From the page module', 1);
-        $this->addFeedback(12, Source::Frontend, 'Done', 1, FeedbackStatus::Closed);
+        $this->addFeedback(12, Source::Frontend, 'Done', 1, 'closed');
         $this->addFeedback(13, Source::Frontend, 'Other page', 1);
         $this->renderPage(12);
 
@@ -50,6 +49,20 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertSame('2', $module->getShortInfo(), 'open frontend feedback of all senders, no backend or closed feedback');
         self::assertSame('Feedback on this page', $module->getLabel());
         self::assertSame(['opinion_page_list'], array_keys($module->getSubModules()));
+    }
+
+    #[Test]
+    public function ownClosedStatusesAreNotCounted(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['statuses'] = 'new,closed,rejected';
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['closedStatuses'] = 'closed,rejected';
+        $this->addFeedback(12, Source::Frontend, 'Open', 1);
+        $this->addFeedback(12, Source::Frontend, 'Rejected', 1, 'rejected');
+        $this->renderPage(12);
+
+        $module = $this->loadModules()['opinion_page'] ?? null;
+        self::assertInstanceOf(PageFeedbackModule::class, $module);
+        self::assertSame('1', $module->getShortInfo());
     }
 
     #[Test]
@@ -72,7 +85,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
     #[Test]
     public function listShowsTextDateAndStatusOnlyEscaped(): void
     {
-        $this->addFeedback(12, Source::Frontend, '<script>alert(1)</script>', 1, FeedbackStatus::InProgress, '2026-11-02 09:30');
+        $this->addFeedback(12, Source::Frontend, '<script>alert(1)</script>', 1, 'in_progress', '2026-11-02 09:30');
         $this->addFeedback(12, Source::Backend, 'From the page module', 1);
         $subModule = $this->get(PageFeedbackSubModule::class);
 
@@ -135,7 +148,7 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         return $this->get(ModuleLoader::class)->validateSortAndInitializeModules($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['adminpanel']['modules']);
     }
 
-    private function addFeedback(int $pageUid, Source $source, string $message, int $senderUid, FeedbackStatus $status = FeedbackStatus::New, string $date = 'now'): void
+    private function addFeedback(int $pageUid, Source $source, string $message, int $senderUid, string $status = 'new', string $date = 'now'): void
     {
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission($message, 'bug', Severity::Low, $source, $senderUid, new \DateTimeImmutable($date), context: ['pageUid' => $pageUid]), null);

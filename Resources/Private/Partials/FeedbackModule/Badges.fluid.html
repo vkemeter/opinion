@@ -1,5 +1,6 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	xmlns:opinion="http://typo3.org/ns/Vkemeter/Opinion/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:section name="Severity">
 		<f:variable
@@ -9,10 +10,7 @@
 	</f:section>
 
 	<f:section name="Status">
-		<f:variable
-			name="badges"
-			value="{new: 'info', in_progress: 'warning', closed: 'success'}" />
-		<span class="badge badge-{badges.{status}}">{f:translate(domain: 'opinion.messages', key: 'status.{status}')}</span>
+		<span class="badge badge-{opinion:statusBadge(value: status)}">{opinion:label(list: 'status', value: status)}</span>
 	</f:section>
 
 	<f:section name="Delivery">
