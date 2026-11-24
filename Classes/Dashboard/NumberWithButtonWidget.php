@@ -14,6 +14,7 @@ use TYPO3\CMS\Dashboard\Widgets\WidgetInterface;
 
 /**
  * The Core number widget with a button to the module; the Core one takes no button.
+ * The button is left out for users who may not open the module.
  * Options: icon, title, subtitle (as for the Core NumberWithIconWidget).
  */
 final class NumberWithButtonWidget implements WidgetInterface, RequestAwareWidgetInterface
@@ -27,6 +28,7 @@ final class NumberWithButtonWidget implements WidgetInterface, RequestAwareWidge
         private readonly WidgetConfigurationInterface $configuration,
         private readonly NumberWithIconDataProviderInterface $dataProvider,
         private readonly ButtonProviderInterface $buttonProvider,
+        private readonly FeedbackScope $scope,
         private readonly BackendViewFactory $backendViewFactory,
         private readonly array $options = [],
     ) {}
@@ -44,7 +46,7 @@ final class NumberWithButtonWidget implements WidgetInterface, RequestAwareWidge
             'title' => $this->options['title'] ?? '',
             'subtitle' => $this->options['subtitle'] ?? '',
             'number' => $this->dataProvider->getNumber(),
-            'button' => $this->buttonProvider,
+            'button' => $this->scope->getSenderFilter() === false ? null : $this->buttonProvider,
             'options' => $this->options,
             'configuration' => $this->configuration,
         ]);

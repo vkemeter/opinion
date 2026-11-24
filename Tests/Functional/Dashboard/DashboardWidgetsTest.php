@@ -123,6 +123,19 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertStringContainsString('/typo3/module/opinion/feedback?token=', $html);
     }
 
+    #[Test]
+    public function numberWidgetHidesTheButtonFromUsersWithoutTheModule(): void
+    {
+        $backendUser = $this->setUpBackendUser(3);
+        $backendUser->groupData['available_widgets'] = implode(',', self::WIDGETS);
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
+
+        $html = $this->renderWidget('opinion-openFeedback');
+
+        self::assertStringContainsString('Open feedback', $html);
+        self::assertStringNotContainsString('/typo3/module/opinion/feedback', $html);
+    }
+
     private function renderWidget(string $identifier): string
     {
         $request = new ServerRequest('https://example.com/typo3/module/dashboard', 'GET', null, [], ['HTTP_HOST' => 'example.com', 'HTTPS' => 'on', 'SCRIPT_NAME' => '/typo3/index.php'])

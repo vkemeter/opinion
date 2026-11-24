@@ -9,6 +9,8 @@
 - Security: `deniedUrlParameters` also removes parameters from the fragment
   (`#access_token=…`, `#/reset?token=…`); anchors and routes are kept.
   Feedback stored before is not changed
+- Fix: the dashboard widgets "Open feedback" and "New messages" no longer
+  show the button to the module "Feedback" to users who may not open it
 
 ## 2.0.0 – 2026-11-23
 
