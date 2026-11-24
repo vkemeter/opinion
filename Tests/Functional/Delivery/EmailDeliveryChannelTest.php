@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Delivery;
 
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Mime\Address;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -18,6 +19,7 @@ use Vkemeter\Opinion\Domain\Category;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 
@@ -43,9 +45,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
         $this->setUpBackendUser(3);
         // As in the submit request: storages created in the backend evaluate the editor's file permissions
-        $request = new ServerRequest('https://example.com/typo3/', 'POST', null, [], ['HTTP_HOST' => 'example.com', 'HTTPS' => 'on', 'SCRIPT_NAME' => '/typo3/index.php'])
-            ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
-        $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
+        $this->setBackendRequest();
         $this->get(ScreenshotStorageInstaller::class)->install();
         $screenshot = $this->get(ScreenshotStorage::class)->store(base64_decode(self::PNG_BASE64, true), 'png', new \DateTimeImmutable());
 
@@ -99,20 +99,14 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     #[Test]
     public function reportedUrlIsSentOnce(): void
     {
-        $submission = $this->createSubmission();
-        $submission = new Submission(
-            $submission->message,
-            $submission->category,
-            $submission->severity,
-            Source::Backend,
-            $submission->backendUserUid,
-            $submission->createdAt,
-            ['url' => 'https://example.com/typo3/module/web/layout?id=1'],
-            $submission->systemInfo,
-            ['pageUid' => 1, 'url' => '/typo3/module/web/layout?id=1'],
-        );
+        $this->setBackendRequest();
+        $this->get(SiteWriter::class)->write('main', ['rootPageId' => 1, 'base' => 'https://example.com/', 'languages' => [['languageId' => 0, 'title' => 'English', 'locale' => 'en_US.UTF-8', 'base' => '/']]]);
 
-        $this->get(EmailDeliveryChannel::class)->deliver($submission, null, $this->configuration());
+        $this->get(EmailDeliveryChannel::class)->deliver(
+            $this->createSubmission(['url' => 'https://example.com/typo3/module/web/layout?id=1'], ['pageUid' => 1, 'url' => '/typo3/module/web/layout?id=1']),
+            null,
+            $this->configuration(),
+        );
 
         $email = $this->getSentEmail();
         $html = (string)$email->getHtmlBody();
@@ -122,13 +116,33 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function reportedUrlOfAHostWithoutSiteIsNotLinked(): void
+    {
+        // The request host is not trusted in the email: the sender sets it
+        $this->setBackendRequest();
+
+        $this->get(EmailDeliveryChannel::class)->deliver($this->createSubmission(['url' => 'https://example.com/login']), null, $this->configuration());
+
+        $html = (string)$this->getSentEmail()->getHtmlBody();
+        self::assertStringContainsString('https://example.com/login', $html);
+        self::assertStringNotContainsString('href="https://example.com/login', $html);
+    }
+
+    #[Test]
     public function brokenTransportThrows(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = '127.0.0.1:1';
 
         $this->expectException(\Throwable::class);
-        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener(), $this->get(ScreenshotStorage::class))->deliver($this->createSubmission(), null, $this->configuration());
+        new EmailDeliveryChannel(new \TYPO3\CMS\Core\Mail\Mailer(), new \Vkemeter\Opinion\Formatting\DataFlattener(), $this->get(ScreenshotStorage::class), $this->get(LinkableHosts::class))->deliver($this->createSubmission(), null, $this->configuration());
+    }
+
+    private function setBackendRequest(): void
+    {
+        $request = new ServerRequest('https://example.com/typo3/', 'POST', null, [], ['HTTP_HOST' => 'example.com', 'HTTPS' => 'on', 'SCRIPT_NAME' => '/typo3/index.php'])
+            ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
+        $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request));
     }
 
     private function getSentEmail(): FluidEmail
@@ -139,7 +153,11 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         return $email;
     }
 
-    private function createSubmission(): Submission
+    /**
+     * @param array<string, mixed> $clientInfo
+     * @param array<string, mixed> $context
+     */
+    private function createSubmission(array $clientInfo = ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true], array $context = ['pageUid' => 12]): Submission
     {
         return new Submission(
             message: 'Teaser <b>image</b> is cropped.',
@@ -148,12 +166,12 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
             source: Source::Frontend,
             backendUserUid: 2,
             createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
-            clientInfo: ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true],
+            clientInfo: $clientInfo,
             systemInfo: [
                 'typo3Version' => '14.3.0',
                 'backendUser' => ['uid' => 2, 'username' => 'editor', 'realName' => 'Eddie Editor', 'email' => 'editor@example.com'],
             ],
-            context: ['pageUid' => 12],
+            context: $context,
         );
     }
 

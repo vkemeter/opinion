@@ -124,6 +124,23 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function showDoesNotLinkAForeignHostOrABackslashPath(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $foreign = $repository->add(new Submission('Foreign', Category::Bug, Severity::High, Source::Frontend, 1, new \DateTimeImmutable('2026-10-01 10:00'), clientInfo: ['url' => 'https://evil.example/login']), null);
+        $backslash = $repository->add(new Submission('Backslash', Category::Bug, Severity::High, Source::Backend, 1, new \DateTimeImmutable('2026-10-01 10:00'), context: ['url' => '/\\evil.example/typo3']), null);
+
+        $controller = $this->get(FeedbackModuleController::class);
+        $foreignHtml = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$foreign]))->getBody();
+        $backslashHtml = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$backslash]))->getBody();
+
+        self::assertStringContainsString('https://evil.example/login', $foreignHtml);
+        self::assertStringNotContainsString('href="https://evil.example', $foreignHtml);
+        self::assertStringContainsString('evil.example/typo3', $backslashHtml);
+        self::assertStringNotContainsString('evil.example/typo3"', $backslashHtml);
+    }
+
+    #[Test]
     public function showOffersANewDeliveryOnlyForUndeliveredFeedback(): void
     {
         $failed = $this->addFeedback('Failed feedback', '2026-10-01 10:00');

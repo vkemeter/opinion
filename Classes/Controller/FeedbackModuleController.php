@@ -27,6 +27,7 @@ use Vkemeter\Opinion\Domain\FeedbackStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\ConversationRepository;
@@ -57,6 +58,7 @@ final readonly class FeedbackModuleController
         private AccessChecker $accessChecker,
         private ScreenshotStorage $screenshotStorage,
         private ConversationRepository $conversationRepository,
+        private LinkableHosts $linkableHosts,
     ) {}
 
     public function listAction(ServerRequestInterface $request): ResponseInterface
@@ -151,7 +153,7 @@ final readonly class FeedbackModuleController
             'filterParameters' => $filterParameters,
             'canRedeliver' => $this->isAdmin() && $this->redeliverer->isUndelivered($record),
             'statuses' => array_map(static fn(FeedbackStatus $status): string => $status->value, FeedbackStatus::cases()),
-            'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, true),
+            'reportedUrl' => ReportedUrl::fromDetails($clientInfo, $context, $this->linkableHosts->forRequest($request), true),
             // The URLs are shown once as reportedUrl
             'sections' => [
                 'context' => $this->dataFlattener->flatten(array_diff_key($context, ['url' => true])),

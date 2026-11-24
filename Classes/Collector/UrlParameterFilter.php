@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Collector;
 
 /**
- * Removes query parameters from a collected URL, so preview, login or session
+ * Removes query and fragment parameters from a collected URL, so preview, login or session
  * parameters do not end up in the email and the database.
  */
 final readonly class UrlParameterFilter
@@ -21,23 +21,43 @@ final readonly class UrlParameterFilter
      */
     public function filter(string $url, array $deniedParameters): string
     {
+        $patterns = array_map(strtolower(...), [...self::ALWAYS_DENIED, ...$deniedParameters]);
         $fragmentStart = strpos($url, '#');
-        $fragment = $fragmentStart !== false ? substr($url, $fragmentStart) : '';
+        $fragment = $fragmentStart !== false ? substr($url, $fragmentStart + 1) : null;
         $url = $fragmentStart !== false ? substr($url, 0, $fragmentStart) : $url;
 
         $queryStart = strpos($url, '?');
-        if ($queryStart === false) {
-            return $url . $fragment;
+        if ($queryStart !== false) {
+            $query = $this->filterPairs(substr($url, $queryStart + 1), $patterns);
+            $url = substr($url, 0, $queryStart) . ($query !== '' ? '?' . $query : '');
         }
 
-        $patterns = array_map(strtolower(...), [...self::ALWAYS_DENIED, ...$deniedParameters]);
-        // The pairs are kept as sent, so the URL stays identical apart from the removed parameters
-        $pairs = array_filter(
-            explode('&', substr($url, $queryStart + 1)),
-            fn(string $pair): bool => $pair !== '' && !$this->isDenied($this->getParameterName($pair), $patterns),
-        );
+        if ($fragment !== null) {
+            // Tokens also come in fragments (#access_token=…, #/reset?token=…); anchors and routes have no denied pair
+            $routeEnd = strpos($fragment, '?');
+            if ($routeEnd !== false) {
+                $query = $this->filterPairs(substr($fragment, $routeEnd + 1), $patterns);
+                $fragment = substr($fragment, 0, $routeEnd) . ($query !== '' ? '?' . $query : '');
+            } else {
+                $fragment = $this->filterPairs($fragment, $patterns);
+            }
+            $url .= $fragment !== '' ? '#' . $fragment : '';
+        }
 
-        return substr($url, 0, $queryStart) . ($pairs !== [] ? '?' . implode('&', $pairs) : '') . $fragment;
+        return $url;
+    }
+
+    /**
+     * The pairs are kept as sent, so the URL stays identical apart from the removed parameters.
+     *
+     * @param list<string> $patterns lowercase
+     */
+    private function filterPairs(string $pairs, array $patterns): string
+    {
+        return implode('&', array_filter(
+            explode('&', $pairs),
+            fn(string $pair): bool => $pair !== '' && !$this->isDenied($this->getParameterName($pair), $patterns),
+        ));
     }
 
     /**

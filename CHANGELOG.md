@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Security: the reported URL is linked in the detail view and the email only
+  when its host belongs to a configured site (site or language base), in the
+  detail view also when it is the host of the backend; other URLs and URLs
+  with a backslash are shown as text
+- Security: `deniedUrlParameters` also removes parameters from the fragment
+  (`#access_token=…`, `#/reset?token=…`); anchors and routes are kept.
+  Feedback stored before is not changed
+
 ## 2.0.0 – 2026-11-23
 
 Upgrade from 1.x:

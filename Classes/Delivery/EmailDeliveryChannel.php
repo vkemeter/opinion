@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\Utility\MailUtility;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Link\ReportedUrl;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 
@@ -25,6 +26,7 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         private MailerInterface $mailer,
         private DataFlattener $dataFlattener,
         private ScreenshotStorage $screenshotStorage,
+        private LinkableHosts $linkableHosts,
     ) {}
 
     public function getIdentifier(): string
@@ -51,7 +53,8 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
             ->assignMultiple([
                 'submission' => $submission,
                 'sender' => $sender,
-                'reportedUrl' => ReportedUrl::fromDetails($submission->clientInfo, $submission->context, false),
+                // Site hosts only: the host of the submit request is set by the sender (Host header)
+                'reportedUrl' => ReportedUrl::fromDetails($submission->clientInfo, $submission->context, $this->linkableHosts->forRequest(null), false),
                 // The URLs are shown once as reportedUrl
                 'clientInfo' => $this->dataFlattener->flatten(array_diff_key($submission->clientInfo, ['url' => true])),
                 'systemInfo' => $this->dataFlattener->flatten(array_diff_key($submission->systemInfo, ['backendUser' => true])),

@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Resource\StorageRepository;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 use Vkemeter\Opinion\Delivery\EmailDeliveryChannel;
@@ -16,6 +17,7 @@ use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
 use Vkemeter\Opinion\Formatting\DataFlattener;
+use Vkemeter\Opinion\Link\LinkableHosts;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageLocation;
 use Vkemeter\Opinion\Storage\ScreenshotStorageResolver;
@@ -69,6 +71,7 @@ final class EmailDeliveryChannelTest extends UnitTestCase
             self::createStub(MailerInterface::class),
             new DataFlattener(),
             new ScreenshotStorage(new ScreenshotStorageResolver(self::createStub(StorageRepository::class), new ScreenshotStorageLocation())),
+            new LinkableHosts(self::createStub(SiteFinder::class)),
         );
     }
 }

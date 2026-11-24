@@ -605,8 +605,8 @@
                 <target>URLs</target>
             </trans-unit>
             <trans-unit id="extconf.deniedUrlParameters">
-                <source>Query parameters removed from the page and module URL: comma-separated, case-insensitive, a trailing * matches a prefix (ADMCMD_*). The backend request token is always removed.</source>
-                <target>Query-Parameter, die aus der Seiten- und Modul-URL entfernt werden: kommagetrennt, ohne Beachtung der Groß-/Kleinschreibung, ein * am Ende passt auf einen Präfix (ADMCMD_*). Das Request-Token des Backends wird immer entfernt.</target>
+                <source>Parameters removed from the query and the fragment of the page and module URL: comma-separated, case-insensitive, a trailing * matches a prefix (ADMCMD_*). The backend request token is always removed.</source>
+                <target>Parameter, die aus der Query und dem Fragment der Seiten- und Modul-URL entfernt werden: kommagetrennt, ohne Beachtung der Groß-/Kleinschreibung, ein * am Ende passt auf einen Präfix (ADMCMD_*). Das Request-Token des Backends wird immer entfernt.</target>
             </trans-unit>
             <trans-unit id="extconf.collect_client_url">
                 <source>Page URL</source>

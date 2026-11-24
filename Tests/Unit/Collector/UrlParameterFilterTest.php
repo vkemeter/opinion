@@ -24,6 +24,11 @@ final class UrlParameterFilterTest extends UnitTestCase
         yield 'prefix does not match other names' => ['https://example.com/?username=x', ['user'], 'https://example.com/?username=x'];
         yield 'everything removed drops the ?' => ['https://example.com/page?token=abc#c1', [], 'https://example.com/page#c1'];
         yield 'remaining pairs are kept as sent' => ['https://example.com/?q=a%20b&token=x&tx_news[news]=5', [], 'https://example.com/?q=a%20b&tx_news[news]=5'];
+        yield 'token in the fragment' => ['https://example.com/app#token=abc&view=list', [], 'https://example.com/app#view=list'];
+        yield 'route with query in the fragment' => ['https://example.com/app#/reset?token=abc&step=2', [], 'https://example.com/app#/reset?step=2'];
+        yield 'route keeps its path when its query is emptied' => ['https://example.com/app#/reset?access_token=abc', ['access_token'], 'https://example.com/app#/reset'];
+        yield 'anchor' => ['https://example.com/news#comments', ['ADMCMD_*'], 'https://example.com/news#comments'];
+        yield 'emptied fragment drops the #' => ['https://example.com/app?id=1#ADMCMD_prev=abc', ['ADMCMD_*'], 'https://example.com/app?id=1'];
     }
 
     /**

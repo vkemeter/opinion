@@ -243,8 +243,13 @@ URLs
     login or session parameters do not end up in the email. Comma-separated
     and case-insensitive; a trailing `*` matches a prefix, `ADMCMD_*` covers
     all preview parameters. For an array parameter like
-    `tx_felogin_login[hash]` the base name `tx_felogin_login` is matched. All
-    other parameters and the fragment are kept as sent.
+    `tx_felogin_login[hash]` the base name `tx_felogin_login` is matched.
+
+    The same parameters are removed from the fragment, so tokens like
+    `#access_token=…` or `#/reset?token=…` are not stored either: from the part
+    after the first `?` of the fragment, or from the whole fragment without
+    `?`, read as parameters separated by `&`. All other parameters, anchors
+    like `#comments` and routes like `#/reset` are kept as sent.
 
     The request token of backend URLs (`token`) is always removed. An empty
     value removes nothing else.
