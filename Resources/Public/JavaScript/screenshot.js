@@ -27,7 +27,7 @@ export async function captureScreenshot() {
     video.muted = true;
     video.playsInline = true;
     video.srcObject = stream;
-    await video.play();
+    await playWithRepaints(video);
     await new Promise((resolve) => window.setTimeout(resolve, SETTLE_DELAY_MS));
 
     const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
@@ -42,6 +42,28 @@ export async function captureScreenshot() {
     for (const track of stream.getTracks()) {
       track.stop();
     }
+  }
+}
+
+/**
+ * Chrome delivers a frame of the tab only when the page repaints; with the dialog hidden a static
+ * page may never repaint. One pixel changes invisibly (1–2 % black) until the first frame arrives.
+ *
+ * @param {HTMLVideoElement} video
+ */
+async function playWithRepaints(video) {
+  const pixel = document.createElement('div');
+  pixel.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;z-index:2147483647';
+  document.body.append(pixel);
+  let tick = 0;
+  const interval = window.setInterval(() => {
+    pixel.style.background = `rgb(0 0 0 / ${++tick % 2 + 1}%)`;
+  }, 100);
+  try {
+    await video.play();
+  } finally {
+    window.clearInterval(interval);
+    pixel.remove();
   }
 }
 

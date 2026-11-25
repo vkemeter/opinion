@@ -20,6 +20,14 @@
   `DeliveryChannelInterface` is unchanged
 - `opinion:cleanup` reports deleted "file(s)" instead of "screenshot(s)", as it
   counts videos as well
+- The feedback dialog has a new look after Bootstrap 6 (own stylesheet, no
+  Bootstrap needed): header with a close button, a body that scrolls on low
+  windows while Send stays visible, rounded controls with a focus ring, red
+  invalid fields, solid buttons and a short opening animation (none with reduced
+  motion). It is dark when the system prefers it and, in the backend, when the
+  TYPO3 colour scheme is dark. The annotation editor uses the same look
+- Fix: taking a screenshot no longer waits forever on a page that does not
+  change while the tab is shared
 
 ## 2.1.0 – 2026-11-24
 

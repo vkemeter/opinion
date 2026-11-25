@@ -1,5 +1,6 @@
 import { collectClientInfo } from './client-info.js';
 import { el } from './dom.js';
+import { icon } from './icons.js';
 import { ScreenshotControl } from './screenshot-control.js';
 
 // Generous, the request can carry a screenshot of up to 10 MB or a video of up to about 48 MB
@@ -25,6 +26,21 @@ export function openOpinionDialog(config) {
 let instanceCounter = 0;
 
 /**
+ * Header with title, the intro of the form and the close button (×) that closes the dialog like Cancel.
+ */
+function dialogHeader(dialog, labels, id, withIntro) {
+  const closeButton = el('button', { class: 'opinion-dialog__close', type: 'button', 'aria-label': labels.close, title: labels.close }, [icon('cancel')]);
+  closeButton.addEventListener('click', () => dialog.close());
+  return el('div', { class: 'opinion-dialog__header' }, [
+    el('div', { class: 'opinion-dialog__heading' }, [
+      el('h2', { class: 'opinion-dialog__title', id: `${id}-title` }, labels.title),
+      ...(withIntro ? [el('p', { class: 'opinion-dialog__intro' }, labels.intro)] : []),
+    ]),
+    closeButton,
+  ]);
+}
+
+/**
  * Tells users who cannot send feedback (no email address) why, instead of the form.
  */
 function openUnavailableNotice(config) {
@@ -39,8 +55,10 @@ function openUnavailableNotice(config) {
   );
   dialog.append(
     el('div', { class: 'opinion-dialog__form' }, [
-      el('h2', { class: 'opinion-dialog__title', id: `${id}-title` }, config.labels.title),
-      el('p', { class: 'opinion-dialog__status opinion-dialog__status--error', id: `${id}-message` }, config.unavailable.message),
+      dialogHeader(dialog, config.labels, id, false),
+      el('div', { class: 'opinion-dialog__body' }, [
+        el('p', { class: 'opinion-dialog__status opinion-dialog__status--error', id: `${id}-message` }, config.unavailable.message),
+      ]),
       el('div', { class: 'opinion-dialog__footer' }, [closeButton, settingsLink]),
     ]),
   );
@@ -85,10 +103,7 @@ class OpinionDialog {
       this.submit();
     });
 
-    const header = el('div', { class: 'opinion-dialog__header' }, [
-      el('h2', { class: 'opinion-dialog__title', id: `${this.id}-title` }, this.labels.title),
-      el('p', { class: 'opinion-dialog__intro' }, this.labels.intro),
-    ]);
+    const header = dialogHeader(dialog, this.labels, this.id, true);
 
     this.message = el('textarea', {
       class: 'opinion-dialog__textarea',
@@ -144,9 +159,11 @@ class OpinionDialog {
     this.sendButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary', type: 'submit' }, this.labels.send);
     this.cancelButton = el('button', { class: 'opinion-dialog__button', type: 'button' }, this.labels.cancel);
     this.cancelButton.addEventListener('click', () => this.element.close());
-    const footer = el('div', { class: 'opinion-dialog__footer' }, [this.cancelButton, this.sendButton]);
+    this.footer = el('div', { class: 'opinion-dialog__footer' }, [this.cancelButton, this.sendButton]);
+    // Only the body scrolls, title and buttons stay visible
+    this.body = el('div', { class: 'opinion-dialog__body' }, [messageField, selects, screenshotField, this.status]);
 
-    this.form.append(header, messageField, selects, screenshotField, this.status, footer);
+    this.form.append(header, this.body, this.footer);
     dialog.append(this.form);
     return dialog;
   }
@@ -232,11 +249,10 @@ class OpinionDialog {
   }
 
   showSuccess(message) {
-    for (const child of Array.from(this.form.children)) {
-      if (!child.classList.contains('opinion-dialog__header') && child !== this.status) {
-        child.hidden = true;
-      }
+    for (const child of Array.from(this.body.children)) {
+      child.hidden = child !== this.status;
     }
+    this.footer.hidden = true;
     this.form.querySelector('.opinion-dialog__intro').hidden = true;
     this.showStatus(message, false);
     const closeButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary', type: 'button' }, this.labels.close);

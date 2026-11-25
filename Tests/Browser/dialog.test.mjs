@@ -296,6 +296,72 @@ await scenario('video: click markers inside a same-origin frame, also after it r
   await page.waitForSelector('dialog.opinion-dialog[open]');
 });
 
+async function reopenDialog(page) {
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog'));
+  await page.click('#open');
+  await page.waitForSelector('dialog.opinion-dialog[open]');
+}
+
+await scenario('layout: close button in the header, only the body scrolls', [], async (page) => {
+  assert(await page.locator('.opinion-dialog__header .opinion-dialog__title').count() === 1, 'no header with title');
+  assert(await page.locator('.opinion-dialog__footer button[type=submit]').count() === 1, 'Send not in the footer');
+  // Header before body before footer: Shift+Tab from the description reaches the close button
+  await page.keyboard.press('Shift+Tab');
+  assert(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')) === '[close]', 'close button not before the body');
+  await page.setViewportSize({ width: 800, height: 420 });
+  const body = await page.evaluate(() => { const b = document.querySelector('.opinion-dialog__body'); return { scrolls: b.scrollHeight > b.clientHeight, overflow: getComputedStyle(b).overflowY }; });
+  assert(body.scrolls && body.overflow === 'auto', 'body does not scroll on a low viewport');
+  const send = await page.locator('button[type=submit]').boundingBox();
+  assert(send && send.y + send.height <= 420, 'Send not visible on a low viewport');
+  await page.click('[aria-label="[close]"]');
+  await page.waitForFunction(() => !document.querySelector('dialog'), null, { timeout: 2000 });
+});
+
+await scenario('look: dark by the system or the TYPO3 backend, light when the backend says so', [], async (page) => {
+  const background = () => page.evaluate(() => getComputedStyle(document.querySelector('dialog')).backgroundColor);
+  assert(await background() === 'rgb(255, 255, 255)', 'light dialog not white');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  assert(await background() === 'rgb(27, 31, 36)', 'not dark with a dark system');
+  await page.evaluate(() => { document.documentElement.dataset.colorScheme = 'light'; });
+  assert(await background() === 'rgb(255, 255, 255)', 'backend light does not win over a dark system');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.evaluate(() => { document.documentElement.dataset.colorScheme = 'dark'; });
+  assert(await background() === 'rgb(27, 31, 36)', 'backend dark does not win over a light system');
+});
+
+await scenario('look: controls keep their style on a page that styles them globally', [], async (page) => {
+  // Many sites shrink the root font size, which would shrink every rem
+  await page.addStyleTag({ content: 'html { font-size: 62.5%; } button, select, textarea, label, p { border: 5px dashed lime; border-radius: 0; padding: 30px; margin: 20px; font-size: 30px; text-transform: uppercase; background: yellow; box-shadow: 0 0 0 9px red; }' });
+  await reopenDialog(page);
+  const styles = await page.evaluate(() => {
+    const style = (selector) => { const c = getComputedStyle(document.querySelector(selector)); return [c.borderTopWidth, c.borderTopLeftRadius, c.paddingTop, c.paddingLeft, c.marginTop, c.textTransform, c.fontSize].join(' '); };
+    return { textarea: style('.opinion-dialog__textarea'), select: style('.opinion-dialog__select'), send: style('button[type=submit]'), label: style('.opinion-dialog__label') };
+  });
+  assert(styles.textarea === '1px 8px 6px 12px 0px none 16px', `textarea: ${styles.textarea}`);
+  assert(styles.select === '1px 8px 6px 12px 0px none 16px', `select: ${styles.select}`);
+  assert(styles.send === '1px 8px 6px 14px 0px none 16px', `send: ${styles.send}`);
+  assert(styles.label.endsWith('0px none 16px'), `label: ${styles.label}`);
+});
+
+await scenario('look: invalid field in red, focus ring, no animation with reduced motion', [], async (page) => {
+  await page.route('**/typo3/ajax/opinion/submit**', (route) => route.fulfill({ status: 422, contentType: 'application/json', body: JSON.stringify({ success: false, message: 'Please check', errors: { message: 'Too short!' } }) }));
+  await page.fill('textarea', 'The teaser image is cropped.');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('[data-error-for="message"]:not([hidden])');
+  // The border colour changes with a transition
+  await page.waitForTimeout(300);
+  const invalid = await page.evaluate(() => [getComputedStyle(document.querySelector('textarea')).borderTopColor, getComputedStyle(document.querySelector('[data-error-for="message"]')).color]);
+  assert(invalid[0] === 'rgb(198, 40, 40)' && invalid[1] === 'rgb(198, 40, 40)', `invalid not red: ${invalid}`);
+  await page.focus('select[name=category]');
+  await page.waitForTimeout(300);
+  assert((await page.evaluate(() => getComputedStyle(document.activeElement).boxShadow)).includes('3px'), 'no focus ring');
+  assert((await page.evaluate(() => getComputedStyle(document.querySelector('dialog')).transitionDuration)).startsWith('0.3s'), 'no opening animation');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await reopenDialog(page);
+  assert(await page.evaluate(() => getComputedStyle(document.querySelector('dialog')).transitionDuration) === '0s', 'animation despite reduced motion');
+});
+
 async function dragOnCanvas(page, from, to) {
   const box = await page.locator('.opinion-annotation__canvas').boundingBox();
   await page.mouse.move(box.x + box.width * from[0], box.y + box.height * from[1]);
