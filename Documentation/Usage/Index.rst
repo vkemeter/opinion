@@ -114,10 +114,13 @@ Category
 Severity
     *Low*, *Normal* or *High*.
 
-Screenshot
-    Optional, see below.
+Screenshot or video
+    Optional, see :ref:`usage-screenshot` and :ref:`usage-video`.
 
-:guilabel:`Send` stores the feedback and delivers it by email. The dialog
+:guilabel:`Send` stores the feedback and delivers it by email. The close
+button (×), :guilabel:`Cancel` and :kbd:`Esc` close the dialog without
+sending. The dialog follows the light or dark colour scheme of the operating
+system, in the backend the colour scheme set in TYPO3. The dialog
 confirms when it is stored; if the email could not be sent, it says so — the
 feedback is stored nevertheless.
 

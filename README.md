@@ -2,12 +2,13 @@
 
 # TYPO3 extension `opinion`
 
-The full documentation is in [Documentation/](Documentation/Index.rst)
-(reStructuredText, rendered with the TYPO3 documentation tools).
+The full documentation is on
+[docs.typo3.org](https://docs.typo3.org/p/vkemeter/opinion/main/en-us/).
 
 Collects feedback from editors: a description, a category and severity, an
-optional screenshot of the current browser tab and details about browser and
-TYPO3. Every submission is stored as a record and delivered by email.
+optional screenshot or (when switched on) video of the current browser tab and
+details about browser and TYPO3. Every submission is stored as a record and
+delivered by email.
 
 The dialog opens from two places:
 
@@ -22,6 +23,12 @@ Before sending, the screenshot can be marked up in a full-screen editor: frame
 an area with a rectangle, point at something with an arrow, add a short text
 note, black out personal data or crop it to the relevant part. The markings
 are burnt into the image; only the marked-up image is sent.
+
+With `videoEnabled`, a switch in the dialog offers a video of the tab instead,
+for problems that are a sequence. The dialog warns that everything visible and
+typed is in the video, closes while recording and opens again with the input
+kept; a bar shows the remaining time and clicks are marked. In the backend the
+recording continues across saving records and switching modules.
 
 Admins find all feedback in the module **Feedback**: search, filters, a list
 with status and conversation, and a detail view with message, screenshot, a
@@ -38,7 +45,10 @@ the latest feedback.
 ## Requirements
 
 - TYPO3 v14.3, PHP 8.4 or 8.5
-- HTTPS for screenshots (`getDisplayMedia()` needs a secure context)
+- HTTPS for screenshots and videos (`getDisplayMedia()` needs a secure context)
+- For videos: `MediaRecorder` in the browser and PHP upload limits that fit
+  `videoMaxDuration` (60 s need `upload_max_filesize = 10M`,
+  `post_max_size = 12M`)
 
 ## Installation
 
@@ -72,6 +82,8 @@ Admin Tools → Settings → Extension Configuration → `opinion`:
 | `redeliverMaxAttempts` | `5` | Attempts after which `opinion:redeliver` gives up, `0` = no limit |
 | `rateLimit` | `10` | Feedback per backend user and hour, `0` = no limit |
 | `enabled` | `1` | `0` hides the triggers and rejects submissions |
+| `videoEnabled` | `0` | `1` offers a video of the tab as an alternative to the screenshot |
+| `videoMaxDuration` | `60` | Maximum video length in seconds (10–300); the server accepts at most this × 160 KB |
 
 Without valid recipients the feedback is still stored, its delivery status is
 "failed".
@@ -158,6 +170,9 @@ command `opinion:cleanup`.
   `var/opinion/`, outside the web root. Only the feedback module delivers
   them, to administrators and the sender; the `dumpFile` URL always answers
   `403`.
+- Videos are stored and delivered like screenshots. The email never carries a
+  video, it links the detail view instead. Videos cannot be blacked out, so
+  they are off by default.
 - Blacked-out areas are burnt into the screenshot in the browser; the original
   capture never leaves the page.
 - The browser sends a fixed set of environment details (URL, title, user agent,
@@ -171,8 +186,8 @@ command `opinion:cleanup`.
   without cache, like in the admin panel itself. Cookies, server variables and
   request parameters of that tab are not taken.
 - The IP address is stored anonymised.
-- `opinion:cleanup` removes records, references, screenshot files and
-  conversations.
+- `opinion:cleanup` removes records, references, screenshot and video files
+  and conversations.
 
 ### Deployment
 
@@ -212,7 +227,10 @@ Extension points:
 `POST` to the backend AJAX route `opinion_submit`, `multipart/form-data`:
 `message`, `category` (one of `categories`, default `bug|content|idea|other`), `severity`
 (`low|normal|high`), `source` (`frontend|backend`), `clientInfo` (JSON),
-`context` (JSON), `screenshot` (PNG/JPEG, at most 10 MB).
+`context` (JSON), `screenshot` (PNG/JPEG, at most 10 MB) or `video` (MP4/WebM,
+at most `videoMaxDuration` × 160 KB, only with `videoEnabled`, never together
+with `screenshot`), `contextAtEnd` (JSON, context when a backend recording
+stopped).
 
 | Status | Meaning |
 |---|---|

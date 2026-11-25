@@ -34,12 +34,15 @@ Features
 *   **Mark up the screenshot** in a full-screen editor: rectangle, arrow,
     text notes, black out and crop. Markings are burnt into the image in the
     browser; only the cropped part is sent.
+*   **Video of the current tab** instead of the screenshot, off by default:
+    the dialog closes while recording, clicks are marked, and in the backend
+    the recording continues across modules.
 *   **Collected details** about browser, server and the current page or
     backend module, each of which an administrator can switch off.
 *   **Stored first, delivered second:** every submission is saved as a record;
     a failing mail transport never loses feedback.
 *   **Email delivery** to configurable recipients, the sender as reply-to,
-    the screenshot inline and attached.
+    the screenshot inline and attached, a video as a link to the detail view.
 *   **Module "Feedback"** with search, filters, a list and a detail view, and a
     configurable processing status (by default *New*, *In progress*,
     *Closed*). Administrators see all
@@ -51,7 +54,7 @@ Features
     in the page module, so a problem is not reported twice.
 *   **Dashboard widgets** for open feedback, new messages and the latest
     feedback (with the optional TYPO3 dashboard).
-*   **Non-public screenshot storage** outside the web root, delivered only
+*   **Non-public storage** of screenshots and videos outside the web root, delivered only
     through the module to administrators and the sender.
 *   **Retention:** the console command `opinion:cleanup` deletes old feedback,
     also as a Scheduler task.
@@ -63,7 +66,10 @@ Requirements
 
 *   TYPO3 v14.3
 *   PHP 8.4 or 8.5
-*   HTTPS for screenshots: browsers allow screen capture in secure contexts only
+*   HTTPS for screenshots and videos: browsers allow screen capture in secure
+    contexts only
+*   For videos: PHP upload limits that fit the maximum duration, see
+    :ref:`configuration-video-upload-limits`
 *   A configured mail transport for the email delivery
 
 ..  _languages:
