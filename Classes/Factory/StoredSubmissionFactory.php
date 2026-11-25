@@ -10,7 +10,7 @@ use Vkemeter\Opinion\Domain\Submission;
 
 /**
  * Rebuilds the submission of a stored feedback record, so it can be delivered again.
- * The screenshot is not part of it, it is already a FAL file.
+ * Screenshot and video are not part of it, they are FAL files already.
  */
 final readonly class StoredSubmissionFactory
 {
@@ -30,6 +30,8 @@ final readonly class StoredSubmissionFactory
             clientInfo: self::decode($record['client_info'] ?? null),
             systemInfo: self::decode($record['system_info'] ?? null),
             context: self::decode($record['context'] ?? null),
+            contextAtEnd: self::decode($record['context_at_end'] ?? null),
+            backendUrl: (string)($record['backend_url'] ?? ''),
         );
     }
 

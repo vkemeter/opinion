@@ -70,9 +70,9 @@ final readonly class SubmitController
         try {
             $result = $this->submissionProcessor->process($submission, $configuration);
         } catch (ScreenshotStorageException $exception) {
-            $this->logger->error('Feedback with screenshot could not be stored: {message}', ['message' => $exception->getMessage()]);
+            $this->logger->error('Feedback with screenshot or video could not be stored: {message}', ['message' => $exception->getMessage()]);
 
-            return $this->createResponse($languageService, 503, false, 'response.screenshotStorageUnavailable');
+            return $this->createResponse($languageService, 503, false, $submission->video !== null ? 'response.videoStorageUnavailable' : 'response.screenshotStorageUnavailable');
         }
 
         return match ($result->status) {

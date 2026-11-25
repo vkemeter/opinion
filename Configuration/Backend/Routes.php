@@ -12,4 +12,10 @@ return [
         'target' => FeedbackModuleController::class . '::screenshotAction',
         'inheritAccessFromModule' => 'opinion_feedback',
     ],
+    'opinion_video' => [
+        'path' => '/opinion/video',
+        'methods' => ['GET'],
+        'target' => FeedbackModuleController::class . '::videoAction',
+        'inheritAccessFromModule' => 'opinion_feedback',
+    ],
 ];

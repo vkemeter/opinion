@@ -68,8 +68,15 @@
 			</p>
 		</f:if>
 
+		<f:if condition="{video}">
+			<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.video')}</h4>
+			<p style="word-break: break-all">
+				{f:translate(domain: 'opinion.messages', key: 'email.video', arguments: {size: video.size})}<f:if condition="{video.url}">: <a href="{video.url}">{video.url}</a></f:if>
+			</p>
+		</f:if>
+
 		<f:for
-			each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}"
+			each="{context: context, contextAtEnd: contextAtEnd, clientInfo: clientInfo, systemInfo: systemInfo}"
 			as="rows"
 			key="section">
 			<f:if condition="{rows}">

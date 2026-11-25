@@ -9,7 +9,9 @@ use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Routing\BackendEntryPointResolver;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use Vkemeter\Opinion\Collection\CollectableField;
 use Vkemeter\Opinion\Collection\CollectionFilter;
@@ -106,6 +108,30 @@ final class SubmissionFactoryTest extends UnitTestCase
     }
 
     #[Test]
+    public function contextAtEndIsResolvedOnlyForTheBackend(): void
+    {
+        $backendProvider = self::createStub(ContextProviderInterface::class);
+        $backendProvider->method('supports')->willReturnCallback(static fn(Source $source): bool => $source === Source::Backend);
+        $backendProvider->method('resolve')->willReturnCallback(
+            static fn(array $context): array => ['module' => $context['module'], 'url' => '/typo3/module/web/list?token=abc&id=12'],
+        );
+        $fields = [
+            ...$this->validFields(),
+            'context' => '{"module":"web_layout"}',
+            'contextAtEnd' => '{"module":"web_list"}',
+        ];
+
+        $backend = $this->createSubject([$backendProvider], [CollectableField::ContextPage])
+            ->createFromRequest($this->createRequest([...$fields, 'source' => 'backend']), $this->createBackendUser());
+        self::assertSame('web_layout', $backend->context['module']);
+        self::assertSame(['module' => 'web_list', 'url' => '/typo3/module/web/list?id=12'], $backend->contextAtEnd, 'filtered like the context');
+
+        $frontend = $this->createSubject([$backendProvider])->createFromRequest($this->createRequest($fields), $this->createBackendUser());
+        self::assertSame([], $frontend->contextAtEnd);
+        self::assertSame('https://example.com/typo3', $frontend->backendUrl);
+    }
+
+    #[Test]
     public function invalidRequestThrowsWithFieldErrors(): void
     {
         try {
@@ -164,6 +190,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         $configurationProvider = self::createStub(ConfigurationProviderInterface::class);
         $configurationProvider->method('getConfiguration')->willReturn(new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180, $disabledFields, ['ADMCMD_*'], categories: ConfiguredValueList::parse($categories, OpinionConfiguration::DEFAULT_CATEGORIES)));
 
+        $backendEntryPointResolver = self::createStub(BackendEntryPointResolver::class);
+        $backendEntryPointResolver->method('getUriFromRequest')->willReturn(new Uri('https://example.com/typo3/'));
+
         return new SubmissionFactory(
             new SubmissionValidator(),
             new ClientInfoSanitizer(new SchemaSanitizer()),
@@ -172,6 +201,7 @@ final class SubmissionFactoryTest extends UnitTestCase
             $configurationProvider,
             new CollectionFilter(),
             new UrlParameterFilter(),
+            $backendEntryPointResolver,
             $contextProviders,
         );
     }

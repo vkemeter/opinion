@@ -61,10 +61,11 @@ document.addEventListener('click', (event) => {
     return;
   }
   const enabled = config.collect?.context;
-  const context = Object.fromEntries(
+  const collectContext = () => Object.fromEntries(
     Object.entries(collectBackendContext()).filter(([key]) => !enabled || enabled.includes(key === 'pageUid' ? 'page' : key)),
   );
-  openOpinionDialog({ ...config, context: { ...config.context, ...context } });
+  // Read again when a recording stops, the editor may have moved on to another module
+  openOpinionDialog({ ...config, context: { ...config.context, ...collectContext() }, collectContextAtEnd: () => ({ ...config.context, ...collectContext() }) });
 });
 
 showUnreadInModuleMenu();

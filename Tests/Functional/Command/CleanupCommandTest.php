@@ -64,7 +64,7 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand([]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Deleted 1 feedback record(s), 1 screenshot(s) and 3 message(s)', $tester->getDisplay());
+        self::assertStringContainsString('Deleted 1 feedback record(s), 1 file(s) and 3 message(s)', $tester->getDisplay());
         self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
         self::assertFileDoesNotExist($this->screenshotPaths['old']);
         self::assertSame(0, $this->countReferences($this->feedbackUids['old']));
@@ -79,11 +79,26 @@ final class CleanupCommandTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function deletesVideosLikeScreenshots(): void
+    {
+        $createdAt = new \DateTimeImmutable('-40 days');
+        $video = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom", 'mp4', $createdAt);
+        $uid = $this->get(FeedbackRepository::class)->add($this->createSubmission($createdAt), null, $video);
+        $path = Environment::getVarPath() . '/opinion' . $video->getIdentifier();
+
+        $tester = $this->runCommand([]);
+
+        self::assertStringContainsString('Deleted 2 feedback record(s), 2 file(s) and 3 message(s)', $tester->getDisplay());
+        self::assertFileDoesNotExist($path);
+        self::assertSame(0, $this->countReferences($uid));
+    }
+
+    #[Test]
     public function daysOptionOverridesTheConfiguration(): void
     {
         $tester = $this->runCommand(['--days' => '5']);
 
-        self::assertStringContainsString('Deleted 2 feedback record(s), 2 screenshot(s) and 4 message(s)', $tester->getDisplay());
+        self::assertStringContainsString('Deleted 2 feedback record(s), 2 file(s) and 4 message(s)', $tester->getDisplay());
         self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
         self::assertFileDoesNotExist($this->screenshotPaths['recent']);
     }
@@ -94,7 +109,7 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand(['--days' => '5', '--dry-run' => true]);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Would delete 2 feedback record(s), 2 screenshot(s) and 4 message(s)', $tester->getDisplay());
+        self::assertStringContainsString('Would delete 2 feedback record(s), 2 file(s) and 4 message(s)', $tester->getDisplay());
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
         self::assertFileExists($this->screenshotPaths['old']);
         self::assertSame(3, $this->get(ConversationRepository::class)->countByFeedback($this->feedbackUids['old']));
@@ -108,7 +123,7 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand(['--days' => '0']);
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Deleted 3 feedback record(s), 2 screenshot(s) and 4 message(s) regardless of age.', $this->display($tester));
+        self::assertStringContainsString('Deleted 3 feedback record(s), 2 file(s) and 4 message(s) regardless of age.', $this->display($tester));
         self::assertNull($this->get(FeedbackRepository::class)->findByUid($now), 'created in the current second');
         self::assertFileDoesNotExist($this->screenshotPaths['recent']);
     }
@@ -123,7 +138,7 @@ final class CleanupCommandTest extends FunctionalTestCase
 
         $tester = $this->runCommand(['--days' => '0', '--status' => 'closed']);
 
-        self::assertStringContainsString('Deleted 1 feedback record(s), 1 screenshot(s) and 1 message(s) regardless of age with status closed.', $this->display($tester));
+        self::assertStringContainsString('Deleted 1 feedback record(s), 1 file(s) and 1 message(s) regardless of age with status closed.', $this->display($tester));
         self::assertNull($repository->findByUid($this->feedbackUids['recent']));
         self::assertNotNull($repository->findByUid($this->feedbackUids['old']), 'new');
         self::assertNotNull($repository->findByUid($inProgress), 'in progress');
@@ -153,7 +168,7 @@ final class CleanupCommandTest extends FunctionalTestCase
 
         $tester = $this->runCommand(['--days' => '0', '--status' => 'new, closed', '--dry-run' => true]);
 
-        self::assertStringContainsString('Would delete 2 feedback record(s), 2 screenshot(s) and 4 message(s) regardless of age with status new, closed.', $this->display($tester));
+        self::assertStringContainsString('Would delete 2 feedback record(s), 2 file(s) and 4 message(s) regardless of age with status new, closed.', $this->display($tester));
     }
 
     #[Test]

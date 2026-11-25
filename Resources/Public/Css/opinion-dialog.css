@@ -10,6 +10,9 @@
   --opinion-color-error: #c00;
   --opinion-color-success: #107c10;
   --opinion-focus: 0 0 0 3px rgb(0 120 230 / 40%);
+  --opinion-color-surface: #eef1f5;
+  --opinion-color-accent: #0063bf;
+  --opinion-color-accent-background: rgb(0 120 230 / 10%);
 }
 
 .opinion-dialog {
@@ -154,6 +157,7 @@
 .opinion-dialog__footer {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -188,6 +192,49 @@
   background: #0063bf;
 }
 
+/* Take, retake and start recording: the main action of the capture, next to the switch */
+.opinion-dialog__button--capture {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 1.125rem 0 0.875rem;
+  border-color: var(--opinion-color-primary);
+  border-radius: 999px;
+  background: var(--opinion-color-accent-background);
+  color: var(--opinion-color-accent);
+  font-weight: 600;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.opinion-dialog .opinion-dialog__button--capture:hover:not(:disabled) {
+  background: var(--opinion-color-primary);
+  color: var(--opinion-color-primary-text);
+}
+
+.opinion-dialog__button-icon {
+  display: inline-flex;
+}
+
+.opinion-dialog__button-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.opinion-dialog__record-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin: 0.125rem;
+  border-radius: 50%;
+  background: #e00;
+  box-shadow: 0 0 0 2px rgb(238 0 0 / 25%);
+}
+
+.opinion-dialog__button--capture[data-kind='screenshot'] .opinion-dialog__record-dot,
+.opinion-dialog__button--capture[data-kind='video'] svg {
+  display: none;
+}
+
 .opinion-dialog__button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -204,6 +251,84 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Switch between screenshot and video: the knob slides over and shows the icon of the selected kind */
+.opinion-switch {
+  position: relative;
+  flex: none;
+  width: 4.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--opinion-color-border);
+  border-radius: 999px;
+  background: var(--opinion-color-surface);
+  color: var(--opinion-color-muted);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.opinion-switch[aria-checked='true'] {
+  border-color: var(--opinion-color-primary);
+  background: var(--opinion-color-accent-background);
+}
+
+.opinion-switch:focus-visible {
+  outline: 0;
+  box-shadow: var(--opinion-focus);
+}
+
+.opinion-switch__track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.625rem;
+}
+
+.opinion-switch svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.opinion-switch__thumb {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--opinion-color-primary);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+  color: var(--opinion-color-primary-text);
+  transition: transform 0.2s ease-out;
+}
+
+.opinion-switch[aria-checked='true'] .opinion-switch__thumb {
+  transform: translateX(2rem);
+}
+
+.opinion-switch[aria-checked='false'] .opinion-switch__thumb svg:last-child,
+.opinion-switch[aria-checked='true'] .opinion-switch__thumb svg:first-child {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opinion-switch,
+  .opinion-switch__thumb {
+    transition: none;
+  }
+}
+
+.opinion-dialog__hint--warning {
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--opinion-color-error);
+  color: var(--opinion-color-text);
 }
 
 .opinion-dialog__preview-wrapper {
@@ -251,6 +376,9 @@
     --opinion-color-error: #ff6b6b;
     --opinion-color-success: #6ccb6c;
     --opinion-color-background: #262626;
+    --opinion-color-surface: #333;
+    --opinion-color-accent: #7ab8ff;
+    --opinion-color-accent-background: rgb(0 120 230 / 22%);
   }
 
   .opinion-dialog .opinion-dialog__textarea,
@@ -258,7 +386,7 @@
     background: #1a1a1a;
   }
 
-  .opinion-dialog .opinion-dialog__button:not(.opinion-dialog__button--primary),
+  .opinion-dialog .opinion-dialog__button:not(.opinion-dialog__button--primary, .opinion-dialog__button--capture),
   .opinion-annotation .opinion-dialog__button:not(.opinion-dialog__button--primary, [aria-pressed='true']) {
     background: #333;
   }
@@ -410,4 +538,62 @@
   box-shadow: 0 2px 12px rgb(0 0 0 / 40%);
   cursor: crosshair;
   touch-action: none;
+}
+
+/* Floating bar of a running recording, outside the dialog: the dialog is closed meanwhile */
+.opinion-recording {
+  position: fixed;
+  z-index: 2147483646;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
+  font: 600 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.opinion-recording__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #e00;
+}
+
+.opinion-recording__time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.opinion-recording__stop {
+  margin: 0;
+  padding: 0.375rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.opinion-recording__stop:focus-visible {
+  outline: 3px solid #4da3ff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .opinion-recording__dot {
+    animation: opinion-recording-pulse 1s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes opinion-recording-pulse {
+  to {
+    opacity: 0.3;
+  }
 }

@@ -9,10 +9,12 @@ use Vkemeter\Opinion\Domain\Screenshot;
 use Vkemeter\Opinion\Domain\ScreenshotType;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Domain\Video;
+use Vkemeter\Opinion\Domain\VideoType;
 
 /**
- * Validates the raw form fields and the screenshot upload of a submission.
- * The screenshot type is detected from the content, never from the client.
+ * Validates the raw form fields and the screenshot or video upload of a submission.
+ * The file type is detected from the content, never from the client.
  */
 final readonly class SubmissionValidator
 {
@@ -24,8 +26,9 @@ final readonly class SubmissionValidator
     /**
      * @param array<array-key, mixed> $fields
      * @param list<string> $categories the configured category values
+     * @param int $videoMaxBytes largest accepted video, 0 = video disabled
      */
-    public function validate(array $fields, ?UploadedFileInterface $screenshotUpload, array $categories): ValidationResult
+    public function validate(array $fields, ?UploadedFileInterface $screenshotUpload, array $categories, ?UploadedFileInterface $videoUpload = null, int $videoMaxBytes = 0): ValidationResult
     {
         $errors = [];
 
@@ -49,13 +52,18 @@ final readonly class SubmissionValidator
         $source = $this->validateEnum($fields, 'source', Source::class, $errors);
         $clientInfo = $this->validateJsonObject($fields, 'clientInfo', $errors);
         $context = $this->validateJsonObject($fields, 'context', $errors);
+        $contextAtEnd = $this->validateJsonObject($fields, 'contextAtEnd', $errors);
         $screenshot = $this->validateScreenshot($screenshotUpload, $errors);
+        $video = $this->validateVideo($videoUpload, $videoMaxBytes, $errors);
+        if ($screenshot !== null && $video !== null) {
+            $errors['video'] = 'withScreenshot';
+        }
 
         if ($errors !== []) {
             return new ValidationResult($errors);
         }
 
-        return new ValidationResult([], $message, $category, $severity, $source, $clientInfo, $context, $screenshot);
+        return new ValidationResult([], $message, $category, $severity, $source, $clientInfo, $context, $screenshot, $video, $contextAtEnd);
     }
 
     /**
@@ -120,25 +128,8 @@ final readonly class SubmissionValidator
      */
     private function validateScreenshot(?UploadedFileInterface $upload, array &$errors): ?Screenshot
     {
-        if ($upload === null || $upload->getError() === UPLOAD_ERR_NO_FILE) {
-            return null;
-        }
-        if (in_array($upload->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-            $errors['screenshot'] = 'tooLarge';
-            return null;
-        }
-        if ($upload->getError() !== UPLOAD_ERR_OK) {
-            $errors['screenshot'] = 'uploadFailed';
-            return null;
-        }
-        if (($upload->getSize() ?? 0) > self::SCREENSHOT_MAX_BYTES) {
-            $errors['screenshot'] = 'tooLarge';
-            return null;
-        }
-
-        $content = (string)$upload->getStream();
-        if (strlen($content) > self::SCREENSHOT_MAX_BYTES) {
-            $errors['screenshot'] = 'tooLarge';
+        $content = $this->readUpload($upload, 'screenshot', self::SCREENSHOT_MAX_BYTES, $errors);
+        if ($content === null) {
             return null;
         }
 
@@ -149,5 +140,59 @@ final readonly class SubmissionValidator
         }
 
         return new Screenshot($content, $type);
+    }
+
+    /**
+     * @param array<string, string> $errors
+     */
+    private function validateVideo(?UploadedFileInterface $upload, int $maxBytes, array &$errors): ?Video
+    {
+        if ($maxBytes <= 0 && $upload !== null && $upload->getError() !== UPLOAD_ERR_NO_FILE) {
+            $errors['video'] = 'videoDisabled';
+            return null;
+        }
+        $content = $this->readUpload($upload, 'video', $maxBytes, $errors);
+        if ($content === null) {
+            return null;
+        }
+
+        $type = VideoType::fromContent($content);
+        if ($type === null) {
+            $errors['video'] = 'invalidType';
+            return null;
+        }
+
+        return new Video($content, $type);
+    }
+
+    /**
+     * @param array<string, string> $errors
+     * @return string|null the content, null without a file or on an error
+     */
+    private function readUpload(?UploadedFileInterface $upload, string $field, int $maxBytes, array &$errors): ?string
+    {
+        if ($upload === null || $upload->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+        if (in_array($upload->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            $errors[$field] = 'tooLarge';
+            return null;
+        }
+        if ($upload->getError() !== UPLOAD_ERR_OK) {
+            $errors[$field] = 'uploadFailed';
+            return null;
+        }
+        if (($upload->getSize() ?? 0) > $maxBytes) {
+            $errors[$field] = 'tooLarge';
+            return null;
+        }
+
+        $content = (string)$upload->getStream();
+        if (strlen($content) > $maxBytes) {
+            $errors[$field] = 'tooLarge';
+            return null;
+        }
+
+        return $content;
     }
 }

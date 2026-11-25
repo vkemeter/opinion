@@ -7,6 +7,7 @@ namespace Vkemeter\Opinion\Validation;
 use Vkemeter\Opinion\Domain\Screenshot;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Domain\Video;
 
 final readonly class ValidationResult
 {
@@ -14,6 +15,7 @@ final readonly class ValidationResult
      * @param array<string, string> $errors error code per field
      * @param array<string, mixed> $clientInfo
      * @param array<string, mixed> $context
+     * @param array<string, mixed> $contextAtEnd context at the end of a recording, unresolved
      */
     public function __construct(
         public array $errors,
@@ -24,6 +26,8 @@ final readonly class ValidationResult
         public array $clientInfo = [],
         public array $context = [],
         public ?Screenshot $screenshot = null,
+        public ?Video $video = null,
+        public array $contextAtEnd = [],
     ) {}
 
     public function isValid(): bool

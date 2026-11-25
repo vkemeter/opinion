@@ -62,6 +62,20 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function addReferencesVideo(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $file = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom", 'mp4', new \DateTimeImmutable());
+
+        $uid = $this->get(FeedbackRepository::class)->add($this->createSubmission(), null, $file);
+
+        $references = $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'video', $uid);
+        self::assertCount(1, $references);
+        self::assertSame($file->getUid(), $references[0]->getOriginalFile()->getUid());
+        self::assertSame([], $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid));
+    }
+
+    #[Test]
     public function queriesCanBeRestrictedToOneSender(): void
     {
         $repository = $this->get(FeedbackRepository::class);

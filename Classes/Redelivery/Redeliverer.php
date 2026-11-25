@@ -49,10 +49,11 @@ final readonly class Redeliverer
             return new ProcessingResult($feedbackUid, DeliveryStatus::Failed, []);
         }
         $screenshot = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $feedbackUid)[0] ?? null;
+        $video = $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'video', $feedbackUid)[0] ?? null;
 
         return $this->submissionProcessor->deliverStored(
             $feedbackUid,
-            $submission,
+            $submission->withStoredFeedback($feedbackUid, $video?->getOriginalFile()),
             $screenshot?->getOriginalFile(),
             $configuration,
             (string)($record['delivery_log'] ?? ''),

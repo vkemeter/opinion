@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Storage;
 
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Uid\Uuid;
+use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Folder;
@@ -63,10 +64,34 @@ final readonly class ScreenshotStorage
 
     /**
      * Inline response with the file; access is checked by the caller (feedback module).
+     * A single byte range ("bytes=a-b", "bytes=a-", "bytes=-n") is answered with 206, so a video player can seek.
+     *
+     * @param string $range value of the Range header, '' = whole file
      */
-    public function stream(File $file): ResponseInterface
+    public function stream(File $file, string $range = ''): ResponseInterface
     {
-        return $this->asSystem($file->getStorage(), static fn(): ResponseInterface => $file->getStorage()->streamFile($file));
+        $response = $this->asSystem($file->getStorage(), static fn(): ResponseInterface => $file->getStorage()->streamFile($file))
+            ->withHeader('Accept-Ranges', 'bytes');
+        if (preg_match('/^bytes=(\d*)-(\d*)$/', trim($range), $matches) !== 1 || $matches[1] . $matches[2] === '') {
+            return $response;
+        }
+
+        $size = $file->getSize();
+        [$start, $end] = $matches[1] === ''
+            ? [max(0, $size - (int)$matches[2]), $size - 1]
+            : [(int)$matches[1], $matches[2] === '' ? $size - 1 : min((int)$matches[2], $size - 1)];
+        if ($start > $end) {
+            return new Response(null, 416, ['Content-Range' => 'bytes */' . $size]);
+        }
+
+        $length = $end - $start + 1;
+        $path = $this->asSystem($file->getStorage(), static fn(): string => $file->getForLocalProcessing(false));
+
+        return $response
+            ->withStatus(206)
+            ->withBody(new FileRangeStream($path, $start, $length))
+            ->withHeader('Content-Length', (string)$length)
+            ->withHeader('Content-Range', sprintf('bytes %d-%d/%d', $start, $end, $size));
     }
 
     public function isAvailable(): bool

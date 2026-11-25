@@ -40,6 +40,18 @@
                 <source>Conversation: administrators and the sender of a feedback exchange messages in the module "Feedback"</source>
                 <target>Unterhaltung: Administratoren und der Absender eines Feedbacks tauschen im Modul "Feedback" Nachrichten aus</target>
             </trans-unit>
+            <trans-unit id="extconf.category.video">
+                <source>Video</source>
+                <target>Video</target>
+            </trans-unit>
+            <trans-unit id="extconf.videoEnabled">
+                <source>Enable video: the dialog offers a short video of the browser tab instead of a screenshot. Everything visible and typed in the tab during the recording is in the video.</source>
+                <target>Video aktivieren: Der Dialog bietet statt eines Screenshots ein kurzes Video des Browser-Tabs an. Alles, was während der Aufnahme im Tab sichtbar ist und eingetippt wird, ist im Video.</target>
+            </trans-unit>
+            <trans-unit id="extconf.videoMaxDuration">
+                <source>Maximum video length in seconds (10–300). Videos may be up to this length × 160 KB; the PHP settings upload_max_filesize and post_max_size must allow that.</source>
+                <target>Maximale Videolänge in Sekunden (10–300). Videos dürfen bis zu dieser Länge × 160 KB groß sein; die PHP-Einstellungen upload_max_filesize und post_max_size müssen das erlauben.</target>
+            </trans-unit>
             <trans-unit id="extconf.enabled">
                 <source>Enable feedback: shows the feedback triggers and accepts submissions</source>
                 <target>Feedback aktivieren: zeigt die Feedback-Schaltflächen an und nimmt Einsendungen an</target>
@@ -91,6 +103,18 @@
             <trans-unit id="tx_opinion_feedback.page_uid">
                 <source>Page</source>
                 <target>Seite</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.video">
+                <source>Video</source>
+                <target>Video</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.context_at_end">
+                <source>Context at the end of the recording</source>
+                <target>Kontext am Ende der Aufnahme</target>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.backend_url">
+                <source>Backend URL</source>
+                <target>Backend-URL</target>
             </trans-unit>
             <trans-unit id="tx_opinion_feedback.client_info">
                 <source>Browser and device</source>
@@ -196,6 +220,10 @@
                 <source>Your feedback has been saved, but could not be delivered. The team will see it in the backend.</source>
                 <target>Ihr Feedback wurde gespeichert, konnte aber nicht zugestellt werden. Das Team sieht es im Backend.</target>
             </trans-unit>
+            <trans-unit id="response.videoStorageUnavailable">
+                <source>The video cannot be stored at the moment. Please send your feedback without a video.</source>
+                <target>Das Video kann derzeit nicht gespeichert werden. Bitte senden Sie Ihr Feedback ohne Video.</target>
+            </trans-unit>
             <trans-unit id="response.screenshotStorageUnavailable">
                 <source>The screenshot cannot be stored at the moment. Please send your feedback without a screenshot.</source>
                 <target>Der Screenshot kann derzeit nicht gespeichert werden. Bitte senden Sie Ihr Feedback ohne Screenshot.</target>
@@ -264,6 +292,34 @@
                 <source>The screenshot could not be uploaded.</source>
                 <target>Der Screenshot konnte nicht hochgeladen werden.</target>
             </trans-unit>
+            <trans-unit id="error.video.tooLarge">
+                <source>The video is too large.</source>
+                <target>Das Video ist zu groß.</target>
+            </trans-unit>
+            <trans-unit id="error.video.invalidType">
+                <source>The video must be an MP4 or WebM file.</source>
+                <target>Das Video muss eine MP4- oder WebM-Datei sein.</target>
+            </trans-unit>
+            <trans-unit id="error.video.uploadFailed">
+                <source>The video could not be uploaded.</source>
+                <target>Das Video konnte nicht hochgeladen werden.</target>
+            </trans-unit>
+            <trans-unit id="error.video.videoDisabled">
+                <source>Videos are not accepted.</source>
+                <target>Videos werden nicht angenommen.</target>
+            </trans-unit>
+            <trans-unit id="error.video.withScreenshot">
+                <source>Please send either a screenshot or a video.</source>
+                <target>Bitte entweder einen Screenshot oder ein Video senden.</target>
+            </trans-unit>
+            <trans-unit id="error.contextAtEnd.invalid">
+                <source>The page details at the end of the recording could not be read.</source>
+                <target>Die Seitendetails am Ende der Aufnahme konnten nicht gelesen werden.</target>
+            </trans-unit>
+            <trans-unit id="error.contextAtEnd.tooLarge">
+                <source>The page details at the end of the recording are too large.</source>
+                <target>Die Seitendetails am Ende der Aufnahme sind zu groß.</target>
+            </trans-unit>
             <trans-unit id="email.headline">
                 <source>New feedback</source>
                 <target>Neues Feedback</target>
@@ -280,9 +336,69 @@
                 <source>Browser and device</source>
                 <target>Browser und Gerät</target>
             </trans-unit>
+            <trans-unit id="email.video">
+                <source>Video ({size} MB) in the backend</source>
+                <target>Video ({size} MB) im Backend</target>
+            </trans-unit>
+            <trans-unit id="email.section.contextAtEnd">
+                <source>At the end of the recording</source>
+                <target>Am Ende der Aufnahme</target>
+            </trans-unit>
             <trans-unit id="email.section.systemInfo">
                 <source>System</source>
                 <target>System</target>
+            </trans-unit>
+            <trans-unit id="dialog.capture">
+                <source>Screenshot or video</source>
+                <target>Screenshot oder Video</target>
+            </trans-unit>
+            <trans-unit id="dialog.captureScreenshot">
+                <source>Screenshot</source>
+                <target>Screenshot</target>
+            </trans-unit>
+            <trans-unit id="dialog.captureVideo">
+                <source>Video</source>
+                <target>Video</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoNotice">
+                <source>Everything visible in this tab and everything you type during the recording is in the video. It cannot be blacked out afterwards. The dialog closes while recording; stop with "Stop".</source>
+                <target>Alles, was während der Aufnahme in diesem Tab sichtbar ist und eingetippt wird, ist im Video. Es kann danach nicht geschwärzt werden. Während der Aufnahme schließt sich der Dialog; beenden mit „Stopp“.</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoStart">
+                <source>Start recording</source>
+                <target>Aufnahme starten</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoRetake">
+                <source>Record again</source>
+                <target>Neu aufnehmen</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoRemove">
+                <source>Remove video</source>
+                <target>Video entfernen</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoPreview">
+                <source>Preview of the video</source>
+                <target>Vorschau des Videos</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoRecording">
+                <source>Recording</source>
+                <target>Aufnahme</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoTimeLeft">
+                <source>{time} left</source>
+                <target>noch {time}</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoStop">
+                <source>Stop</source>
+                <target>Stopp</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoDenied">
+                <source>The recording was cancelled.</source>
+                <target>Die Aufnahme wurde abgebrochen.</target>
+            </trans-unit>
+            <trans-unit id="dialog.videoFailed">
+                <source>The video could not be recorded.</source>
+                <target>Das Video konnte nicht aufgenommen werden.</target>
             </trans-unit>
             <trans-unit id="dialog.title">
                 <source>Send feedback</source>
@@ -503,6 +619,18 @@
             <trans-unit id="module.list.show">
                 <source>Show feedback</source>
                 <target>Feedback anzeigen</target>
+            </trans-unit>
+            <trans-unit id="module.list.hasVideo">
+                <source>With video</source>
+                <target>Mit Video</target>
+            </trans-unit>
+            <trans-unit id="module.list.capture">
+                <source>Screenshot or video</source>
+                <target>Screenshot oder Video</target>
+            </trans-unit>
+            <trans-unit id="module.show.downloadVideo">
+                <source>Download video</source>
+                <target>Video herunterladen</target>
             </trans-unit>
             <trans-unit id="module.list.hasScreenshot">
                 <source>With screenshot</source>

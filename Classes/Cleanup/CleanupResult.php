@@ -11,7 +11,7 @@ final readonly class CleanupResult
      */
     public function __construct(
         public int $records,
-        public int $screenshots,
+        public int $files,
         public int $messages,
         public array $errors,
     ) {}

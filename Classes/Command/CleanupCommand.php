@@ -17,7 +17,7 @@ use Vkemeter\Opinion\Configuration\ConfigurationProviderInterface;
 
 #[AsCommand(
     name: 'opinion:cleanup',
-    description: 'Delete feedback records and their screenshots older than the retention period',
+    description: 'Delete feedback records and their screenshots and videos older than the retention period',
 )]
 final class CleanupCommand extends Command
 {
@@ -65,10 +65,10 @@ final class CleanupCommand extends Command
         }
 
         $io->success(sprintf(
-            '%s %d feedback record(s), %d screenshot(s) and %d message(s) %s%s.',
+            '%s %d feedback record(s), %d file(s) and %d message(s) %s%s.',
             $dryRun ? 'Would delete' : 'Deleted',
             $result->records,
-            $result->screenshots,
+            $result->files,
             $result->messages,
             $createdBefore === null ? 'regardless of age' : 'created before ' . $createdBefore->format('Y-m-d H:i'),
             $statuses !== [] ? ' with status ' . implode(', ', $statuses) : '',

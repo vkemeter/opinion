@@ -45,6 +45,23 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function videoIsOfferedOnlyWhenEnabled(): void
+    {
+        $backendUser = $this->setUpBackendUser(1);
+        $builder = $this->get(DialogConfigurationBuilder::class);
+
+        $configuration = $builder->build($backendUser, Source::Backend);
+        self::assertSame(['screenshot'], $configuration['captureKinds']);
+        self::assertNull($configuration['video']);
+
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $configuration = $builder->build($backendUser, Source::Backend);
+        self::assertSame(['screenshot', 'video'], $configuration['captureKinds']);
+        self::assertGreaterThanOrEqual(10, $configuration['video']['maxDuration']);
+        self::assertLessThanOrEqual(60 * 160 * 1024, $configuration['video']['uploadLimit']);
+    }
+
+    #[Test]
     public function categoriesFollowTheConfigurationWithTheirLabels(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'question=Question,bug,design';

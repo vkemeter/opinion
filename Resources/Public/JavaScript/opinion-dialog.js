@@ -2,8 +2,9 @@ import { collectClientInfo } from './client-info.js';
 import { el } from './dom.js';
 import { ScreenshotControl } from './screenshot-control.js';
 
-// Generous, the request can carry a screenshot of up to 10 MB
+// Generous, the request can carry a screenshot of up to 10 MB or a video of up to about 48 MB
 const SUBMIT_TIMEOUT_MS = 60000;
+const VIDEO_SUBMIT_TIMEOUT_MS = 300000;
 
 /**
  * Opens the feedback dialog. The configuration is built on the server by
@@ -60,9 +61,15 @@ class OpinionDialog {
 
   open() {
     document.body.append(this.element);
-    this.element.addEventListener('close', () => this.destroy(), { once: true });
+    // While recording the dialog is closed with its input kept, see reopen()
+    this.element.addEventListener('close', () => this.recording || this.destroy());
     this.element.showModal();
     this.message.focus();
+  }
+
+  reopen() {
+    this.recording = false;
+    this.element.showModal();
   }
 
   destroy() {
@@ -113,13 +120,23 @@ class OpinionDialog {
     this.screenshotControl = new ScreenshotControl({
       labels: this.labels,
       id: `${this.id}-screenshot`,
+      captureKinds: this.config.captureKinds,
+      video: this.config.video,
       beforeCapture: () => this.setCapturing(true),
       afterCapture: () => this.setCapturing(false),
+      beforeRecording: () => {
+        // A modal dialog makes the page inert
+        this.recording = true;
+        this.element.close();
+      },
+      afterRecording: () => this.reopen(),
+      collectContextAtEnd: this.config.collectContextAtEnd,
     });
     const screenshotField = el('fieldset', { class: 'opinion-dialog__fieldset' }, [
-      el('legend', { class: 'opinion-dialog__label' }, this.labels.screenshot),
+      el('legend', { class: 'opinion-dialog__label' }, this.screenshotControl.kinds.length > 1 ? this.labels.capture : this.labels.screenshot),
       this.screenshotControl.element,
       this.errorElement('screenshot'),
+      this.errorElement('video'),
     ]);
 
     this.status = el('p', { class: 'opinion-dialog__status', role: 'status', 'aria-live': 'polite' });
@@ -176,14 +193,18 @@ class OpinionDialog {
     body.append('source', this.config.source);
     body.append('clientInfo', JSON.stringify(collectClientInfo(this.config.collect?.client)));
     body.append('context', JSON.stringify(this.config.context || {}));
-    const screenshot = this.screenshotControl.getBlob();
-    if (screenshot) {
-      body.append('screenshot', screenshot, 'screenshot.jpg');
+    const capture = this.screenshotControl.getCapture();
+    if (capture) {
+      body.append(capture.field, capture.blob, capture.filename);
+      if (capture.contextAtEnd) {
+        body.append('contextAtEnd', JSON.stringify(capture.contextAtEnd));
+      }
     }
 
     this.setBusy(true);
     try {
-      const response = await fetch(this.config.endpoint, { method: 'POST', body, credentials: 'same-origin', signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS) });
+      const timeout = capture?.field === 'video' ? VIDEO_SUBMIT_TIMEOUT_MS : SUBMIT_TIMEOUT_MS;
+      const response = await fetch(this.config.endpoint, { method: 'POST', body, credentials: 'same-origin', signal: AbortSignal.timeout(timeout) });
       if (response.status === 401) {
         this.showStatus(this.labels.sessionExpired, true);
         return;

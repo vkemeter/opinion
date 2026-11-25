@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Routing\BackendEntryPointResolver;
 use Vkemeter\Opinion\Collection\CollectionFilter;
 use Vkemeter\Opinion\Collector\ClientInfoSanitizer;
 use Vkemeter\Opinion\Collector\SystemInfoCollector;
@@ -34,6 +35,7 @@ final readonly class SubmissionFactory
         private ConfigurationProviderInterface $configurationProvider,
         private CollectionFilter $collectionFilter,
         private UrlParameterFilter $urlParameterFilter,
+        private BackendEntryPointResolver $backendEntryPointResolver,
         #[AutowireIterator('opinion.context_provider')]
         private iterable $contextProviders,
     ) {}
@@ -45,12 +47,15 @@ final readonly class SubmissionFactory
     {
         $fields = $request->getParsedBody();
         $screenshotUpload = $request->getUploadedFiles()['screenshot'] ?? null;
+        $videoUpload = $request->getUploadedFiles()['video'] ?? null;
 
         $configuration = $this->configurationProvider->getConfiguration();
         $result = $this->validator->validate(
             is_array($fields) ? $fields : [],
             $screenshotUpload instanceof UploadedFileInterface ? $screenshotUpload : null,
             $configuration->categoryValues(),
+            $videoUpload instanceof UploadedFileInterface ? $videoUpload : null,
+            $configuration->videoEnabled ? $configuration->videoMaxSize() : 0,
         );
         if (!$result->isValid() || !$result->severity instanceof Severity || !$result->source instanceof Source) {
             throw new InvalidSubmissionException($result->errors, 1791562180);
@@ -69,6 +74,12 @@ final readonly class SubmissionFactory
             systemInfo: $this->collectionFilter->filter('system', $this->systemInfoCollector->collect($backendUser, $request, $createdAt), $configuration),
             context: $this->filterUrl($this->collectionFilter->filter('context', $this->resolveContext($result->source, $result->context, $request), $configuration), $configuration),
             screenshot: $result->screenshot,
+            video: $result->video,
+            // Only the backend keeps running across page changes during a recording
+            contextAtEnd: $result->source === Source::Backend && $result->contextAtEnd !== []
+                ? $this->filterUrl($this->collectionFilter->filter('context', $this->resolveContext($result->source, $result->contextAtEnd, $request), $configuration), $configuration)
+                : [],
+            backendUrl: rtrim((string)$this->backendEntryPointResolver->getUriFromRequest($request), '/'),
         );
     }
 

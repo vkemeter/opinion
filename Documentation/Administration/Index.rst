@@ -23,7 +23,7 @@ status; delivery details and all actions stay with administrators.
 
 List
     Newest first, with date, category, severity, source, sender and their
-    email address, the start of the message, a screenshot marker, the
+    email address, the start of the message, a screenshot or video marker, the
     status, the conversation (number of messages, *New* when there are
     messages you have not read yet) and the delivery status.
 
@@ -37,11 +37,14 @@ Search and filter
     their own feedback only.
 
 Detail view
-    The full message and the screenshot (click to open it in full size) side
-    by side, below them the status, for administrators the delivery status,
+    The full message and the screenshot (click to open it in full size) or
+    the video with a download link side by side, below them the status, for
+    administrators the delivery status,
     the number of delivery attempts and the log. Then the conversation with
     the form to save, and the collected details as sections that are
-    collapsed until you click them. For feedback that is *Failed* or *Pending*, the button
+    collapsed until you click them; for a video the context at the end of
+    the recording is one of them (*At the end of the recording*) when it
+    differs from the start. For feedback that is *Failed* or *Pending*, the button
     :guilabel:`Deliver again` starts a new delivery attempt right away; it
     ignores :confval:`extconf-redelivermaxattempts`. The result is shown as a
     message and appended to the log.
@@ -149,7 +152,7 @@ Clean up old feedback
 
 The console command `opinion:cleanup` deletes feedback records older than
 :confval:`extconf-retentiondays`, including their file references,
-screenshot files, conversation messages and read state.
+screenshot and video files, conversation messages and read state.
 
 ..  code-block:: bash
 
@@ -193,6 +196,11 @@ Data and privacy
     outside the web root. They are delivered only through the feedback module
     in the backend, to administrators and to the sender of the feedback. The
     TYPO3 file dump URL (`eID=dumpFile`) always answers `403` for them.
+*   Videos are stored and delivered like screenshots. The email never
+    carries a video, it links the detail view instead. Video is off by
+    default (:confval:`extconf-videoenabled`); the dialog tells the sender
+    before every recording that everything visible and typed in the tab is
+    in the video.
 *   Blacked-out areas are burnt into the screenshot in the browser; the
     original capture never leaves the page.
 *   The browser sends a fixed set of details only, the server drops every

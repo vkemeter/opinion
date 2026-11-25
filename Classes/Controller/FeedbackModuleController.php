@@ -146,6 +146,7 @@ final readonly class FeedbackModuleController
         }
         $systemInfo = StoredSubmissionFactory::decode($record['system_info'] ?? null);
         $context = StoredSubmissionFactory::decode($record['context'] ?? null);
+        $contextAtEnd = StoredSubmissionFactory::decode($record['context_at_end'] ?? null);
         $clientInfo = StoredSubmissionFactory::decode($record['client_info'] ?? null);
 
         $view = $this->moduleTemplateFactory->create($request);
@@ -155,6 +156,7 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
+            'video' => $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'video', $uid)[0] ?? null,
             'conversationEnabled' => $conversationEnabled,
             'messages' => $messages,
             'messageMaxLength' => self::MESSAGE_MAX_LENGTH,
@@ -168,6 +170,8 @@ final readonly class FeedbackModuleController
             // The URLs are shown once as reportedUrl
             'sections' => [
                 'context' => $this->dataFlattener->flatten(array_diff_key($context, ['url' => true])),
+                // Only where the recording ended elsewhere
+                'contextAtEnd' => $contextAtEnd !== $context ? $this->dataFlattener->flatten($contextAtEnd) : [],
                 'clientInfo' => $this->dataFlattener->flatten(array_diff_key($clientInfo, ['url' => true])),
                 'systemInfo' => $this->dataFlattener->flatten(array_diff_key($systemInfo, ['backendUser' => true])),
             ],
@@ -252,18 +256,15 @@ final readonly class FeedbackModuleController
      */
     public function screenshotAction(ServerRequestInterface $request): ResponseInterface
     {
-        if (!$this->hasModuleAccess()) {
-            return $this->accessDenied();
-        }
-        $uid = (int)($request->getQueryParams()['uid'] ?? 0);
-        // Another user's feedback is treated like an unknown uid
-        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
-        $screenshot = $record !== null ? ($this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid)[0] ?? null) : null;
-        if (!$screenshot instanceof FileReference) {
-            return new HtmlResponse('', 404);
-        }
+        return $this->streamCapture($request, 'screenshot');
+    }
 
-        return $this->screenshotStorage->stream($screenshot->getOriginalFile());
+    /**
+     * Delivers the video of one feedback, with range requests for seeking; same access rules as the detail view.
+     */
+    public function videoAction(ServerRequestInterface $request): ResponseInterface
+    {
+        return $this->streamCapture($request, 'video');
     }
 
     /**
@@ -316,6 +317,22 @@ final readonly class FeedbackModuleController
         parse_str((string)parse_url($uri, PHP_URL_QUERY), $hidden);
 
         return ['action' => (string)parse_url($uri, PHP_URL_PATH), 'hidden' => $hidden];
+    }
+
+    private function streamCapture(ServerRequestInterface $request, string $field): ResponseInterface
+    {
+        if (!$this->hasModuleAccess()) {
+            return $this->accessDenied();
+        }
+        $uid = (int)($request->getQueryParams()['uid'] ?? 0);
+        // Another user's feedback is treated like an unknown uid
+        $record = $uid > 0 ? $this->feedbackRepository->findByUid($uid, $this->getSenderFilter()) : null;
+        $file = $record !== null ? ($this->fileRepository->findByRelation(FeedbackRepository::TABLE, $field, $uid)[0] ?? null) : null;
+        if (!$file instanceof FileReference) {
+            return new HtmlResponse('', 404);
+        }
+
+        return $this->screenshotStorage->stream($file->getOriginalFile(), $request->getHeaderLine('Range'));
     }
 
     /**

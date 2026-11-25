@@ -10,6 +10,8 @@ final readonly class OpinionConfiguration
 {
     public const array DEFAULT_CATEGORIES = ['bug' => '', 'content' => '', 'idea' => '', 'other' => ''];
     public const array DEFAULT_STATUSES = ['new' => '', 'in_progress' => '', 'closed' => ''];
+    /** Server limit per second of video; about 1.3 Mbit/s for a recording at 1 Mbit/s */
+    public const int VIDEO_BYTES_PER_SECOND = 160 * 1024;
 
     /**
      * @param list<string> $recipients
@@ -23,6 +25,8 @@ final readonly class OpinionConfiguration
      * @param array<array-key, string> $statuses processing statuses in their order, like $categories; the first is the initial status
      * @param list<string> $closedStatuses statuses that count as done, never the initial status
      * @param string $reopenStatus status of a closed feedback after a reply of its sender; open and configured
+     * @param bool $videoEnabled the dialog offers a video of the tab as capture
+     * @param int $videoMaxDuration maximum length of a video in seconds, 10–300
      */
     public function __construct(
         public bool $enabled,
@@ -39,7 +43,17 @@ final readonly class OpinionConfiguration
         public array $statuses = self::DEFAULT_STATUSES,
         public array $closedStatuses = ['closed'],
         public string $reopenStatus = 'in_progress',
+        public bool $videoEnabled = false,
+        public int $videoMaxDuration = 60,
     ) {}
+
+    /**
+     * Largest accepted video in bytes, derived from the maximum duration.
+     */
+    public function videoMaxSize(): int
+    {
+        return $this->videoMaxDuration * self::VIDEO_BYTES_PER_SECOND;
+    }
 
     /**
      * The configured category values as strings, in their order.

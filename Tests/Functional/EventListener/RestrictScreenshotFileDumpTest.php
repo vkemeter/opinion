@@ -58,6 +58,16 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function videoIsDeniedAlsoWithAdminSession(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $this->setUpBackendUser(1);
+        $video = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom", 'mp4', new \DateTimeImmutable());
+
+        self::assertSame(403, $this->dispatch($video)->getResponse()?->getStatusCode());
+    }
+
+    #[Test]
     public function processedScreenshotIsDenied(): void
     {
         $processedFile = $this->createScreenshot()->process('Image.Preview', ['width' => 1, 'height' => 1]);

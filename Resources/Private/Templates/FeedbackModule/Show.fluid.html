@@ -1,6 +1,7 @@
 <html
 	xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
 	xmlns:opinion="http://typo3.org/ns/Vkemeter/Opinion/ViewHelpers"
+	xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
 	xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
 	data-namespace-typo3-fluid="true">
 	<f:layout name="Module" />
@@ -86,22 +87,42 @@
 			</div>
 
 			<div class="col-12 col-xl-6">
-				<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h2>
-				<f:if condition="{screenshot}">
+				<f:if condition="{video}">
 					<f:then>
-						<a
-							href="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
-							target="_blank"
-							rel="noopener"
-							title="{f:translate(domain: 'opinion.messages', key: 'module.show.openScreenshot')}">
-							<img
-								class="img-fluid img-thumbnail"
-								src="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
-								alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
-						</a>
+						<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.video')}</h2>
+						<video
+							class="img-fluid img-thumbnail"
+							controls
+							preload="metadata"
+							src="{f:be.uri(route: 'opinion_video', parameters: {uid: record.uid})}"></video>
+						<p class="mt-2">
+							<a
+								href="{f:be.uri(route: 'opinion_video', parameters: {uid: record.uid})}"
+								download="feedback-{record.uid}.{video.extension}">
+								{core:icon(identifier: 'actions-download', size: 'small')}
+								{f:translate(domain: 'opinion.messages', key: 'module.show.downloadVideo')}
+							</a>
+						</p>
 					</f:then>
 					<f:else>
-						<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.show.noScreenshot')}</p>
+						<h2>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</h2>
+						<f:if condition="{screenshot}">
+							<f:then>
+								<a
+									href="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
+									target="_blank"
+									rel="noopener"
+									title="{f:translate(domain: 'opinion.messages', key: 'module.show.openScreenshot')}">
+									<img
+										class="img-fluid img-thumbnail"
+										src="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
+										alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
+								</a>
+							</f:then>
+							<f:else>
+								<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.show.noScreenshot')}</p>
+							</f:else>
+						</f:if>
 					</f:else>
 				</f:if>
 			</div>

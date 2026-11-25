@@ -31,6 +31,15 @@
             <trans-unit id="extconf.conversation">
                 <source>Conversation: administrators and the sender of a feedback exchange messages in the module "Feedback"</source>
             </trans-unit>
+            <trans-unit id="extconf.category.video">
+                <source>Video</source>
+            </trans-unit>
+            <trans-unit id="extconf.videoEnabled">
+                <source>Enable video: the dialog offers a short video of the browser tab instead of a screenshot. Everything visible and typed in the tab during the recording is in the video.</source>
+            </trans-unit>
+            <trans-unit id="extconf.videoMaxDuration">
+                <source>Maximum video length in seconds (10–300). Videos may be up to this length × 160 KB; the PHP settings upload_max_filesize and post_max_size must allow that.</source>
+            </trans-unit>
             <trans-unit id="extconf.enabled">
                 <source>Enable feedback: shows the feedback triggers and accepts submissions</source>
             </trans-unit>
@@ -69,6 +78,15 @@
             </trans-unit>
             <trans-unit id="tx_opinion_feedback.page_uid">
                 <source>Page</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.video">
+                <source>Video</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.context_at_end">
+                <source>Context at the end of the recording</source>
+            </trans-unit>
+            <trans-unit id="tx_opinion_feedback.backend_url">
+                <source>Backend URL</source>
             </trans-unit>
             <trans-unit id="tx_opinion_feedback.client_info">
                 <source>Browser and device</source>
@@ -148,6 +166,9 @@
             <trans-unit id="response.notDelivered">
                 <source>Your feedback has been saved, but could not be delivered. The team will see it in the backend.</source>
             </trans-unit>
+            <trans-unit id="response.videoStorageUnavailable">
+                <source>The video cannot be stored at the moment. Please send your feedback without a video.</source>
+            </trans-unit>
             <trans-unit id="response.screenshotStorageUnavailable">
                 <source>The screenshot cannot be stored at the moment. Please send your feedback without a screenshot.</source>
             </trans-unit>
@@ -199,6 +220,27 @@
             <trans-unit id="error.screenshot.uploadFailed">
                 <source>The screenshot could not be uploaded.</source>
             </trans-unit>
+            <trans-unit id="error.video.tooLarge">
+                <source>The video is too large.</source>
+            </trans-unit>
+            <trans-unit id="error.video.invalidType">
+                <source>The video must be an MP4 or WebM file.</source>
+            </trans-unit>
+            <trans-unit id="error.video.uploadFailed">
+                <source>The video could not be uploaded.</source>
+            </trans-unit>
+            <trans-unit id="error.video.videoDisabled">
+                <source>Videos are not accepted.</source>
+            </trans-unit>
+            <trans-unit id="error.video.withScreenshot">
+                <source>Please send either a screenshot or a video.</source>
+            </trans-unit>
+            <trans-unit id="error.contextAtEnd.invalid">
+                <source>The page details at the end of the recording could not be read.</source>
+            </trans-unit>
+            <trans-unit id="error.contextAtEnd.tooLarge">
+                <source>The page details at the end of the recording are too large.</source>
+            </trans-unit>
             <trans-unit id="email.headline">
                 <source>New feedback</source>
             </trans-unit>
@@ -211,8 +253,53 @@
             <trans-unit id="email.section.clientInfo">
                 <source>Browser and device</source>
             </trans-unit>
+            <trans-unit id="email.video">
+                <source>Video ({size} MB) in the backend</source>
+            </trans-unit>
+            <trans-unit id="email.section.contextAtEnd">
+                <source>At the end of the recording</source>
+            </trans-unit>
             <trans-unit id="email.section.systemInfo">
                 <source>System</source>
+            </trans-unit>
+            <trans-unit id="dialog.capture">
+                <source>Screenshot or video</source>
+            </trans-unit>
+            <trans-unit id="dialog.captureScreenshot">
+                <source>Screenshot</source>
+            </trans-unit>
+            <trans-unit id="dialog.captureVideo">
+                <source>Video</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoNotice">
+                <source>Everything visible in this tab and everything you type during the recording is in the video. It cannot be blacked out afterwards. The dialog closes while recording; stop with "Stop".</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoStart">
+                <source>Start recording</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoRetake">
+                <source>Record again</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoRemove">
+                <source>Remove video</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoPreview">
+                <source>Preview of the video</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoRecording">
+                <source>Recording</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoTimeLeft">
+                <source>{time} left</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoStop">
+                <source>Stop</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoDenied">
+                <source>The recording was cancelled.</source>
+            </trans-unit>
+            <trans-unit id="dialog.videoFailed">
+                <source>The video could not be recorded.</source>
             </trans-unit>
             <trans-unit id="dialog.title">
                 <source>Send feedback</source>
@@ -378,6 +465,15 @@
             </trans-unit>
             <trans-unit id="module.list.show">
                 <source>Show feedback</source>
+            </trans-unit>
+            <trans-unit id="module.list.hasVideo">
+                <source>With video</source>
+            </trans-unit>
+            <trans-unit id="module.list.capture">
+                <source>Screenshot or video</source>
+            </trans-unit>
+            <trans-unit id="module.show.downloadVideo">
+                <source>Download video</source>
             </trans-unit>
             <trans-unit id="module.list.hasScreenshot">
                 <source>With screenshot</source>

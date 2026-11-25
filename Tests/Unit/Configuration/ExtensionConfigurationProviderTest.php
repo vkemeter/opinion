@@ -42,6 +42,21 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
     }
 
     #[Test]
+    public function getConfigurationReadsTheVideoSettings(): void
+    {
+        $defaults = $this->createSubject([])->getConfiguration();
+        self::assertFalse($defaults->videoEnabled);
+        self::assertSame(60, $defaults->videoMaxDuration);
+        self::assertSame(60 * 160 * 1024, $defaults->videoMaxSize());
+
+        $own = $this->createSubject(['videoEnabled' => '1', 'videoMaxDuration' => '900'])->getConfiguration();
+        self::assertTrue($own->videoEnabled);
+        self::assertSame(300, $own->videoMaxDuration);
+        self::assertSame(300 * 160 * 1024, $own->videoMaxSize());
+        self::assertSame(10, $this->createSubject(['videoMaxDuration' => '3'])->getConfiguration()->videoMaxDuration);
+    }
+
+    #[Test]
     public function getConfigurationReadsTheCategories(): void
     {
         self::assertSame(['bug' => '', 'content' => '', 'idea' => '', 'other' => ''], $this->createSubject([])->getConfiguration()->categories);

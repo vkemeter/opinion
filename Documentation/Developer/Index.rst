@@ -93,6 +93,14 @@ switch a channel off by its identifier in
         }
     }
 
+A video is not passed as `$screenshot`: :php:`$submission->videoFile` holds the
+stored video (:php:`null` without one), :php:`$submission->feedbackUid` the uid
+of the record and :php:`$submission->backendUrl` the backend base URL it was
+sent from, also when the feedback is delivered again from the command line.
+Read the file with
+:php:`\Vkemeter\Opinion\Storage\ScreenshotStorage::getContents()`; the
+sending editor has no file mount on the storage.
+
 ..  _developer-context-provider:
 
 Validate the context of an entry point
@@ -152,6 +160,14 @@ configuration (`endpoint`).
         -   JSON, context of the entry point
     *   -   `screenshot`
         -   Optional, PNG or JPEG, at most 10 MB
+    *   -   `video`
+        -   Optional, MP4 or WebM (detected from the content), at most
+            :confval:`extconf-videomaxduration` × 160 KB; only with
+            :confval:`extconf-videoenabled` and never together with
+            `screenshot` (`422`)
+    *   -   `contextAtEnd`
+        -   Optional, JSON, context when a recording stopped; validated like
+            `context`, only for source `backend`
 
 ..  list-table::
     :header-rows: 1

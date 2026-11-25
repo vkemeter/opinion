@@ -141,6 +141,38 @@ Screenshots need a secure (HTTPS) connection and a current browser. If the
 browser cannot take screenshots, or the permission is denied, the dialog
 explains it and the feedback can still be sent without one.
 
+..  _usage-video:
+
+Record a video
+==============
+
+Some problems are a sequence, not a state: a menu that closes too early, a
+value that is lost on saving. When an administrator switched video on (see
+:ref:`configuration-video`), the dialog shows a switch between
+:guilabel:`Screenshot` and :guilabel:`Video`.
+
+#.  Flip the switch next to the capture button from the camera to the video
+    icon and read the notice: everything visible in the
+    tab and everything you type during the recording is in the video.
+#.  Click :guilabel:`Start recording` and choose the current tab.
+#.  The dialog closes, so you can use the page. A bar at the bottom shows the
+    remaining time; every click is marked with a red circle in the video.
+#.  Click :guilabel:`Stop`. The recording also stops at the maximum duration,
+    before the upload limit is reached and when you end the sharing in the
+    browser bar.
+#.  The dialog opens again with your text and a preview of the video.
+
+:guilabel:`Record again` replaces the video, :guilabel:`Remove` drops it. A
+feedback has either a screenshot or a video: a new capture of the other kind
+replaces the existing one, flipping the switch alone keeps it. Videos cannot
+be marked up.
+
+In the backend the recording continues while you save records or switch
+modules. On a frontend page, leaving or reloading the page ends the recording,
+so the browser asks first. To show a sequence across several frontend pages,
+open the pages in a backend module that shows the frontend in the module
+frame, for example the page preview, and record there.
+
 ..  _usage-annotation:
 
 Mark up the screenshot

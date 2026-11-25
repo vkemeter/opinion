@@ -22,7 +22,10 @@ use Vkemeter\Opinion\Domain\ScreenshotType;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Domain\Video;
+use Vkemeter\Opinion\Domain\VideoType;
 use Vkemeter\Opinion\Exception\ScreenshotStorageException;
+use Vkemeter\Opinion\Factory\StoredSubmissionFactory;
 use Vkemeter\Opinion\Processing\SubmissionProcessor;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
@@ -30,6 +33,7 @@ use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 
 final class SubmissionProcessorTest extends FunctionalTestCase
 {
+    private const string WEBM = "\x1A\x45\xDF\xA3\x9F\x42\x86\x81\x01\x42\x82\x84webm\x42\x87rest";
     private const string PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
     protected array $coreExtensionsToLoad = ['adminpanel'];
@@ -145,6 +149,45 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertInstanceOf(File::class, $receivedScreenshot);
         self::assertSame($receivedScreenshot->getUid(), $references[0]->getOriginalFile()->getUid());
         self::assertFalse($receivedScreenshot->getStorage()->isPublic());
+    }
+
+    #[Test]
+    public function videoIsStoredReferencedAndPassedToTheChannelsWithTheEndContext(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $received = null;
+        $channel = $this->createChannel('test', static function (Submission $submission, ?File $screenshot) use (&$received): DeliveryResult {
+            $received = [$submission, $screenshot];
+            return DeliveryResult::success('test');
+        });
+        $submission = new Submission(
+            message: 'The menu closes too early.',
+            category: 'bug',
+            severity: Severity::Normal,
+            source: Source::Backend,
+            backendUserUid: 1,
+            createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
+            context: ['module' => 'web_layout'],
+            video: new Video(self::WEBM, VideoType::Webm),
+            contextAtEnd: ['module' => 'web_list'],
+            backendUrl: 'https://example.com/typo3',
+        );
+
+        $result = $this->createProcessor([$channel])->process($submission, $this->configuration());
+
+        $references = $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'video', $result->feedbackUid);
+        self::assertCount(1, $references);
+        self::assertSame('webm', $references[0]->getOriginalFile()->getExtension());
+        self::assertSame(self::WEBM, $references[0]->getOriginalFile()->getContents());
+        self::assertIsArray($received);
+        [$delivered, $screenshot] = $received;
+        self::assertNull($screenshot);
+        self::assertSame($result->feedbackUid, $delivered->feedbackUid);
+        self::assertSame($references[0]->getOriginalFile()->getUid(), $delivered->videoFile?->getUid());
+        $record = $this->get(FeedbackRepository::class)->findByUid($result->feedbackUid);
+        self::assertSame(1, (int)($record['video'] ?? 0));
+        self::assertSame('https://example.com/typo3', $record['backend_url'] ?? null);
+        self::assertSame(['module' => 'web_list'], StoredSubmissionFactory::decode($record['context_at_end'] ?? null));
     }
 
     #[Test]

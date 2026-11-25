@@ -30,15 +30,15 @@ final readonly class FeedbackCleaner
     public function cleanup(?\DateTimeImmutable $createdBefore, bool $dryRun, array $statuses = []): CleanupResult
     {
         $records = 0;
-        $screenshots = 0;
+        $files = 0;
         $messages = 0;
         $errors = [];
 
         foreach ($this->feedbackRepository->findUidsForCleanup($createdBefore?->getTimestamp(), $statuses) as $feedbackUid) {
-            $fileUids = $this->feedbackRepository->findScreenshotFileUids($feedbackUid);
+            $fileUids = $this->feedbackRepository->findCaptureFileUids($feedbackUid);
             if ($dryRun) {
                 $records++;
-                $screenshots += count($fileUids);
+                $files += count($fileUids);
                 $messages += $this->conversationRepository->countByFeedback($feedbackUid);
                 continue;
             }
@@ -50,7 +50,7 @@ final readonly class FeedbackCleaner
                     } catch (FileDoesNotExistException) {
                         // Already gone, the reference is removed with the record
                     }
-                    $screenshots++;
+                    $files++;
                 }
                 $messages += $this->conversationRepository->removeByFeedback($feedbackUid);
                 $this->feedbackRepository->remove($feedbackUid);
@@ -60,6 +60,6 @@ final readonly class FeedbackCleaner
             }
         }
 
-        return new CleanupResult($records, $screenshots, $messages, $errors);
+        return new CleanupResult($records, $files, $messages, $errors);
     }
 }

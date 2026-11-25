@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- Video of the browser tab as an alternative to the screenshot, off by default
+  (`videoEnabled` in the new tab "Video"). A switch in the dialog chooses
+  between screenshot and video; the dialog warns that everything visible and typed is in the video, closes
+  while recording and opens again with the input kept. A bar shows the
+  remaining time, clicks are marked, the recording stops at `videoMaxDuration`
+  (default 60 s, 10–300), before the upload limit, on "Stop" and when the
+  sharing ends. In the backend it continues across saving records and
+  switching modules and stores the context at the end. MP4 or WebM, at most
+  `videoMaxDuration` × 160 KB, stored and protected like screenshots and
+  deleted by `opinion:cleanup`. The email links the detail view instead of
+  attaching the video; the module plays it (with seeking) and marks it in the
+  list. Run `vendor/bin/typo3 extension:setup` for the new columns `video`,
+  `context_at_end` and `backend_url`
+- Delivery channels get the stored video, the feedback uid and the backend URL
+  through `Submission` (`videoFile`, `feedbackUid`, `backendUrl`);
+  `DeliveryChannelInterface` is unchanged
+- `opinion:cleanup` reports deleted "file(s)" instead of "screenshot(s)", as it
+  counts videos as well
+
 ## 2.1.0 – 2026-11-24
 
 - Processing statuses are configurable: `statuses` (default

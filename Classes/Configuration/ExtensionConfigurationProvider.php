@@ -17,6 +17,7 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
     private const int DEFAULT_RETENTION_DAYS = 180;
     private const int DEFAULT_REDELIVER_MAX_ATTEMPTS = 5;
     private const int DEFAULT_RATE_LIMIT = 10;
+    private const int DEFAULT_VIDEO_MAX_DURATION = 60;
     public const string DEFAULT_DENIED_URL_PARAMETERS = 'ADMCMD_*,logintype,user,pass,redirect_url,tx_felogin_login';
 
     public function __construct(
@@ -61,6 +62,8 @@ final readonly class ExtensionConfigurationProvider implements ConfigurationProv
             statuses: $statuses,
             closedStatuses: $closedStatuses,
             reopenStatus: $reopenStatus,
+            videoEnabled: (bool)($settings['videoEnabled'] ?? false),
+            videoMaxDuration: max(10, min(300, (int)($settings['videoMaxDuration'] ?? self::DEFAULT_VIDEO_MAX_DURATION))),
         );
     }
 

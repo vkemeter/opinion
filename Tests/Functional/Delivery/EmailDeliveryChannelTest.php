@@ -115,6 +115,28 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function videoIsLinkedNeverAttachedAndTheEndContextShownWhenItDiffers(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $video = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom" . str_repeat('0', 8 * 1024 * 1024), 'mp4', new \DateTimeImmutable());
+        $base = new Submission('The menu closes too early.', 'bug', Severity::Normal, Source::Backend, 2, new \DateTimeImmutable(), context: ['module' => 'web_layout'], contextAtEnd: ['module' => 'web_list'], backendUrl: 'https://example.com/typo3');
+
+        $this->get(EmailDeliveryChannel::class)->deliver($base->withStoredFeedback(42, $video), null, $this->configuration());
+
+        $email = $this->getSentEmail();
+        self::assertSame([], $email->getAttachments());
+        $link = 'https://example.com/typo3/module/opinion/feedback/show?uid=42';
+        self::assertStringContainsString('Video (8.0 MB) in the backend: <a href="' . $link . '">', (string)$email->getHtmlBody());
+        self::assertStringContainsString('Video (8.0 MB) in the backend: ' . $link, (string)$email->getTextBody());
+        self::assertStringContainsString('At the end of the recording', (string)$email->getTextBody());
+        self::assertStringContainsString('web_list', (string)$email->getTextBody());
+
+        $sameModule = new Submission('The menu closes too early.', 'bug', Severity::Normal, Source::Backend, 2, new \DateTimeImmutable(), context: ['module' => 'web_layout'], contextAtEnd: ['module' => 'web_layout']);
+        $this->get(EmailDeliveryChannel::class)->deliver($sameModule->withStoredFeedback(43, $video), null, $this->configuration());
+        self::assertStringNotContainsString('At the end of the recording', (string)$this->getSentEmail()->getTextBody());
+    }
+
+    #[Test]
     public function reportedUrlIsSentOnce(): void
     {
         $this->setBackendRequest();

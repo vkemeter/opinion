@@ -35,24 +35,27 @@ final readonly class SubmissionProcessor
     ) {}
 
     /**
-     * @throws \Vkemeter\Opinion\Exception\ScreenshotStorageException when the screenshot cannot be stored
+     * @throws \Vkemeter\Opinion\Exception\ScreenshotStorageException when the screenshot or video cannot be stored
      */
     public function process(Submission $submission, OpinionConfiguration $configuration): ProcessingResult
     {
         $screenshot = $submission->screenshot !== null
             ? $this->screenshotStorage->store($submission->screenshot->content, $submission->screenshot->type->getFileExtension(), $submission->createdAt)
             : null;
+        $video = $submission->video !== null
+            ? $this->screenshotStorage->store($submission->video->content, $submission->video->type->getFileExtension(), $submission->createdAt)
+            : null;
 
         try {
-            $feedbackUid = $this->feedbackRepository->add($submission, $screenshot);
+            $feedbackUid = $this->feedbackRepository->add($submission, $screenshot, $video);
         } catch (\Throwable $exception) {
-            if ($screenshot instanceof File) {
-                $this->screenshotStorage->delete($screenshot);
+            foreach (array_filter([$screenshot, $video]) as $file) {
+                $this->screenshotStorage->delete($file);
             }
             throw $exception;
         }
 
-        return $this->deliverStored($feedbackUid, $submission, $screenshot, $configuration);
+        return $this->deliverStored($feedbackUid, $submission->withStoredFeedback($feedbackUid, $video), $screenshot, $configuration);
     }
 
     /**

@@ -13,6 +13,8 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\UploadedFile;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\MailerInterface;
+use TYPO3\CMS\Core\Resource\FileRepository;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\SubmitController;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
@@ -21,6 +23,7 @@ use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
 final class SubmitControllerTest extends FunctionalTestCase
 {
     private const string PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    private const string WEBM = "\x1A\x45\xDF\xA3\x9F\x42\x86\x81\x01\x42\x82\x84webm\x42\x87rest";
 
     protected array $coreExtensionsToLoad = ['adminpanel'];
 
@@ -122,6 +125,73 @@ final class SubmitControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function videoWhileVideoIsDisabledIsRejected(): void
+    {
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), null, self::WEBM);
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame('Videos are not accepted.', $this->decode($response)['errors']['video']);
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
+    public function webmVideoIsAcceptedAndStored(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), null, self::WEBM);
+
+        self::assertSame(200, $response->getStatusCode());
+        $references = $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'video', 1);
+        self::assertCount(1, $references);
+        self::assertSame('webm', $references[0]->getOriginalFile()->getExtension());
+    }
+
+    #[Test]
+    public function videoWithoutStorageIsRejectedWithServiceUnavailable(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), null, self::WEBM);
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertStringContainsString('without a video', (string)$this->decode($response)['message']);
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
+    public function disguisedVideoIsRejected(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), null, 'just a text file');
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame(['video'], array_keys($this->decode($response)['errors']));
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
+    public function screenshotAndVideoTogetherAreRejected(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true), self::WEBM);
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame(['video'], array_keys($this->decode($response)['errors']));
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    #[Test]
     public function screenshotWithoutStorageIsRejectedWithServiceUnavailable(): void
     {
         $this->setUpBackendUser(1);
@@ -136,7 +206,8 @@ final class SubmitControllerTest extends FunctionalTestCase
     public function failingScreenshotWriteIsRejectedWithServiceUnavailable(): void
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
-        // A file named like the year folder makes creating the dated folder fail
+        // A file named like the year folder makes creating the dated folder fail; other tests may have created the folder
+        GeneralUtility::rmdir(Environment::getVarPath() . '/opinion/' . date('Y'), true);
         touch(Environment::getVarPath() . '/opinion/' . date('Y'));
         $this->setUpBackendUser(1);
 
@@ -183,14 +254,17 @@ final class SubmitControllerTest extends FunctionalTestCase
     /**
      * @param array<string, string> $fields
      */
-    private function submit(array $fields, ?string $screenshot = null): ResponseInterface
+    private function submit(array $fields, ?string $screenshot = null, ?string $video = null): ResponseInterface
     {
-        $request = new ServerRequest('https://example.com/typo3/ajax/opinion/submit', 'POST')->withParsedBody($fields);
-        if ($screenshot !== null) {
-            $file = (string)tempnam(sys_get_temp_dir(), 'opinion');
-            file_put_contents($file, $screenshot);
-            $request = $request->withUploadedFiles(['screenshot' => new UploadedFile($file, strlen($screenshot), UPLOAD_ERR_OK, 'screenshot.png', 'image/png')]);
+        $files = [];
+        foreach (['screenshot' => [$screenshot, 'image/png'], 'video' => [$video, 'video/mp4']] as $field => [$content, $mediaType]) {
+            if ($content !== null) {
+                $file = (string)tempnam(sys_get_temp_dir(), 'opinion');
+                file_put_contents($file, $content);
+                $files[$field] = new UploadedFile($file, strlen($content), UPLOAD_ERR_OK, $field, $mediaType);
+            }
         }
+        $request = new ServerRequest('https://example.com/typo3/ajax/opinion/submit', 'POST')->withParsedBody($fields)->withUploadedFiles($files);
 
         return $this->get(SubmitController::class)->submitAction($request);
     }

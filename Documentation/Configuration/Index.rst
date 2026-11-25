@@ -159,7 +159,7 @@ Extension configuration
     :default: 180
 
     Age in days after which :ref:`opinion:cleanup <administration-cleanup>`
-    deletes feedback records and their screenshots.
+    deletes feedback records and their screenshots and videos.
 
 ..  confval:: enabled
     :name: extconf-enabled
@@ -178,6 +178,56 @@ Extension configuration
     the conversation, the message field, the conversation column of the list
     and the badge on the module menu, and rejects new messages. Stored
     messages are kept and deleted by `opinion:cleanup` as before.
+
+..  _configuration-video:
+
+Video
+=====
+
+The tab :guilabel:`Video` of the extension configuration switches the video
+of the browser tab on. It is off by default: everything visible in the tab and
+everything typed during the recording is in the video and cannot be blacked
+out.
+
+..  confval:: videoEnabled
+    :name: extconf-videoenabled
+    :type: boolean
+    :default: 0
+
+    `1`: the dialog offers :guilabel:`Screenshot` · :guilabel:`Video` in the
+    admin panel and the backend toolbar (see :ref:`usage-video`), and the
+    endpoint accepts videos. `0`: screenshots only; a video is rejected with
+    `422`.
+
+..  confval:: videoMaxDuration
+    :name: extconf-videomaxduration
+    :type: int
+    :default: 60
+
+    Maximum length of a video in seconds; values outside 10–300 are set to
+    the nearest limit. The server accepts videos of at most this length ×
+    160 KB, by default 9.4 MB.
+
+..  _configuration-video-upload-limits:
+
+PHP upload limits
+-----------------
+
+A video is sent in one request, so `upload_max_filesize` and `post_max_size`
+of PHP must allow it, for example for the default of 60 seconds:
+
+..  code-block:: ini
+    :caption: php.ini
+
+    upload_max_filesize = 10M
+    post_max_size = 12M
+
+The dialog takes the smallest of the server limit, `upload_max_filesize` and
+`post_max_size` (minus 256 KB for the other fields) and stops the recording
+in time: with `upload_max_filesize = 2M` a recording stops after 12 seconds.
+When the limits allow less than 10 seconds, the dialog does not offer video.
+The web server may have an own limit for the request size, for example
+`client_max_body_size` of nginx.
 
 ..  _configuration-email:
 

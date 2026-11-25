@@ -12,12 +12,17 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use Vkemeter\Opinion\Domain\ScreenshotType;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
+use Vkemeter\Opinion\Domain\VideoType;
 use Vkemeter\Opinion\Validation\SubmissionValidator;
 
 final class SubmissionValidatorTest extends UnitTestCase
 {
     private const string PNG = "\x89PNG\r\n\x1a\nrest";
     private const string JPEG = "\xFF\xD8\xFF\xE0rest";
+    private const string MP4 = "\x00\x00\x00\x24ftypisom\x00\x00\x02\x00rest";
+    private const string WEBM = "\x1A\x45\xDF\xA3\x9F\x42\x86\x81\x01\x42\xF7\x81\x01\x42\xF2\x81\x04\x42\xF3\x81\x08\x42\x82\x84webm\x42\x87rest";
+    private const string MATROSKA = "\x1A\x45\xDF\xA3\x9F\x42\x86\x81\x01\x42\x82\x88matroska\x42\x87rest";
+    private const int VIDEO_MAX_BYTES = 1000;
     private const array CATEGORIES = ['bug', 'content', 'idea', 'other'];
 
     /** @var list<string> */
@@ -155,6 +160,63 @@ final class SubmissionValidatorTest extends UnitTestCase
         $result = new SubmissionValidator()->validate(self::validFields(), self::failedUpload(UPLOAD_ERR_PARTIAL), self::CATEGORIES);
 
         self::assertSame(['screenshot' => 'uploadFailed'], $result->errors);
+    }
+
+    /**
+     * @return iterable<string, array{string, VideoType}>
+     */
+    public static function videoDataProvider(): iterable
+    {
+        yield 'MP4' => [self::MP4, VideoType::Mp4];
+        yield 'WebM' => [self::WEBM, VideoType::Webm];
+    }
+
+    #[Test]
+    #[DataProvider('videoDataProvider')]
+    public function videoTypeIsDetectedFromTheContent(string $content, VideoType $type): void
+    {
+        $result = new SubmissionValidator()->validate([...self::validFields(), 'contextAtEnd' => '{"module":"web_list"}'], null, self::CATEGORIES, $this->upload($content, 'application/octet-stream'), self::VIDEO_MAX_BYTES);
+
+        self::assertTrue($result->isValid());
+        self::assertSame($type, $result->video?->type);
+        self::assertSame($content, $result->video->content);
+        self::assertSame(['module' => 'web_list'], $result->contextAtEnd);
+    }
+
+    /**
+     * @return iterable<string, array{string, int, string}>
+     */
+    public static function invalidVideoDataProvider(): iterable
+    {
+        yield 'text as MP4' => ['just some text', self::VIDEO_MAX_BYTES, 'invalidType'];
+        yield 'Matroska, not WebM' => [self::MATROSKA, self::VIDEO_MAX_BYTES, 'invalidType'];
+        yield 'above the limit' => [self::MP4 . str_repeat('0', self::VIDEO_MAX_BYTES), self::VIDEO_MAX_BYTES, 'tooLarge'];
+        yield 'video disabled' => [self::MP4, 0, 'videoDisabled'];
+    }
+
+    #[Test]
+    #[DataProvider('invalidVideoDataProvider')]
+    public function invalidVideoIsRejected(string $content, int $maxBytes, string $code): void
+    {
+        $result = new SubmissionValidator()->validate(self::validFields(), null, self::CATEGORIES, $this->upload($content, 'video/mp4'), $maxBytes);
+
+        self::assertSame(['video' => $code], $result->errors);
+    }
+
+    #[Test]
+    public function screenshotAndVideoTogetherAreRejected(): void
+    {
+        $result = new SubmissionValidator()->validate(self::validFields(), $this->upload(self::PNG), self::CATEGORIES, $this->upload(self::WEBM), self::VIDEO_MAX_BYTES);
+
+        self::assertSame(['video' => 'withScreenshot'], $result->errors);
+    }
+
+    #[Test]
+    public function videoExceedingPhpUploadLimitIsRejectedAsTooLarge(): void
+    {
+        $result = new SubmissionValidator()->validate(self::validFields(), null, self::CATEGORIES, self::failedUpload(UPLOAD_ERR_INI_SIZE), self::VIDEO_MAX_BYTES);
+
+        self::assertSame(['video' => 'tooLarge'], $result->errors);
     }
 
     #[Test]

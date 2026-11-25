@@ -37,6 +37,14 @@ redeliverMaxAttempts = 5
 # cat=storage; type=int+; label=opinion.messages:extconf.retentionDays
 retentionDays = 180
 
+# customcategory=video=opinion.messages:extconf.category.video
+
+# cat=video; type=boolean; label=opinion.messages:extconf.videoEnabled
+videoEnabled = 0
+
+# cat=video; type=int+; label=opinion.messages:extconf.videoMaxDuration
+videoMaxDuration = 60
+
 # customcategory=collect=opinion.messages:extconf.category.collect
 # customsubcategory=client=opinion.messages:extconf.collect.client
 # customsubcategory=system=opinion.messages:extconf.collect.system

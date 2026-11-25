@@ -319,6 +319,27 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function showPlaysTheVideoWithTheEndContextAndTheListMarksIt(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $file = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom", 'mp4', new \DateTimeImmutable());
+        $withVideo = $this->get(FeedbackRepository::class)->add(new Submission('With video', 'bug', Severity::Low, Source::Backend, 1, new \DateTimeImmutable(), context: ['module' => 'web_layout'], contextAtEnd: ['module' => 'web_list']), null, $file);
+        $this->addFeedbackWithScreenshot(1);
+        $controller = $this->get(FeedbackModuleController::class);
+
+        $html = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$withVideo]))->getBody();
+        self::assertMatchesRegularExpression('#<video[^>]+preload="metadata"[^>]+src="[^"]*/opinion/video\?#', $html);
+        self::assertMatchesRegularExpression('#<a[^>]+download="feedback-' . $withVideo . '\.mp4"#', $html);
+        self::assertStringContainsString('Download video', $html);
+        self::assertStringContainsString('At the end of the recording', $html);
+        self::assertStringContainsString('web_list', $html);
+
+        $list = (string)$controller->listAction($this->createRequest('opinion_feedback'))->getBody();
+        self::assertSame(1, substr_count($list, 'title="With video"'));
+        self::assertSame(1, substr_count($list, 'title="With screenshot"'));
+    }
+
+    #[Test]
     public function screenshotIsDeliveredToAdminsAndTheSenderOnly(): void
     {
         $ofAdmin = $this->addFeedbackWithScreenshot(1);
@@ -338,6 +359,42 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
         $this->setUpBackendUser(2);
         self::assertSame(403, $this->requestScreenshot($ofReporter)->getStatusCode(), 'without options.opinion.enable');
+    }
+
+    #[Test]
+    public function videoIsDeliveredToAdminsAndTheSenderOnlyWithRanges(): void
+    {
+        $video = "\x00\x00\x00\x18ftypisom" . str_repeat('0123456789', 10);
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $file = $this->get(ScreenshotStorage::class)->store($video, 'mp4', new \DateTimeImmutable());
+        $ofReporter = $this->get(FeedbackRepository::class)->add(new Submission('With video', 'bug', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null, $file);
+        $ofAdmin = $this->addFeedbackWithScreenshot(1);
+        self::assertSame('opinion_feedback', $this->get(Router::class)->getRoute('opinion_video')?->getOption('inheritAccessFromModule'), 'Core checks the module access');
+
+        $response = $this->requestVideo($ofReporter);
+        self::assertSame(200, $response->getStatusCode(), 'admin, foreign feedback');
+        self::assertSame($video, (string)$response->getBody());
+        self::assertSame('bytes', $response->getHeaderLine('Accept-Ranges'));
+        self::assertSame(404, $this->requestVideo($ofAdmin)->getStatusCode(), 'screenshot, no video');
+
+        $response = $this->requestVideo($ofReporter, 'bytes=4-7');
+        self::assertSame(206, $response->getStatusCode());
+        self::assertSame('ftyp', (string)$response->getBody());
+        self::assertSame('bytes 4-7/112', $response->getHeaderLine('Content-Range'));
+        self::assertSame('4', $response->getHeaderLine('Content-Length'));
+        self::assertSame(substr($video, 100), (string)$this->requestVideo($ofReporter, 'bytes=100-')->getBody(), 'open range');
+        self::assertSame('6789', (string)$this->requestVideo($ofReporter, 'bytes=-4')->getBody(), 'suffix range');
+        self::assertSame('bytes 110-111/112', $this->requestVideo($ofReporter, 'bytes=110-999')->getHeaderLine('Content-Range'), 'end beyond the file');
+        $response = $this->requestVideo($ofReporter, 'bytes=200-');
+        self::assertSame(416, $response->getStatusCode());
+        self::assertSame('bytes */112', $response->getHeaderLine('Content-Range'));
+        self::assertSame(200, $this->requestVideo($ofReporter, 'bytes=0-1,4-5')->getStatusCode(), 'several ranges get the whole file');
+
+        $this->setUpBackendUser(3);
+        self::assertSame(206, $this->requestVideo($ofReporter, 'bytes=0-')->getStatusCode(), 'sender');
+
+        $this->setUpBackendUser(2);
+        self::assertSame(403, $this->requestVideo($ofReporter)->getStatusCode(), 'without options.opinion.enable');
     }
 
     #[Test]
@@ -747,6 +804,13 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     private function requestScreenshot(int $uid): ResponseInterface
     {
         return $this->get(FeedbackModuleController::class)->screenshotAction($this->createRequest('opinion_screenshot', ['uid' => (string)$uid]));
+    }
+
+    private function requestVideo(int $uid, string $range = ''): ResponseInterface
+    {
+        $request = $this->createRequest('opinion_video', ['uid' => (string)$uid]);
+
+        return $this->get(FeedbackModuleController::class)->videoAction($range === '' ? $request : $request->withHeader('Range', $range));
     }
 
     private function addFeedbackWithScreenshot(int $senderUid): int

@@ -83,6 +83,41 @@ final class RedelivererTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function redeliverPassesTheVideoTheUidAndTheStoredBackendUrl(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $createdAt = new \DateTimeImmutable('2026-10-09 12:00:00');
+        $video = $this->get(ScreenshotStorage::class)->store("\x00\x00\x00\x18ftypisom", 'mp4', $createdAt);
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission(
+            message: 'The menu closes too early.',
+            category: 'bug',
+            severity: Severity::Normal,
+            source: Source::Backend,
+            backendUserUid: 3,
+            createdAt: $createdAt,
+            context: ['module' => 'web_layout'],
+            contextAtEnd: ['module' => 'web_list'],
+            backendUrl: 'https://example.com/typo3',
+        ), null, $video);
+
+        $received = null;
+        $channel = self::createStub(DeliveryChannelInterface::class);
+        $channel->method('getIdentifier')->willReturn('test');
+        $channel->method('deliver')->willReturnCallback(static function (Submission $submission) use (&$received): DeliveryResult {
+            $received = $submission;
+            return DeliveryResult::success('test');
+        });
+
+        $this->createRedeliverer([$channel])->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
+
+        self::assertInstanceOf(Submission::class, $received);
+        self::assertSame($uid, $received->feedbackUid);
+        self::assertSame('https://example.com/typo3', $received->backendUrl);
+        self::assertSame(['module' => 'web_list'], $received->contextAtEnd);
+        self::assertSame($video->getUid(), $received->videoFile?->getUid());
+    }
+
+    #[Test]
     public function feedbackThatCannotBeRebuiltCountsAsFailedAttempt(): void
     {
         $repository = $this->get(FeedbackRepository::class);

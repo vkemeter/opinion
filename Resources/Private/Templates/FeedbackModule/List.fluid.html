@@ -91,7 +91,7 @@
 								<f:if condition="{isAdmin}">
 									<th>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.delivery_status')}</th>
 								</f:if>
-								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}</span></th>
+								<th><span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'module.list.capture')}</span></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -156,6 +156,11 @@
 										<f:if condition="{item.screenshot}">
 											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasScreenshot')}">
 												{core:icon(identifier: 'mimetypes-media-image', size: 'small')}
+											</span>
+										</f:if>
+										<f:if condition="{item.video}">
+											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasVideo')}">
+												{core:icon(identifier: 'mimetypes-media-video', size: 'small')}
 											</span>
 										</f:if>
 									</td>

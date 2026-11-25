@@ -48,10 +48,16 @@ const html = `<!doctype html><html><head><link rel="stylesheet" href="/Css/opini
 import { openOpinionDialog } from '/JavaScript/opinion-dialog.js';
 const config = ${JSON.stringify(config)};
 // Labels are rendered as [key], so the tests can find elements by them
-config.labels = new Proxy({}, { get: (_, key) => key === 'charactersLeft' ? 'Characters left: {count}' : '[' + String(key) + ']' });
+config.labels = new Proxy({}, { get: (_, key) => ({ charactersLeft: 'Characters left: {count}', videoTimeLeft: 'Left: {time}' })[key] ?? '[' + String(key) + ']' });
 document.getElementById('open').addEventListener('click', () => { window.dialog = openOpinionDialog(config); });
 document.getElementById('open').addEventListener('open-unavailable', () => { window.dialog = openOpinionDialog({ ...config, unavailable: window.unavailable }); });
 document.getElementById('open').addEventListener('open-with-collect', () => { window.dialog = openOpinionDialog({ ...config, collect: window.dialogConfigOverride }); });
+document.getElementById('open').addEventListener('open-with-video', () => {
+  window.dialog = openOpinionDialog({ ...config, captureKinds: ['screenshot', 'video'], video: window.videoLimits, collectContextAtEnd: () => ({ module: 'web_list' }) });
+});
+// The recordings of the scenarios, so a scenario can end the sharing like the browser bar does
+const getDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+navigator.mediaDevices.getDisplayMedia = async (options) => { window.lastStream = await getDisplayMedia(options); return window.lastStream; };
 </script></body></html>`;
 
 async function scenario(name, args, fn) {
@@ -162,6 +168,132 @@ await scenario('screenshot capture, preview, retake, remove, upload', ['--auto-a
   await page.click('button[type=submit]');
   await page.waitForSelector('.opinion-dialog__status--success');
   assert(body.includes('name="screenshot"; filename="screenshot.jpg"\r\nContent-Type: image/jpeg\r\n\r\n\xFF\xD8\xFF'), 'screenshot not uploaded as JPEG');
+});
+
+async function openVideoDialog(page, videoLimits = { maxDuration: 60, uploadLimit: 10 * 1024 * 1024 }) {
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog'));
+  await page.evaluate((limits) => {
+    window.videoLimits = limits;
+    document.getElementById('open').dispatchEvent(new Event('open-with-video'));
+  }, videoLimits);
+  await page.waitForSelector('dialog.opinion-dialog[open]');
+}
+
+function mockSubmit(page, bodies) {
+  return page.route('**/typo3/ajax/opinion/submit**', (route) => {
+    bodies.push(route.request().postDataBuffer().toString('latin1'));
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, title: 'Feedback', message: 'ok', delivered: true }) });
+  });
+}
+
+await scenario('without video no capture choice is shown', [], async (page) => {
+  assert(await page.locator('[role=switch]').count() === 0, 'choice shown without video');
+  assert(await page.textContent('legend') === '[screenshot]', 'legend not for screenshots');
+});
+
+await scenario('video: notice, recording with page usable and click markers, input kept, upload', ['--auto-accept-this-tab-capture'], async (page) => {
+  const bodies = [];
+  await mockSubmit(page, bodies);
+  await openVideoDialog(page);
+  assert(await page.getAttribute('[role=switch]', 'aria-checked') === 'false', 'screenshot not preselected');
+  assert(await page.getAttribute('[role=switch]', 'aria-label') === '[captureVideo]', 'switch has no name');
+  assert(await page.isHidden('text=[videoNotice]'), 'notice shown for screenshots');
+  await page.fill('textarea', 'The menu closes too early.');
+  await page.focus('[role=switch]');
+  await page.keyboard.press('Space');
+  assert(await page.getAttribute('[role=switch]', 'aria-checked') === 'true', 'switch not on after Space');
+  assert(await page.isVisible('text=[videoNotice]'), 'privacy notice missing');
+  await page.click('text=[videoStart]');
+  await page.waitForSelector('.opinion-recording');
+  assert(await page.locator('dialog[open]').count() === 0, 'dialog still open during the recording');
+  const leaving = await page.evaluate(() => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  assert(leaving, 'leaving the page is not confirmed');
+  await page.click('h1');
+  assert(await page.locator('.opinion-click-marker').count() === 1, 'no click marker');
+  assert(/^Left: (1:00|0:5\d)$/.test(await page.textContent('.opinion-recording__time')), 'remaining time not shown');
+  await page.waitForTimeout(1500);
+  await page.click('.opinion-recording__stop');
+  await page.waitForSelector('dialog.opinion-dialog[open] video.opinion-dialog__preview:not([hidden])', { timeout: 10000 });
+  assert(await page.locator('.opinion-recording').count() === 0, 'bar not removed');
+  assert(await page.inputValue('textarea') === 'The menu closes too early.', 'description lost');
+  assert(await page.isVisible('text=[videoRetake]') && await page.isVisible('text=[videoRemove]'), 'record again / remove missing');
+  assert(await page.isHidden('text=[annotate]'), 'videos must not be annotated');
+  assert(!(await page.evaluate(() => { const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; })), 'leaving still confirmed');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('.opinion-dialog__status--success');
+  const body = bodies[0];
+  assert(/name="video"; filename="video\.(mp4|webm)"\r\nContent-Type: video\/(mp4|webm)/.test(body), 'video not uploaded');
+  // avc1 breaks when the tab is resized during the recording
+  const avc3 = await page.evaluate(() => MediaRecorder.isTypeSupported('video/mp4;codecs=avc3'));
+  assert(!avc3 || body.includes('filename="video.mp4"'), 'MP4 (avc3) not preferred');
+  assert(body.includes('\r\n\r\n\x00\x00\x00') || body.includes('\x1A\x45\xDF\xA3'), 'not an MP4 or WebM file');
+  assert(!body.includes('name="screenshot"'), 'screenshot sent as well');
+  assert(body.includes('name="contextAtEnd"\r\n\r\n{"module":"web_list"}'), 'end context missing');
+});
+
+await scenario('video: stops at the maximum duration and when the sharing ends, replaces a screenshot', ['--auto-accept-this-tab-capture'], async (page) => {
+  const bodies = [];
+  await mockSubmit(page, bodies);
+  await openVideoDialog(page, { maxDuration: 2, uploadLimit: 10 * 1024 * 1024 });
+  await page.click('text=[screenshotTake]');
+  await page.waitForSelector('img.opinion-dialog__preview:not([hidden])', { timeout: 10000 });
+  await page.click('[role=switch]');
+  assert(await page.getAttribute('[role=switch]', 'aria-checked') === 'true', 'switch does not select video');
+  assert(await page.isVisible('img.opinion-dialog__preview'), 'changing the option alone removed the screenshot');
+  // The retake button offers the other kind now
+  await page.click('text=[videoStart] >> visible=true');
+  await page.waitForSelector('.opinion-recording');
+  await page.waitForSelector('dialog.opinion-dialog[open] video.opinion-dialog__preview:not([hidden])', { timeout: 6000 });
+  assert(await page.isHidden('img.opinion-dialog__preview'), 'screenshot kept next to the video');
+
+  await page.click('text=[videoRetake]');
+  await page.waitForSelector('.opinion-recording');
+  await page.evaluate(() => window.lastStream.getVideoTracks()[0].dispatchEvent(new Event('ended')));
+  await page.waitForSelector('dialog.opinion-dialog[open] video.opinion-dialog__preview:not([hidden])', { timeout: 6000 });
+  await page.fill('textarea', 'The menu closes too early.');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('.opinion-dialog__status--success');
+  assert(bodies[0].includes('name="video"') && !bodies[0].includes('name="screenshot"'), 'not only the video sent');
+});
+
+await scenario('video: stops before the recorded size reaches the upload limit', ['--auto-accept-this-tab-capture'], async (page) => {
+  await openVideoDialog(page, { maxDuration: 60, uploadLimit: 1 });
+  await page.click('[role=switch]');
+  await page.click('text=[videoStart]');
+  await page.waitForSelector('.opinion-recording');
+  // The first chunk arrives after about a second and already passes the limit
+  await page.waitForSelector('dialog.opinion-dialog[open] video.opinion-dialog__preview:not([hidden])', { timeout: 6000 });
+});
+
+await scenario('video: click markers inside a same-origin frame, also after it reloaded', ['--auto-accept-this-tab-capture'], async (page) => {
+  await page.evaluate(() => {
+    const frame = document.createElement('iframe');
+    frame.id = 'module';
+    frame.srcdoc = '<button id="save">Save</button>';
+    document.body.append(frame);
+    return new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+  });
+  await openVideoDialog(page);
+  await page.click('[role=switch]');
+  await page.click('text=[videoStart]');
+  await page.waitForSelector('.opinion-recording');
+  const frame = page.frameLocator('#module');
+  await frame.locator('#save').click();
+  assert(await frame.locator('.opinion-click-marker').count() === 1, 'no marker in the frame');
+  await page.evaluate(() => new Promise((resolve) => {
+    const module = document.getElementById('module');
+    module.addEventListener('load', resolve, { once: true });
+    module.srcdoc = '<button id="save">Saved</button>';
+  }));
+  await frame.locator('#save').click();
+  assert(await frame.locator('.opinion-click-marker').count() === 1, 'no marker after the frame reloaded');
+  await page.click('.opinion-recording__stop');
+  await page.waitForSelector('dialog.opinion-dialog[open]');
 });
 
 async function dragOnCanvas(page, from, to) {
@@ -424,6 +556,42 @@ await scenario('backend: unread count on the module menu entry, also after it is
   await page.evaluate(() => { document.getElementById('modulemenu').innerHTML = '<a data-modulemenu-identifier="opinion_feedback"><span>Feedback</span></a>'; });
   await page.waitForSelector(badge);
   assert(await page.locator(badge).count() === 1, 'badge added twice');
+});
+
+await scenario('backend: the toolbar sends the module at the end of a recording', ['--auto-accept-this-tab-capture'], async (page) => {
+  const toolbarConfig = {
+    ...config,
+    source: 'backend',
+    context: {},
+    collect: { client: [], context: ['module', 'page', 'url'] },
+    captureKinds: ['screenshot', 'video'],
+    video: { maxDuration: 60, uploadLimit: 10 * 1024 * 1024 },
+    labels: { title: 'Send feedback', captureVideo: 'Video', captureScreenshot: 'Screenshot', videoStart: 'Start recording', videoStop: 'Stop', videoTimeLeft: '{time}', send: 'Send', charactersLeft: '{count}' },
+  };
+  const moduleHtml = (module) => `<!doctype html><div class="module" data-module-name="${module}">${module}</div>`;
+  await page.route(`${BASE}/typo3/module/**`, (route) => route.fulfill({ contentType: 'text/html', body: moduleHtml(new URL(route.request().url()).pathname.split('/').pop()) }));
+  await page.route(`${BASE}/backend.html`, (route) => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><head><link rel="stylesheet" href="/Css/opinion-dialog.css"></head><body>
+<button data-opinion-toolbar-config='${JSON.stringify(toolbarConfig)}'>Send feedback</button>
+<iframe id="typo3-contentIframe" src="/typo3/module/web_layout?id=1"></iframe>
+<script type="module" src="/JavaScript/toolbar-item.js"></script></body></html>` }));
+  const bodies = [];
+  await mockSubmit(page, bodies);
+  await page.goto(`${BASE}/backend.html`);
+  await page.frameLocator('#typo3-contentIframe').locator('[data-module-name=web_layout]').waitFor();
+  await page.click('text=Send feedback');
+  await page.fill('textarea', 'The list loses the sorting.');
+  await page.click('[role=switch]');
+  await page.click('text=Start recording');
+  await page.waitForSelector('.opinion-recording');
+  await page.evaluate(() => { document.getElementById('typo3-contentIframe').src = '/typo3/module/web_list?id=2'; });
+  await page.frameLocator('#typo3-contentIframe').locator('[data-module-name=web_list]').waitFor();
+  await page.click('.opinion-recording__stop');
+  await page.waitForSelector('dialog.opinion-dialog[open] video.opinion-dialog__preview:not([hidden])', { timeout: 10000 });
+  await page.click('button[type=submit]');
+  await page.waitForFunction(() => document.querySelector('.opinion-dialog__status')?.textContent === 'ok');
+  const field = (name) => JSON.parse(bodies[0].match(new RegExp(`name="${name}"\\r\\n\\r\\n(.*)\\r\\n`))?.[1] ?? 'null');
+  assert(JSON.stringify(field('context')) === JSON.stringify({ url: '/typo3/module/web_layout?id=1', pageUid: '1', module: 'web_layout' }), 'start context wrong: ' + JSON.stringify(field('context')));
+  assert(JSON.stringify(field('contextAtEnd')) === JSON.stringify({ url: '/typo3/module/web_list?id=2', pageUid: '2', module: 'web_list' }), 'end context wrong: ' + JSON.stringify(field('contextAtEnd')));
 });
 
 await scenario('backend: no badge without unread messages', [], async (page) => {

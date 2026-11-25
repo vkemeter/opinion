@@ -33,8 +33,8 @@ return [
     'types' => [
         1 => [
             'showitem' => 'status,source,category,severity,be_user,message,
-            --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context,
-            --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log',
+            --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context, context_at_end,
+            --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log, backend_url',
         ],
     ],
     'columns' => [
@@ -101,6 +101,15 @@ return [
                 'readOnly' => true,
             ],
         ],
+        'video' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.video',
+            'config' => [
+                'type' => 'file',
+                'maxitems' => 1,
+                'allowed' => 'mp4,webm',
+                'readOnly' => true,
+            ],
+        ],
         'client_info' => [
             'label' => 'opinion.messages:tx_opinion_feedback.client_info',
             'config' => $readOnlyJson,
@@ -112,6 +121,19 @@ return [
         'context' => [
             'label' => 'opinion.messages:tx_opinion_feedback.context',
             'config' => $readOnlyJson,
+        ],
+        'context_at_end' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.context_at_end',
+            'config' => $readOnlyJson,
+        ],
+        // Base URL of the backend the feedback was sent from, for links built on the command line
+        'backend_url' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.backend_url',
+            'config' => [
+                'type' => 'input',
+                'size' => 50,
+                'readOnly' => true,
+            ],
         ],
         // The page of the collected context, for the lists per page; 0 = no page collected
         'page_uid' => [

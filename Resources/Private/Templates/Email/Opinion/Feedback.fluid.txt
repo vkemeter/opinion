@@ -8,7 +8,9 @@
 </f:if>
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}:
 {submission.message -> f:format.raw()}
-<f:for each="{context: context, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">
+<f:if condition="{video}">
+{f:translate(domain: 'opinion.messages', key: 'email.video', arguments: {size: video.size}) -> f:format.raw()}<f:if condition="{video.url}">: {video.url -> f:format.raw()}</f:if>
+</f:if><f:for each="{context: context, contextAtEnd: contextAtEnd, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">
 
 {f:translate(domain: 'opinion.messages', key: 'email.section.{section}')}:
 <f:for each="{rows}" as="value" key="label">{label -> f:format.raw()}: {value -> f:format.raw()}

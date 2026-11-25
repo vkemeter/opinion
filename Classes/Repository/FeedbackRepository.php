@@ -27,12 +27,12 @@ final readonly class FeedbackRepository
         private ConfigurationProviderInterface $configurationProvider,
     ) {}
 
-    public function add(Submission $submission, ?File $screenshot): int
+    public function add(Submission $submission, ?File $screenshot, ?File $video = null): int
     {
         $connection = $this->connectionPool->getConnectionForTable(self::TABLE);
         $timestamp = $submission->createdAt->getTimestamp();
 
-        return $connection->transactional(function (Connection $connection) use ($submission, $screenshot, $timestamp): int {
+        return $connection->transactional(function (Connection $connection) use ($submission, $screenshot, $video, $timestamp): int {
             $connection->insert(self::TABLE, [
                 'pid' => 0,
                 'crdate' => $timestamp,
@@ -43,9 +43,12 @@ final readonly class FeedbackRepository
                 'be_user' => $submission->backendUserUid,
                 'message' => $submission->message,
                 'screenshot' => $screenshot instanceof File ? 1 : 0,
+                'video' => $video instanceof File ? 1 : 0,
                 'client_info' => $submission->clientInfo,
                 'system_info' => $submission->systemInfo,
                 'context' => $submission->context,
+                'context_at_end' => $submission->contextAtEnd,
+                'backend_url' => $submission->backendUrl,
                 'page_uid' => self::pageUidOf($submission->context),
                 'status' => $this->configurationProvider->getConfiguration()->initialStatus(),
                 'delivery_status' => DeliveryStatus::Pending->value,
@@ -55,18 +58,19 @@ final readonly class FeedbackRepository
                 'client_info' => Types::JSON,
                 'system_info' => Types::JSON,
                 'context' => Types::JSON,
+                'context_at_end' => Types::JSON,
             ]);
             $uid = (int)$connection->lastInsertId();
 
-            if ($screenshot instanceof File) {
+            foreach (array_filter(['screenshot' => $screenshot, 'video' => $video]) as $field => $file) {
                 $this->connectionPool->getConnectionForTable('sys_file_reference')->insert('sys_file_reference', [
                     'pid' => 0,
                     'crdate' => $timestamp,
                     'tstamp' => $timestamp,
-                    'uid_local' => $screenshot->getUid(),
+                    'uid_local' => $file->getUid(),
                     'uid_foreign' => $uid,
                     'tablenames' => self::TABLE,
-                    'fieldname' => 'screenshot',
+                    'fieldname' => $field,
                     'sorting_foreign' => 1,
                 ]);
             }
@@ -232,7 +236,7 @@ final readonly class FeedbackRepository
     /**
      * @return list<int>
      */
-    public function findScreenshotFileUids(int $feedbackUid): array
+    public function findCaptureFileUids(int $feedbackUid): array
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_file_reference');
         $queryBuilder->getRestrictions()->removeAll();
@@ -242,7 +246,7 @@ final readonly class FeedbackRepository
             ->from('sys_file_reference')
             ->where(
                 $queryBuilder->expr()->eq('tablenames', $queryBuilder->createNamedParameter(self::TABLE)),
-                $queryBuilder->expr()->eq('fieldname', $queryBuilder->createNamedParameter('screenshot')),
+                $queryBuilder->expr()->in('fieldname', $queryBuilder->createNamedParameter(['screenshot', 'video'], Connection::PARAM_STR_ARRAY)),
                 $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($feedbackUid, Connection::PARAM_INT)),
             )
             ->executeQuery()

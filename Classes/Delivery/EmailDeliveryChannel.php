@@ -63,7 +63,10 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
                 'clientInfo' => $this->dataFlattener->flatten(array_diff_key($submission->clientInfo, ['url' => true])),
                 'systemInfo' => $this->dataFlattener->flatten(array_diff_key($submission->systemInfo, ['backendUser' => true])),
                 'context' => $this->dataFlattener->flatten(array_diff_key($submission->context, ['url' => true])),
+                // Only where the recording ended elsewhere
+                'contextAtEnd' => $submission->contextAtEnd !== $submission->context ? $this->dataFlattener->flatten($submission->contextAtEnd) : [],
                 'hasScreenshot' => $screenshot instanceof File,
+                'video' => $this->buildVideoLink($submission),
             ]);
 
         $senderEmail = (string)($sender['email'] ?? '');
@@ -86,6 +89,25 @@ final readonly class EmailDeliveryChannel implements DeliveryChannelInterface
         $this->mailer->send($email);
 
         return DeliveryResult::success($this->getIdentifier(), 'sent to ' . implode(', ', $configuration->recipients));
+    }
+
+    /**
+     * Videos are never attached (size), the email links the detail view in the feedback module instead.
+     *
+     * @return array{size: string, url: string}|null url '' when the backend URL is unknown
+     */
+    private function buildVideoLink(Submission $submission): ?array
+    {
+        if (!$submission->videoFile instanceof File) {
+            return null;
+        }
+
+        return [
+            'size' => number_format($submission->videoFile->getSize() / 1024 / 1024, 1),
+            'url' => $submission->backendUrl !== '' && $submission->feedbackUid > 0
+                ? $submission->backendUrl . '/module/opinion/feedback/show?uid=' . $submission->feedbackUid
+                : '',
+        ];
     }
 
     /**
