@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.2.0 – 2026-11-25
 
 - Video of the browser tab as an alternative to the screenshot, off by default
   (`videoEnabled` in the new tab "Video"). A switch in the dialog chooses
