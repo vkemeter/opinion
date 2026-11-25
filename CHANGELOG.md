@@ -26,6 +26,12 @@
   invalid fields, solid buttons and a short opening animation (none with reduced
   motion). It is dark when the system prefers it and, in the backend, when the
   TYPO3 colour scheme is dark. The annotation editor uses the same look
+- Accessibility of the dialog and the module: the page behind the dialog no
+  longer scrolls along, focus rings, the selected tool and colour and the
+  select arrow stay visible in Windows high contrast, Enter and Escape in the
+  annotation text field no longer interrupt Japanese, Chinese or Korean input,
+  the dialog titles are level-1 headings, the screenshot and video icons in the
+  list are announced by screen readers and the pagination has a name
 - Fix: taking a screenshot no longer waits forever on a page that does not
   change while the tab is shared
 

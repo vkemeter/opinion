@@ -648,6 +648,10 @@
                 <source>Page {current} of {pages}</source>
                 <target>Seite {current} von {pages}</target>
             </trans-unit>
+            <trans-unit id="module.list.pagination">
+                <source>Pagination</source>
+                <target>Seitennavigation</target>
+            </trans-unit>
             <trans-unit id="module.show.openScreenshot">
                 <source>Open screenshot in full size</source>
                 <target>Screenshot in voller Größe öffnen</target>

@@ -33,7 +33,7 @@ function dialogHeader(dialog, labels, id, withIntro) {
   closeButton.addEventListener('click', () => dialog.close());
   return el('div', { class: 'opinion-dialog__header' }, [
     el('div', { class: 'opinion-dialog__heading' }, [
-      el('h2', { class: 'opinion-dialog__title', id: `${id}-title` }, labels.title),
+      el('h1', { class: 'opinion-dialog__title', id: `${id}-title` }, labels.title),
       ...(withIntro ? [el('p', { class: 'opinion-dialog__intro' }, labels.intro)] : []),
     ]),
     closeButton,

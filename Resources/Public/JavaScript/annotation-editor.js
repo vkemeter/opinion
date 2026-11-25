@@ -134,7 +134,7 @@ class AnnotationEditor {
     this.stage = el('div', { class: 'opinion-annotation__stage' }, [this.canvas]);
     dialog.append(
       el('div', { class: 'opinion-annotation__toolbar' }, [
-        el('h2', { class: 'opinion-dialog__title opinion-annotation__title', id: `${this.id}-title` }, this.labels.annotationTitle),
+        el('h1', { class: 'opinion-dialog__title opinion-annotation__title', id: `${this.id}-title` }, this.labels.annotationTitle),
         tools,
         this.colorGroup,
         el('div', { class: 'opinion-annotation__group' }, [this.undoButton, this.clearButton, this.resetCropButton]),
@@ -230,6 +230,10 @@ class AnnotationEditor {
     input.style.left = `${canvasRect.left - stageRect.left + (x * canvasRect.width) / this.canvas.width}px`;
     input.style.top = `${canvasRect.top - stageRect.top + (y * canvasRect.height) / this.canvas.height}px`;
     input.addEventListener('keydown', (event) => {
+      // Enter and Escape confirm or cancel an IME composition (Japanese, Chinese, Korean); 229 covers Safari
+      if (event.isComposing || event.keyCode === 229) {
+        return;
+      }
       if (event.key === 'Enter') {
         event.preventDefault();
         this.commitText();

@@ -487,6 +487,9 @@
             <trans-unit id="module.list.page">
                 <source>Page {current} of {pages}</source>
             </trans-unit>
+            <trans-unit id="module.list.pagination">
+                <source>Pagination</source>
+            </trans-unit>
             <trans-unit id="module.show.openScreenshot">
                 <source>Open screenshot in full size</source>
             </trans-unit>

@@ -155,12 +155,14 @@
 									<td>
 										<f:if condition="{item.screenshot}">
 											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasScreenshot')}">
-												{core:icon(identifier: 'mimetypes-media-image', size: 'small')}
+												<span aria-hidden="true">{core:icon(identifier: 'mimetypes-media-image', size: 'small')}</span>
+												<span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'module.list.hasScreenshot')}</span>
 											</span>
 										</f:if>
 										<f:if condition="{item.video}">
 											<span title="{f:translate(domain: 'opinion.messages', key: 'module.list.hasVideo')}">
-												{core:icon(identifier: 'mimetypes-media-video', size: 'small')}
+												<span aria-hidden="true">{core:icon(identifier: 'mimetypes-media-video', size: 'small')}</span>
+												<span class="visually-hidden">{f:translate(domain: 'opinion.messages', key: 'module.list.hasVideo')}</span>
 											</span>
 										</f:if>
 									</td>
@@ -171,7 +173,9 @@
 				</div>
 
 				<f:if condition="{pagination.pages} > 1">
-					<nav class="d-flex align-items-center gap-3">
+					<nav
+						class="d-flex align-items-center gap-3"
+						aria-label="{f:translate(domain: 'opinion.messages', key: 'module.list.pagination')}">
 						<f:if condition="{pagination.previous}">
 							<a
 								class="btn btn-default"

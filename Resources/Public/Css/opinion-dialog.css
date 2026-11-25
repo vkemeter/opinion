@@ -54,7 +54,7 @@
 }
 
 /* Against global page styles; :where() keeps the specificity low, so the rules below win */
-:is(.opinion-dialog, .opinion-annotation) :where(button, input, select, textarea, label, p, h2, legend, fieldset, a) {
+:is(.opinion-dialog, .opinion-annotation) :where(button, input, select, textarea, label, p, h1, legend, fieldset, a) {
   float: none;
   min-width: 0;
   max-width: none;
@@ -76,11 +76,11 @@
   box-sizing: border-box;
   width: min(35em, calc(100vw - 2em));
   max-width: none;
-  max-height: calc(100vh - 2em);
   max-height: calc(100dvh - 2em);
   margin: auto;
   padding: 0;
   overflow: hidden;
+  overscroll-behavior: contain;
   border: 1px solid var(--opinion-color-border);
   border-radius: 0.75em;
   background: var(--opinion-color-background);
@@ -97,6 +97,9 @@
 
 .opinion-dialog::backdrop,
 .opinion-annotation::backdrop {
+  /* A scroll container, so overscroll-behavior keeps the page behind from scrolling */
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: var(--opinion-backdrop, rgb(0 0 0 / 50%));
   backdrop-filter: blur(8px);
 }
@@ -187,7 +190,7 @@
 }
 
 .opinion-dialog__close:focus-visible {
-  outline: 0;
+  outline: 2px solid transparent;
   box-shadow: var(--opinion-focus);
   opacity: 1;
 }
@@ -205,6 +208,7 @@
   min-height: 0;
   padding: 1.25em;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 /* The body scrolls instead: without this the preview (overflow: auto) would shrink to nothing */
@@ -289,7 +293,7 @@
 .opinion-dialog__textarea:focus,
 .opinion-dialog__select:focus {
   border-color: var(--opinion-color-primary);
-  outline: 0;
+  outline: 2px solid transparent;
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 8%), var(--opinion-focus);
 }
 
@@ -357,7 +361,7 @@
 }
 
 .opinion-dialog__button:focus-visible {
-  outline: 0;
+  outline: 2px solid transparent;
   box-shadow: var(--opinion-focus);
 }
 
@@ -430,7 +434,7 @@
 }
 
 .opinion-switch:focus-visible {
-  outline: 0;
+  outline: 2px solid transparent;
   box-shadow: var(--opinion-focus);
 }
 
@@ -553,11 +557,11 @@
   display: none;
   width: 100vw;
   max-width: none;
-  height: 100vh;
   height: 100dvh;
   max-height: none;
   margin: 0;
   padding: 1em;
+  overscroll-behavior: contain;
   border: 0;
   background: var(--opinion-color-background);
   color: var(--opinion-color-text);
@@ -651,7 +655,7 @@
 }
 
 .opinion-annotation__color:focus-visible {
-  outline: 0;
+  outline: 2px solid transparent;
   box-shadow: var(--opinion-focus);
 }
 
@@ -754,5 +758,27 @@
 @keyframes opinion-recording-pulse {
   to {
     opacity: 0.3;
+  }
+}
+
+/* Windows high contrast drops box shadows and background images: keep the selection and the arrow visible */
+@media (forced-colors: active) {
+  .opinion-annotation [aria-pressed='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .opinion-switch__thumb {
+    border: 1px solid ButtonText;
+  }
+
+  .opinion-dialog__select {
+    background-image: none;
+    appearance: auto;
+  }
+
+  /* The colour of the swatch is the information */
+  .opinion-annotation__color {
+    forced-color-adjust: none;
   }
 }
