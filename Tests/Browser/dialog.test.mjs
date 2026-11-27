@@ -764,9 +764,13 @@ await scenario('screenshot annotation: numbered pins with comments, crop, list a
 });
 
 // Scenario: Pin size on a high-resolution capture
-await scenario('screenshot annotation: pin of 30 CSS pixels on a capture larger than the page', ['--auto-accept-this-tab-capture'], async (page) => {
+await scenario('screenshot annotation: pin of 30 CSS pixels on a capture at twice the page width', ['--auto-accept-this-tab-capture'], async (page) => {
   await button(page, '[screenshotTake]').click();
   await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  // The capture size depends on the platform (Linux: page width, macOS: larger); a page of half
+  // the capture width gives a fixed ratio of 2, as on a display with device pixel ratio 2
+  const captureWidth = await imageSize(page, await page.getAttribute('.opinion-dialog__preview', 'src')).then((size) => size.width);
+  await page.evaluate((width) => Object.defineProperty(window, 'innerWidth', { configurable: true, value: width / 2 }), captureWidth);
   await button(page, '[annotate]').click();
   await page.waitForSelector('dialog.opinion-annotation[open]');
   await button(page, '[annotationPin]').click();
@@ -784,15 +788,10 @@ await scenario('screenshot annotation: pin of 30 CSS pixels on a capture larger 
     // From the first to the last yellow pixel: the number in the middle is not yellow
     const yellow = [];
     for (let i = 0; i < row.length; i += 4) if (row[i] > 200 && row[i + 1] > 170 && row[i + 2] < 110) yellow.push(i / 4);
-    return { width: yellow.length ? yellow.at(-1) - yellow[0] + 1 : 0, imageWidth: image.width, pageWidth: window.innerWidth };
+    return { width: yellow.length ? yellow.at(-1) - yellow[0] + 1 : 0, imageWidth: image.width };
   }, await page.getAttribute('.opinion-dialog__preview', 'src'));
   console.log('   pin', JSON.stringify(measured));
-  // Headless Chrome captures the tab at 1600 instead of 2560 pixels; the ratio is what counts
-  assert(measured.imageWidth >= measured.pageWidth * 1.2, 'capture not larger than the page');
-  assert(Math.abs(measured.width - (30 * measured.imageWidth) / measured.pageWidth) <= 4, 'pin not 30 CSS pixels wide');
-}, async (page) => {
-  const session = await page.context().newCDPSession(page);
-  await session.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 2, mobile: false });
+  assert(Math.abs(measured.width - 60) <= 4, 'pin not 30 CSS pixels (60 image pixels) wide');
 });
 
 // Scenario: Timeout
