@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `opinion:redeliver` delivers the oldest feedback first by its creation time,
+  also for imported or backdated records (it ordered by uid before)
+- The upgrade wizard "Opinion: page of existing feedback" is done after it ran,
+  also when a stored context holds an invalid page such as `"twelve"`; such
+  feedback keeps no page
+
 ## 2.2.0 – 2026-11-25
 
 - Video of the browser tab as an alternative to the screenshot, off by default

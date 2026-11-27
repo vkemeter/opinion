@@ -37,12 +37,36 @@ final readonly class PageUidUpgradeWizard implements UpgradeWizardInterface
 
     public function updateNecessary(): bool
     {
-        return (int)$this->createCandidateQuery()->count('uid')->executeQuery()->fetchOne() > 0;
+        // Runs the generator up to the first page to store only
+        return $this->findPagesToStore()->valid();
     }
 
     public function executeUpdate(): bool
     {
         $connection = $this->connectionPool->getConnectionForTable(FeedbackRepository::TABLE);
+        foreach ($this->findPagesToStore() as $uid => $pageUid) {
+            $connection->update(FeedbackRepository::TABLE, ['page_uid' => $pageUid], ['uid' => $uid]);
+        }
+
+        return true;
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    public function getPrerequisites(): array
+    {
+        return [DatabaseUpdatedPrerequisite::class];
+    }
+
+    /**
+     * Uid and page of each feedback without page uid whose context names a valid page.
+     * The same rule decides whether the wizard is necessary, so it is done once nothing is left to write.
+     *
+     * @return \Generator<int, int>
+     */
+    private function findPagesToStore(): \Generator
+    {
         $lastUid = 0;
         do {
             $queryBuilder = $this->createCandidateQuery();
@@ -58,20 +82,10 @@ final readonly class PageUidUpgradeWizard implements UpgradeWizardInterface
                 $context = json_decode((string)$row['context'], true);
                 $pageUid = FeedbackRepository::pageUidOf(is_array($context) ? $context : []);
                 if ($pageUid > 0) {
-                    $connection->update(FeedbackRepository::TABLE, ['page_uid' => $pageUid], ['uid' => $lastUid]);
+                    yield $lastUid => $pageUid;
                 }
             }
         } while (count($rows) === self::BATCH_SIZE);
-
-        return true;
-    }
-
-    /**
-     * @return list<class-string>
-     */
-    public function getPrerequisites(): array
-    {
-        return [DatabaseUpdatedPrerequisite::class];
     }
 
     /**

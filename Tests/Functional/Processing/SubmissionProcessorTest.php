@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Processing;
 
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Clock\ClockInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
@@ -89,7 +90,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             return DeliveryResult::success('jira');
         });
 
-        $result = new SubmissionProcessor($this->get(FeedbackRepository::class), $this->get(ScreenshotStorage::class), [$email, $jira], $logger)
+        $result = new SubmissionProcessor($this->get(FeedbackRepository::class), $this->get(ScreenshotStorage::class), [$email, $jira], $logger, $this->get(ClockInterface::class))
             ->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['emial']));
 
         self::assertSame(DeliveryStatus::Sent, $result->status);
@@ -130,7 +131,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
                 ? throw new \RuntimeException('Server has gone away', 1795000003)
                 : $realConnectionPool->getConnectionForTable($table),
         );
-        $processor = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [], new NullLogger());
+        $processor = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [], new NullLogger(), $this->get(ClockInterface::class));
         // A month no other test of this class writes into
         $folder = Environment::getVarPath() . '/opinion/2027/03';
 
@@ -202,7 +203,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             return DeliveryResult::success('test');
         });
 
-        $result = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [$channel], new NullLogger())
+        $result = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [$channel], new NullLogger(), $this->get(ClockInterface::class))
             ->process($this->createSubmission(), $this->configuration());
 
         self::assertSame(DeliveryStatus::Sent, $result->status);
@@ -298,6 +299,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             $this->get(ScreenshotStorage::class),
             $channels,
             new NullLogger(),
+            $this->get(ClockInterface::class),
         );
     }
 

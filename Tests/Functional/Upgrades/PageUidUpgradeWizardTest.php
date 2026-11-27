@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Upgrades;
 
 use Doctrine\DBAL\Types\Types;
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -52,14 +51,11 @@ final class PageUidUpgradeWizardTest extends FunctionalTestCase
     }
 
     /**
-     * Scenario: Existing feedback
+     * Scenario: Invalid page in the context
      */
     #[Test]
-    #[Group('spec-mismatch')]
     public function wizardIsDoneAlsoWithAnInvalidPageInTheContext(): void
     {
-        self::markTestSkipped('Spec mismatch M5: a stored context with an invalid pageUid keeps the wizard "necessary" after it ran');
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
         $this->insertOldFeedback(['pageUid' => 12]);
         $this->insertOldFeedback(['pageUid' => 'twelve']);
 

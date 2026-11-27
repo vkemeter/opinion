@@ -190,7 +190,8 @@ final readonly class FeedbackRepository
                 )),
                 $queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($createdBefore, Connection::PARAM_INT)),
             )
-            ->orderBy('uid');
+            ->orderBy('crdate')
+            ->addOrderBy('uid');
         if ($maxAttempts > 0) {
             $queryBuilder->andWhere($queryBuilder->expr()->lt('delivery_attempts', $queryBuilder->createNamedParameter($maxAttempts, Connection::PARAM_INT)));
         }

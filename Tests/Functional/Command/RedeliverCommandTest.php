@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Command;
 
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Clock\MockClock;
@@ -171,15 +170,12 @@ final class RedeliverCommandTest extends FunctionalTestCase
     }
 
     /**
-     * Scenario: Retry after outage
+     * Scenario: Oldest first
      */
     #[Test]
-    #[Group('spec-mismatch')]
     public function recordsAreDeliveredOldestFirst(): void
     {
-        self::markTestSkipped('Spec mismatch M1: opinion:redeliver orders by uid, not by creation time');
         // Imported later, but created before all other records
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
         $oldest = $this->addFeedback('-3 hours', DeliveryStatus::Failed, 1);
 
         $display = $this->runCommand(['--dry-run' => true])->getDisplay();
@@ -191,11 +187,8 @@ final class RedeliverCommandTest extends FunctionalTestCase
      * Scenario: Retry after outage
      */
     #[Test]
-    #[Group('spec-mismatch')]
     public function appendedLogLineCarriesTheTimeOfTheRun(): void
     {
-        self::markTestSkipped('Needs a production change: SubmissionProcessor and Redeliverer stamp the log with date() instead of the injected clock');
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
         $container = $this->getContainer();
         self::assertInstanceOf(Container::class, $container);
         $container->set(ClockInterface::class, new MockClock(new \DateTimeImmutable('+1 day')->setTime(3, 4)));

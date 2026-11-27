@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Processing;
 
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use TYPO3\CMS\Core\Log\Channel;
@@ -32,6 +33,7 @@ final readonly class SubmissionProcessor
         private iterable $deliveryChannels,
         #[Channel('opinion')]
         private LoggerInterface $logger,
+        private ClockInterface $clock,
     ) {}
 
     /**
@@ -84,7 +86,7 @@ final readonly class SubmissionProcessor
             $results,
         ));
         if ($previousLog !== null) {
-            $log = ltrim($previousLog . "\n" . sprintf('[%s] ', date('Y-m-d H:i')) . $log);
+            $log = ltrim($previousLog . "\n" . sprintf('[%s] ', $this->clock->now()->format('Y-m-d H:i')) . $log);
         }
         try {
             $this->feedbackRepository->updateDeliveryStatus($feedbackUid, $status, $log);

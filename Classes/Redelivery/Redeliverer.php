@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Redelivery;
 
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Log\Channel;
 use TYPO3\CMS\Core\Resource\FileRepository;
@@ -26,6 +27,7 @@ final readonly class Redeliverer
         private SubmissionProcessor $submissionProcessor,
         #[Channel('opinion')]
         private LoggerInterface $logger,
+        private ClockInterface $clock,
     ) {}
 
     /**
@@ -43,7 +45,7 @@ final readonly class Redeliverer
         } catch (\ValueError $exception) {
             $this->logger->error('Feedback {uid} cannot be delivered again: {message}', ['uid' => $feedbackUid, 'message' => $exception->getMessage()]);
             // Counted as attempt, so redeliverMaxAttempts ends the retries of a record that can never be delivered
-            $log = ltrim((string)($record['delivery_log'] ?? '') . "\n" . sprintf('[%s] cannot be delivered again: %s', date('Y-m-d H:i'), $exception->getMessage()));
+            $log = ltrim((string)($record['delivery_log'] ?? '') . "\n" . sprintf('[%s] cannot be delivered again: %s', $this->clock->now()->format('Y-m-d H:i'), $exception->getMessage()));
             $this->feedbackRepository->updateDeliveryStatus($feedbackUid, DeliveryStatus::Failed, $log);
 
             return new ProcessingResult($feedbackUid, DeliveryStatus::Failed, []);

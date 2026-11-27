@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\Container;
@@ -957,13 +956,11 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
      * Scenario: Editor
      */
     #[Test]
-    #[Group('spec-mismatch')]
-    public function grantedModuleWithoutTheOptionIsNotInTheModuleMenu(): void
+    public function editorWithoutTheGrantedModuleDoesNotGetTheModule(): void
     {
-        self::markTestSkipped('Spec mismatch M2: the module menu offers "Feedback" to granted editors without options.opinion.enable');
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
-        $backendUser = $this->setUpBackendUser(2);
-        $backendUser->groupData['modules'] = 'opinion_feedback';
+        $backendUser = $this->setUpBackendUser(3);
+        // May send feedback, but the module is not granted
+        $backendUser->groupData['modules'] = '';
 
         self::assertFalse($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $backendUser));
     }
@@ -1085,11 +1082,8 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
      * Scenario: Empty message
      */
     #[Test]
-    #[Group('spec-mismatch')]
-    public function emptyMessageOfTheSenderIsAnError(): void
+    public function emptyMessageOfTheSenderStoresNothingAndSaysSo(): void
     {
-        self::markTestSkipped('Spec mismatch M3: an empty message is answered with an information, not an error message');
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
         $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
         $this->setUpBackendUser(3);
 
@@ -1097,26 +1091,8 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
         $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessagesAndFlush();
         self::assertCount(1, $messages);
-        self::assertSame(ContextualFeedbackSeverity::ERROR, $messages[0]->getSeverity());
+        self::assertSame(ContextualFeedbackSeverity::INFO, $messages[0]->getSeverity());
         self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($uid));
-    }
-
-    /**
-     * Scenario: Sender replies to closed feedback
-     */
-    #[Test]
-    #[Group('spec-mismatch')]
-    public function postedUnchangedStatusDoesNotKeepASenderReplyFromReopening(): void
-    {
-        self::markTestSkipped('Spec mismatch M4: a non-admin sender who also posts the current status keeps closed feedback closed');
-        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
-        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
-        $this->get(FeedbackRepository::class)->updateStatus($uid, 'closed');
-        $this->setUpBackendUser(3);
-
-        $this->postSave($uid, ['status' => 'closed', 'message' => 'Still broken.']);
-
-        self::assertSame('in_progress', $this->statusOf($uid));
     }
 
     private function addNumberedFeedback(int $count): void

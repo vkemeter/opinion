@@ -6,6 +6,7 @@ namespace Vkemeter\Opinion\Tests\Functional\Redelivery;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -225,8 +226,9 @@ final class RedelivererTest extends FunctionalTestCase
             $repository,
             $this->get(FileRepository::class),
             new StoredSubmissionFactory(),
-            new SubmissionProcessor($repository, $this->get(ScreenshotStorage::class), $channels, new NullLogger()),
+            new SubmissionProcessor($repository, $this->get(ScreenshotStorage::class), $channels, new NullLogger(), $this->get(ClockInterface::class)),
             $logger ?? new NullLogger(),
+            $this->get(ClockInterface::class),
         );
     }
 }
