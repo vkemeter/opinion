@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Command;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Clock\ClockInterface;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\DependencyInjection\Container;
 use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -44,6 +48,11 @@ final class RedeliverCommandTest extends FunctionalTestCase
         ];
     }
 
+    /**
+     * Scenario: Retry after outage
+     * Scenario: Attempt limit
+     * Scenario: Young record
+     */
     #[Test]
     public function deliversFailedAndPendingFeedbackAgain(): void
     {
@@ -65,12 +74,18 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame(1, (int)($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['sent'])['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Scenario: Young record
+     */
     #[Test]
     public function minAgeOptionIncludesYoungerFeedback(): void
     {
         self::assertStringContainsString('Delivered 3 feedback record(s).', $this->runCommand(['--min-age' => '0'])->getDisplay());
     }
 
+    /**
+     * Requirement: Redelivery command (--dry-run only reports)
+     */
     #[Test]
     public function dryRunDeliversNothing(): void
     {
@@ -80,6 +95,9 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame('failed', $this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed'])['delivery_status'] ?? null);
     }
 
+    /**
+     * Requirement: Redelivery command (exits non-zero when a record is still undelivered)
+     */
     #[Test]
     public function failingDeliveryIsReported(): void
     {
@@ -92,6 +110,9 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame(2, (int)($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed'])['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Scenario: Limit reached for a corrupt record
+     */
     #[Test]
     public function feedbackThatCannotBeRebuiltStopsFailingAtTheAttemptLimit(): void
     {
@@ -106,6 +127,9 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame(3, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Scenario: All channels disabled
+     */
     #[Test]
     public function skippedFeedbackIsNotDeliveredAgain(): void
     {
@@ -117,6 +141,9 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Scenario: All channels disabled
+     */
     #[Test]
     public function disabledEmailChannelSkipsTheFeedback(): void
     {
@@ -131,12 +158,65 @@ final class RedeliverCommandTest extends FunctionalTestCase
         self::assertStringContainsString('Delivered 0 feedback record(s).', $this->runCommand([])->getDisplay());
     }
 
+    /**
+     * Scenario: Attempt limit
+     */
+    #[Test]
+    public function attemptLimitZeroRetriesWithoutLimit(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['redeliverMaxAttempts'] = '0';
+
+        self::assertStringContainsString('Delivered 3 feedback record(s).', $this->runCommand([])->getDisplay(), 'also the record with 3 attempts');
+        self::assertSame('sent', $this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['givenUp'])['delivery_status'] ?? null);
+    }
+
+    /**
+     * Scenario: Retry after outage
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function recordsAreDeliveredOldestFirst(): void
+    {
+        self::markTestSkipped('Spec mismatch M1: opinion:redeliver orders by uid, not by creation time');
+        // Imported later, but created before all other records
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $oldest = $this->addFeedback('-3 hours', DeliveryStatus::Failed, 1);
+
+        $display = $this->runCommand(['--dry-run' => true])->getDisplay();
+
+        self::assertStringContainsString(sprintf('again: %d, %d, %d.', $oldest, $this->feedbackUids['failed'], $this->feedbackUids['pending']), $display);
+    }
+
+    /**
+     * Scenario: Retry after outage
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function appendedLogLineCarriesTheTimeOfTheRun(): void
+    {
+        self::markTestSkipped('Needs a production change: SubmissionProcessor and Redeliverer stamp the log with date() instead of the injected clock');
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $container = $this->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->set(ClockInterface::class, new MockClock(new \DateTimeImmutable('+1 day')->setTime(3, 4)));
+
+        $this->runCommand([]);
+
+        self::assertStringEndsWith(sprintf('[%s] email: OK sent to team@example.com', new \DateTimeImmutable('+1 day')->format('Y-m-d') . ' 03:04'), (string)($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['failed'])['delivery_log'] ?? ''));
+    }
+
+    /**
+     * Requirement: Redelivery command (--min-age in minutes)
+     */
     #[Test]
     public function invalidMinAgeIsRejected(): void
     {
         self::assertSame(Command::INVALID, $this->runCommand(['--min-age' => 'soon'])->getStatusCode());
     }
 
+    /**
+     * Requirement: Retention cleanup / Redelivery command (selectable as Scheduler task)
+     */
     #[Test]
     public function commandIsSchedulable(): void
     {

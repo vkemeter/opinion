@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Repository;
 
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
@@ -24,6 +26,10 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Requirement: Record location and access
+     * Scenario: New submission
+     */
     #[Test]
     public function addStoresRecordAtRootLevel(): void
     {
@@ -47,6 +53,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(1791561428, (int)$record['crdate']);
     }
 
+    /**
+     * Requirement: Stored before delivery
+     */
     #[Test]
     public function addReferencesScreenshot(): void
     {
@@ -61,6 +70,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(1, (int)($this->get(FeedbackRepository::class)->findByUid($uid)['screenshot'] ?? 0));
     }
 
+    /**
+     * Requirement: Video files
+     */
     #[Test]
     public function addReferencesVideo(): void
     {
@@ -75,6 +87,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame([], $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'screenshot', $uid));
     }
 
+    /**
+     * Scenario: Own list
+     */
     #[Test]
     public function queriesCanBeRestrictedToOneSender(): void
     {
@@ -90,6 +105,11 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertNotNull($repository->findByUid($foreign));
     }
 
+    /**
+     * Scenario: Open bugs
+     * Scenario: Search by page
+     * Scenario: Editor searches
+     */
     #[Test]
     public function listCanBeFilteredAndSearched(): void
     {
@@ -124,6 +144,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(1, $repository->countAll(3, new FeedbackFilter(category: 'bug')));
     }
 
+    /**
+     * Requirement: Administrators change the status (does not change the delivery status)
+     */
     #[Test]
     public function updateStatusLeavesTheDeliveryAlone(): void
     {
@@ -139,6 +162,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Requirement: Delivery status (every attempt increases the counter)
+     */
     #[Test]
     public function updateDeliveryStatusWritesStatusAndLog(): void
     {
@@ -156,6 +182,10 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(2, (int)($repository->findByUid($uid)['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Scenario: Attempt limit
+     * Scenario: Young record
+     */
     #[Test]
     public function findUndeliveredUidsHonoursStatusAgeAndAttempts(): void
     {
@@ -172,6 +202,10 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame([], $repository->findUndeliveredUids(1791561428, 0), 'created at 1791561428, not before');
     }
 
+    /**
+     * Scenario: Several statuses
+     * Scenario: All feedback
+     */
     #[Test]
     public function findUidsForCleanupHonoursAgeAndStatus(): void
     {
@@ -192,6 +226,10 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame([$oldClosed, $oldNew, $nowClosed], $repository->findUidsForCleanup(null, ['new', 'closed']));
     }
 
+    /**
+     * Scenario: Own initial status
+     * Scenario: Removed status
+     */
     #[Test]
     public function addStoresTheConfiguredInitialStatusAndOpenMeansNotClosed(): void
     {
@@ -213,16 +251,37 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(3, $repository->countOpen(), 'no closed status');
     }
 
+    /**
+     * Scenario: List module
+     * Requirement: Conversation stored with the feedback (root level, hidden from the List module, read-only)
+     */
     #[Test]
-    public function tableIsReadOnlyAdminOnlyRootLevel(): void
+    public function tablesAreReadOnlyRootLevelAndHiddenFromTheListModule(): void
     {
-        $ctrl = $GLOBALS['TCA'][FeedbackRepository::TABLE]['ctrl'];
-
-        self::assertSame(1, $ctrl['rootLevel']);
-        self::assertTrue($ctrl['adminOnly']);
-        self::assertTrue($ctrl['readOnly']);
+        foreach ([FeedbackRepository::TABLE, ConversationRepository::MESSAGE_TABLE, ConversationRepository::READ_TABLE] as $table) {
+            $ctrl = $GLOBALS['TCA'][$table]['ctrl'];
+            self::assertSame(1, $ctrl['rootLevel'], $table);
+            self::assertTrue($ctrl['hideTable'], $table . ' is listed in the List module');
+            self::assertTrue($ctrl['readOnly'], $table);
+        }
     }
 
+    /**
+     * Scenario: Update from 1.0.x
+     */
+    #[Test]
+    public function feedbackStoredWithoutStatusHasTheStatusNew(): void
+    {
+        // A record as 1.0.x wrote it: the status column did not exist yet
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE);
+        $connection->insert(FeedbackRepository::TABLE, ['pid' => 0, 'crdate' => 1791561428, 'source' => 'backend', 'category' => 'bug', 'severity' => 'low', 'message' => 'Old feedback']);
+
+        self::assertSame('new', $this->get(FeedbackRepository::class)->findByUid((int)$connection->lastInsertId())['status'] ?? null);
+    }
+
+    /**
+     * Scenario: New feedback
+     */
     #[Test]
     public function pageUidIsStoredFromTheContext(): void
     {
@@ -232,6 +291,9 @@ final class FeedbackRepositoryTest extends FunctionalTestCase
         self::assertSame(0, (int)($repository->findByUid($repository->add($this->createPageSubmission(null, Source::Frontend, 'No page'), null))['page_uid'] ?? -1));
     }
 
+    /**
+     * Scenario: Closed feedback
+     */
     #[Test]
     public function openFeedbackOfAPageIsFilteredByStatusAndSourceNewestFirst(): void
     {

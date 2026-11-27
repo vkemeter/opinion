@@ -12,6 +12,9 @@ final class ReportedUrlTest extends UnitTestCase
 {
     private const array HOSTS = ['www.example.com', 'example.com'];
 
+    /**
+     * Scenario: Backend feedback
+     */
     #[Test]
     public function browserUrlIsPreferredAndLinked(): void
     {
@@ -21,6 +24,9 @@ final class ReportedUrlTest extends UnitTestCase
         );
     }
 
+    /**
+     * Scenario: Host of the request only
+     */
     #[Test]
     public function modulePathIsUsedWithoutBrowserUrlAndLinkedOnlyWhereAllowed(): void
     {
@@ -28,6 +34,9 @@ final class ReportedUrlTest extends UnitTestCase
         self::assertSame(['url' => '/typo3/module/web/layout?id=1', 'linked' => false], ReportedUrl::fromDetails([], ['url' => '/typo3/module/web/layout?id=1'], self::HOSTS, false));
     }
 
+    /**
+     * Scenario: Unsafe reported URL
+     */
     #[Test]
     public function unsafeUrlsAreNotLinked(): void
     {
@@ -35,6 +44,9 @@ final class ReportedUrlTest extends UnitTestCase
         self::assertFalse(ReportedUrl::fromDetails([], ['url' => '//evil.example.com/x'], self::HOSTS, true)['linked'] ?? null);
     }
 
+    /**
+     * Scenario: Foreign host
+     */
     #[Test]
     public function onlyOwnHostsAreLinked(): void
     {
@@ -44,6 +56,10 @@ final class ReportedUrlTest extends UnitTestCase
         self::assertFalse(ReportedUrl::fromDetails(['url' => 'https://sub.example.com/'], [], self::HOSTS, true)['linked'] ?? null);
     }
 
+    /**
+     * Scenario: Backslash before an own host
+     * Scenario: Backslash in a backend path
+     */
     #[Test]
     public function urlsWithBackslashAreNotLinked(): void
     {
@@ -51,6 +67,9 @@ final class ReportedUrlTest extends UnitTestCase
         self::assertFalse(ReportedUrl::fromDetails(['url' => 'https://evil.example\\@example.com/'], [], self::HOSTS, true)['linked'] ?? null);
     }
 
+    /**
+     * Requirement: Reported URL in the detail view
+     */
     #[Test]
     public function withoutUrlNothingIsReturned(): void
     {

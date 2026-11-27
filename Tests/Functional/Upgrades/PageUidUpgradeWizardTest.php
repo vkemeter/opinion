@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Upgrades;
 
 use Doctrine\DBAL\Types\Types;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -17,13 +18,15 @@ final class PageUidUpgradeWizardTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Scenario: Existing feedback
+     */
     #[Test]
     public function fillsThePageOfExistingFeedbackFromTheContext(): void
     {
         // Feedback as stored before the column existed
         $withPage = $this->insertOldFeedback(['pageUid' => 12, 'module' => 'web_layout']);
         $withoutPage = $this->insertOldFeedback(['module' => 'web_list']);
-        $invalidPage = $this->insertOldFeedback(['pageUid' => 'twelve']);
         $wizard = $this->get(PageUidUpgradeWizard::class);
 
         self::assertTrue($wizard->updateNecessary());
@@ -31,10 +34,43 @@ final class PageUidUpgradeWizardTest extends FunctionalTestCase
 
         self::assertSame(12, $this->pageUidOf($withPage));
         self::assertSame(0, $this->pageUidOf($withoutPage));
-        self::assertSame(0, $this->pageUidOf($invalidPage));
         self::assertSame(1, $this->get(FeedbackRepository::class)->countOpenByPage(12, null));
+        self::assertFalse($this->get(PageUidUpgradeWizard::class)->updateNecessary(), 'the wizard is done');
     }
 
+    /**
+     * Scenario: Existing feedback
+     */
+    #[Test]
+    public function invalidPageInTheContextIsStoredAsNoPage(): void
+    {
+        $invalidPage = $this->insertOldFeedback(['pageUid' => 'twelve']);
+
+        $this->get(PageUidUpgradeWizard::class)->executeUpdate();
+
+        self::assertSame(0, $this->pageUidOf($invalidPage));
+    }
+
+    /**
+     * Scenario: Existing feedback
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function wizardIsDoneAlsoWithAnInvalidPageInTheContext(): void
+    {
+        self::markTestSkipped('Spec mismatch M5: a stored context with an invalid pageUid keeps the wizard "necessary" after it ran');
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $this->insertOldFeedback(['pageUid' => 12]);
+        $this->insertOldFeedback(['pageUid' => 'twelve']);
+
+        self::assertTrue($this->get(PageUidUpgradeWizard::class)->executeUpdate());
+
+        self::assertFalse($this->get(PageUidUpgradeWizard::class)->updateNecessary());
+    }
+
+    /**
+     * Scenario: Existing feedback
+     */
     #[Test]
     public function nothingToDoWithoutOldFeedback(): void
     {

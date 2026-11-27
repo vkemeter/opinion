@@ -58,6 +58,10 @@ final class CleanupCommandTest extends FunctionalTestCase
         $conversation->markRead($this->feedbackUids['old'], 1);
     }
 
+    /**
+     * Scenario: Old feedback
+     * Scenario: Cleanup of an old feedback
+     */
     #[Test]
     public function deletesFeedbackOlderThanTheConfiguredRetentionIncludingScreenshots(): void
     {
@@ -78,6 +82,25 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertSame(1, $this->countReferences($this->feedbackUids['recent']));
     }
 
+    /**
+     * Scenario: Missing file
+     */
+    #[Test]
+    public function recordIsRemovedWhenItsScreenshotFileIsAlreadyGone(): void
+    {
+        unlink($this->screenshotPaths['old']);
+
+        $tester = $this->runCommand([]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode(), $tester->getDisplay());
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']));
+        self::assertSame(0, $this->countReferences($this->feedbackUids['old']));
+        self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
+    }
+
+    /**
+     * Scenario: Cleanup
+     */
     #[Test]
     public function deletesVideosLikeScreenshots(): void
     {
@@ -93,6 +116,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertSame(0, $this->countReferences($uid));
     }
 
+    /**
+     * Scenario: Old feedback
+     */
     #[Test]
     public function daysOptionOverridesTheConfiguration(): void
     {
@@ -103,6 +129,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertFileDoesNotExist($this->screenshotPaths['recent']);
     }
 
+    /**
+     * Scenario: Dry run
+     */
     #[Test]
     public function dryRunDeletesNothing(): void
     {
@@ -115,6 +144,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertSame(3, $this->get(ConversationRepository::class)->countByFeedback($this->feedbackUids['old']));
     }
 
+    /**
+     * Scenario: All feedback
+     */
     #[Test]
     public function daysZeroDeletesFeedbackOfAnyAge(): void
     {
@@ -128,6 +160,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertFileDoesNotExist($this->screenshotPaths['recent']);
     }
 
+    /**
+     * Scenario: Closed feedback of any age
+     */
     #[Test]
     public function statusRestrictsTheDeletionAtAnyAge(): void
     {
@@ -144,6 +179,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertNotNull($repository->findByUid($inProgress), 'in progress');
     }
 
+    /**
+     * Scenario: Status keeps the retention period
+     */
     #[Test]
     public function statusKeepsTheRetentionPeriod(): void
     {
@@ -158,6 +196,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertNotNull($repository->findByUid($this->feedbackUids['recent']), 'younger than retentionDays');
     }
 
+    /**
+     * Scenario: Several statuses
+     */
     #[Test]
     public function severalStatusesCanBeGiven(): void
     {
@@ -169,13 +210,25 @@ final class CleanupCommandTest extends FunctionalTestCase
         $tester = $this->runCommand(['--days' => '0', '--status' => 'new, closed', '--dry-run' => true]);
 
         self::assertStringContainsString('Would delete 2 feedback record(s), 2 file(s) and 4 message(s) regardless of age with status new, closed.', $this->display($tester));
+
+        $tester = $this->runCommand(['--days' => '0', '--status' => 'new,closed']);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['old']), 'new');
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']), 'closed');
+        self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($inProgress), 'in progress stays');
     }
 
+    /**
+     * Scenario: Invalid options
+     */
     #[Test]
     public function invalidOptionsAreRejected(): void
     {
-        self::assertSame(Command::INVALID, $this->runCommand(['--days' => '-1'])->getStatusCode());
-        self::assertSame(Command::INVALID, $this->runCommand(['--days' => 'many'])->getStatusCode());
+        foreach (['-1', 'many'] as $days) {
+            $tester = $this->runCommand(['--days' => $days]);
+            self::assertSame(Command::INVALID, $tester->getStatusCode(), $days);
+            self::assertStringContainsString('--days', $tester->getDisplay(), $days);
+        }
         $tester = $this->runCommand(['--days' => '0', '--status' => 'closed,done']);
         self::assertSame(Command::INVALID, $tester->getStatusCode());
         self::assertStringContainsString('done', $tester->getDisplay());
@@ -183,6 +236,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertNotNull($this->get(FeedbackRepository::class)->findByUid($this->feedbackUids['recent']));
     }
 
+    /**
+     * Scenario: Invalid options
+     */
     #[Test]
     public function statusFollowsTheConfiguredStatuses(): void
     {
@@ -194,6 +250,9 @@ final class CleanupCommandTest extends FunctionalTestCase
         self::assertSame(Command::INVALID, $this->runCommand(['--days' => '0', '--status' => 'in_progress'])->getStatusCode(), 'not configured');
     }
 
+    /**
+     * Requirement: Retention cleanup / Redelivery command (selectable as Scheduler task)
+     */
     #[Test]
     public function commandIsSchedulable(): void
     {

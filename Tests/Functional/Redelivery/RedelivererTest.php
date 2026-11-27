@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Redelivery;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
@@ -23,6 +25,7 @@ use Vkemeter\Opinion\Redelivery\Redeliverer;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
+use Vkemeter\Opinion\Tests\Functional\Fixtures\CollectingLogger;
 
 final class RedelivererTest extends FunctionalTestCase
 {
@@ -32,6 +35,9 @@ final class RedelivererTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Scenario: Retry after outage
+     */
     #[Test]
     public function redeliverPassesTheStoredSubmissionAndScreenshotAndAppendsTheLog(): void
     {
@@ -82,6 +88,9 @@ final class RedelivererTest extends FunctionalTestCase
         self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] test: OK delivered$/', (string)($record['delivery_log'] ?? ''));
     }
 
+    /**
+     * Scenario: Redelivery from the CLI
+     */
     #[Test]
     public function redeliverPassesTheVideoTheUidAndTheStoredBackendUrl(): void
     {
@@ -117,8 +126,21 @@ final class RedelivererTest extends FunctionalTestCase
         self::assertSame($video->getUid(), $received->videoFile?->getUid());
     }
 
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function corruptFieldProvider(): iterable
+    {
+        yield 'unknown severity' => ['severity', 'urgent'];
+        yield 'unknown source' => ['source', 'cli'];
+    }
+
+    /**
+     * Scenario: Corrupt severity
+     */
     #[Test]
-    public function feedbackThatCannotBeRebuiltCountsAsFailedAttempt(): void
+    #[DataProvider('corruptFieldProvider')]
+    public function feedbackThatCannotBeRebuiltCountsAsFailedAttempt(string $field, string $value): void
     {
         $repository = $this->get(FeedbackRepository::class);
         $uid = $repository->add(new Submission(
@@ -130,20 +152,28 @@ final class RedelivererTest extends FunctionalTestCase
             createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
         ), null);
         $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'test: FAILED Connection refused');
-        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['severity' => 'urgent'], ['uid' => $uid]);
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, [$field => $value], ['uid' => $uid]);
 
-        $channel = self::createMock(DeliveryChannelInterface::class);
-        $channel->expects(self::never())->method('deliver');
+        $delivered = [];
+        $channel = $this->createCapturingChannel($delivered);
+        $logger = new CollectingLogger();
 
-        $result = $this->createRedeliverer([$channel])->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
+        $result = $this->createRedeliverer([$channel], $logger)->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
 
         self::assertSame(DeliveryStatus::Failed, $result?->status);
+        self::assertSame([], $delivered, 'not delivered');
+        self::assertCount(1, $logger->messages('error'), 'an error is logged');
+        self::assertStringContainsString((string)$uid, $logger->messages('error')[0]);
         $record = $repository->findByUid($uid);
         self::assertSame('failed', $record['delivery_status'] ?? null);
         self::assertSame(2, (int)($record['delivery_attempts'] ?? 0));
-        self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] cannot be delivered again: .*urgent/', (string)($record['delivery_log'] ?? ''));
+        self::assertMatchesRegularExpression('/^test: FAILED Connection refused\n\[[\d: -]{16}\] cannot be delivered again: .*' . $value . '/', (string)($record['delivery_log'] ?? ''));
     }
 
+    /**
+     * Scenario: Corrupt category
+     * Scenario: Removed category on redelivery
+     */
     #[Test]
     public function categoryThatIsNotConfiguredIsDeliveredAsStored(): void
     {
@@ -151,17 +181,18 @@ final class RedelivererTest extends FunctionalTestCase
         $uid = $repository->add(new Submission('The teaser image is cropped.', 'feature', Severity::High, Source::Backend, 3, new \DateTimeImmutable('2026-10-09 12:00:00')), null);
         $repository->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'test: FAILED Connection refused');
 
-        $channel = self::createMock(DeliveryChannelInterface::class);
-        $channel->method('getIdentifier')->willReturn('test');
-        $channel->expects(self::once())->method('deliver')
-            ->with(self::callback(static fn(Submission $submission): bool => $submission->category === 'feature'))
-            ->willReturn(DeliveryResult::success('test', 'OK'));
+        $delivered = [];
+        $channel = $this->createCapturingChannel($delivered);
 
         $result = $this->createRedeliverer([$channel])->redeliver($uid, new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180));
 
         self::assertSame(DeliveryStatus::Sent, $result?->status);
+        self::assertSame(['feature'], array_map(static fn(Submission $submission): string => $submission->category, $delivered));
     }
 
+    /**
+     * Scenario: Unknown feedback
+     */
     #[Test]
     public function unknownFeedbackIsNotDelivered(): void
     {
@@ -169,9 +200,24 @@ final class RedelivererTest extends FunctionalTestCase
     }
 
     /**
+     * @param list<Submission> $delivered receives every delivered submission
+     */
+    private function createCapturingChannel(array &$delivered): DeliveryChannelInterface
+    {
+        $channel = self::createStub(DeliveryChannelInterface::class);
+        $channel->method('getIdentifier')->willReturn('test');
+        $channel->method('deliver')->willReturnCallback(static function (Submission $submission) use (&$delivered): DeliveryResult {
+            $delivered[] = $submission;
+            return DeliveryResult::success('test', 'OK');
+        });
+
+        return $channel;
+    }
+
+    /**
      * @param list<DeliveryChannelInterface> $channels
      */
-    private function createRedeliverer(array $channels): Redeliverer
+    private function createRedeliverer(array $channels, ?LoggerInterface $logger = null): Redeliverer
     {
         $repository = $this->get(FeedbackRepository::class);
 
@@ -180,7 +226,7 @@ final class RedelivererTest extends FunctionalTestCase
             $this->get(FileRepository::class),
             new StoredSubmissionFactory(),
             new SubmissionProcessor($repository, $this->get(ScreenshotStorage::class), $channels, new NullLogger()),
-            new NullLogger(),
+            $logger ?? new NullLogger(),
         );
     }
 }

@@ -12,6 +12,9 @@ use Vkemeter\Opinion\Repository\FeedbackFilter;
 
 final class FeedbackFilterTest extends UnitTestCase
 {
+    /**
+     * Scenario: Invalid filter value
+     */
     #[Test]
     public function validParametersAreTakenAndInvalidOnesIgnored(): void
     {
@@ -24,6 +27,9 @@ final class FeedbackFilterTest extends UnitTestCase
         self::assertSame(['search' => 'teaser', 'status' => 'closed'], $filter->toQueryParameters());
     }
 
+    /**
+     * Scenario: Category no longer configured
+     */
     #[Test]
     public function categoryMustBeConfigured(): void
     {
@@ -32,6 +38,9 @@ final class FeedbackFilterTest extends UnitTestCase
         self::assertSame('2', FeedbackFilter::fromQueryParameters(['category' => '2'], self::configuration('1,2'))->category, 'numeric value');
     }
 
+    /**
+     * Requirement: Search and filter
+     */
     #[Test]
     public function searchIsCutAndEmptyFilterIsInactive(): void
     {
@@ -40,6 +49,9 @@ final class FeedbackFilterTest extends UnitTestCase
         self::assertTrue(new FeedbackFilter(category: 'bug')->isActive());
     }
 
+    /**
+     * Scenario: Filter offers configured statuses
+     */
     #[Test]
     public function statusMustBeConfigured(): void
     {

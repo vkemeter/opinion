@@ -16,6 +16,9 @@ final class LinkableHostsTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Requirement: Reported URL in the detail view (hosts of sites, languages and the backend request)
+     */
     #[Test]
     public function hostsOfAllSitesLanguagesAndTheRequestAreCollected(): void
     {

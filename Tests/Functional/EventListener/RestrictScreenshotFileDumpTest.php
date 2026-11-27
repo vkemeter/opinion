@@ -31,6 +31,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         $this->get(ScreenshotStorageInstaller::class)->install();
     }
 
+    /**
+     * Scenario: Editor opens the file dump URL
+     */
     #[Test]
     public function listenerIsRegistered(): void
     {
@@ -39,6 +42,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         self::assertContains(RestrictScreenshotFileDump::class, $services);
     }
 
+    /**
+     * Scenario: Editor opens the file dump URL
+     */
     #[Test]
     public function screenshotIsAlwaysDenied(): void
     {
@@ -48,6 +54,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         self::assertSame(403, $event->getResponse()?->getStatusCode());
     }
 
+    /**
+     * Scenario: File dump URL with administrator session
+     */
     #[Test]
     public function screenshotIsDeniedAlsoWithAdminSession(): void
     {
@@ -57,6 +66,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         self::assertSame(403, $this->dispatch($this->createScreenshot())->getResponse()?->getStatusCode());
     }
 
+    /**
+     * Scenario: Video file dump URL
+     */
     #[Test]
     public function videoIsDeniedAlsoWithAdminSession(): void
     {
@@ -67,6 +79,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         self::assertSame(403, $this->dispatch($video)->getResponse()?->getStatusCode());
     }
 
+    /**
+     * Scenario: File dump URL with administrator session
+     */
     #[Test]
     public function processedScreenshotIsDenied(): void
     {
@@ -75,6 +90,9 @@ final class RestrictScreenshotFileDumpTest extends FunctionalTestCase
         self::assertSame(403, $this->dispatch($processedFile)->getResponse()?->getStatusCode());
     }
 
+    /**
+     * Scenario: Other storages untouched
+     */
     #[Test]
     public function filesOfOtherStoragesAreNotTouched(): void
     {

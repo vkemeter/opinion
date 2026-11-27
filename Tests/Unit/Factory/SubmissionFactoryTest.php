@@ -31,6 +31,9 @@ use Vkemeter\Opinion\Validation\SubmissionValidator;
 
 final class SubmissionFactoryTest extends UnitTestCase
 {
+    /**
+     * Scenario: Unknown key
+     */
     #[Test]
     public function createFromRequestBuildsSubmission(): void
     {
@@ -55,6 +58,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertNull($submission->screenshot);
     }
 
+    /**
+     * Requirement: Valid category values (digits allowed)
+     */
     #[Test]
     public function numericCategoryValuesAreAccepted(): void
     {
@@ -63,6 +69,10 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame('2', $submission->category);
     }
 
+    /**
+     * Scenario: Forged sender
+     * Scenario: IP address
+     */
     #[Test]
     public function systemInfoIsCollectedOnTheServerNotTakenFromTheBody(): void
     {
@@ -81,6 +91,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame('2026-10-09T12:00:00+00:00', $submission->systemInfo['submittedAt']);
     }
 
+    /**
+     * Requirement: Frontend context validation (anything else is dropped)
+     */
     #[Test]
     public function contextWithoutProviderIsDropped(): void
     {
@@ -89,6 +102,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame([], $this->createSubject([])->createFromRequest($request, $this->createBackendUser())->context);
     }
 
+    /**
+     * Requirement: Frontend context validation
+     */
     #[Test]
     public function contextIsResolvedByMatchingProvider(): void
     {
@@ -107,6 +123,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame(['pageUid' => 12, 'verified' => true], $submission->context);
     }
 
+    /**
+     * Requirement: Context at the end of the recording (ignored for other sources)
+     */
     #[Test]
     public function contextAtEndIsResolvedOnlyForTheBackend(): void
     {
@@ -131,6 +150,9 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame('https://example.com/typo3', $frontend->backendUrl);
     }
 
+    /**
+     * Scenario: Message too short
+     */
     #[Test]
     public function invalidRequestThrowsWithFieldErrors(): void
     {
@@ -145,6 +167,10 @@ final class SubmissionFactoryTest extends UnitTestCase
         }
     }
 
+    /**
+     * Scenario: Forged disabled detail
+     * Scenario: Disabled IP address
+     */
     #[Test]
     public function switchedOffDetailsAreDroppedEvenIfTheBrowserSendsThem(): void
     {
@@ -162,6 +188,10 @@ final class SubmissionFactoryTest extends UnitTestCase
         self::assertSame(['siteIdentifier' => 'default'], $submission->context);
     }
 
+    /**
+     * Scenario: Preview parameter
+     * Scenario: Request token
+     */
     #[Test]
     public function createFromRequestRemovesDeniedParametersFromBothUrls(): void
     {

@@ -33,6 +33,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Scenario: Dashboard installed
+     */
     #[Test]
     public function widgetsAreRegisteredInTheGroupFeedback(): void
     {
@@ -42,6 +45,11 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertSame(self::WIDGETS, array_keys($registry->getAvailableWidgetsForWidgetGroup('opinion')));
     }
 
+    /**
+     * Scenario: Count
+     * Scenario: Editor
+     * Scenario: No module access
+     */
     #[Test]
     public function openFeedbackCountsNewAndInProgressWithTheRulesOfTheModule(): void
     {
@@ -61,6 +69,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertSame(1, $provider->getNumber(), 'editor with the module: own feedback only');
     }
 
+    /**
+     * Scenario: Own statuses
+     */
     #[Test]
     public function openFeedbackFollowsTheClosedStatuses(): void
     {
@@ -74,6 +85,10 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertSame(2, $this->get(OpenFeedbackDataProvider::class)->getNumber());
     }
 
+    /**
+     * Scenario: Answer for the sender
+     * Scenario: Conversation switched off
+     */
     #[Test]
     public function newMessagesCountsUnreadFeedbackAndIsZeroWhileTheConversationIsOff(): void
     {
@@ -90,6 +105,10 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertSame(0, $provider->getNumber());
     }
 
+    /**
+     * Scenario: More than five
+     * Scenario: Link to the detail view
+     */
     #[Test]
     public function latestFeedbackListsTheFiveNewestLinkedToTheDetailView(): void
     {
@@ -108,6 +127,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertStringContainsString('Open module &quot;Feedback&quot;', $html);
     }
 
+    /**
+     * Requirement: Same data as the module
+     */
     #[Test]
     public function latestFeedbackOfAnEditorShowsOnlyOwnFeedback(): void
     {
@@ -121,6 +143,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertStringNotContainsString('Feedback of the admin', $html);
     }
 
+    /**
+     * Scenario: Own category with configured label
+     */
     #[Test]
     public function latestFeedbackShowsTheLabelOfAnOwnCategory(): void
     {
@@ -136,6 +161,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertStringContainsString('<td>Idea</td>', $html, 'removed shipped category keeps its translation');
     }
 
+    /**
+     * Requirement: Open feedback (number and button to the module)
+     */
     #[Test]
     public function numberWidgetShowsTheNumberAndTheButtonToTheModule(): void
     {
@@ -149,6 +177,9 @@ final class DashboardWidgetsTest extends FunctionalTestCase
         self::assertStringContainsString('/typo3/module/opinion/feedback?token=', $html);
     }
 
+    /**
+     * Scenario: No module access
+     */
     #[Test]
     public function numberWidgetHidesTheButtonFromUsersWithoutTheModule(): void
     {

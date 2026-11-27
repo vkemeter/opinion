@@ -39,6 +39,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         ],
     ];
 
+    /**
+     * Scenario: Feedback with screenshot
+     */
     #[Test]
     public function deliverAttachesTheScreenshotAlsoForEditorsWithoutFileMount(): void
     {
@@ -55,6 +58,10 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertContains('screenshot.png', array_map(static fn($part): ?string => $part->getFilename(), $this->getSentEmail()->getAttachments()));
     }
 
+    /**
+     * Scenario: Feedback with screenshot
+     * Scenario: Reply-to
+     */
     #[Test]
     public function deliverSendsMailWithAllDetailsAndScreenshot(): void
     {
@@ -86,6 +93,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertContains('screenshot.png', $attachmentNames);
     }
 
+    /**
+     * Scenario: Subject with an own category
+     */
     #[Test]
     public function ownAndRemovedCategoriesAreLabelledAlsoInTheSubject(): void
     {
@@ -104,6 +114,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertStringContainsString('Idea', (string)$this->getSentEmail()->getHtmlBody());
     }
 
+    /**
+     * Requirement: Screenshot in the email (only when one exists)
+     */
     #[Test]
     public function deliverWithoutScreenshotSendsMailWithoutImage(): void
     {
@@ -114,6 +127,10 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertSame([], $this->getSentEmail()->getAttachments());
     }
 
+    /**
+     * Scenario: Video feedback
+     * Scenario: Same module
+     */
     #[Test]
     public function videoIsLinkedNeverAttachedAndTheEndContextShownWhenItDiffers(): void
     {
@@ -136,6 +153,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertStringNotContainsString('At the end of the recording', (string)$this->getSentEmail()->getTextBody());
     }
 
+    /**
+     * Scenario: Feedback from the backend
+     */
     #[Test]
     public function reportedUrlIsSentOnce(): void
     {
@@ -155,6 +175,10 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertSame(1, substr_count((string)$email->getTextBody(), '/typo3/module/web/layout?id=1'));
     }
 
+    /**
+     * Scenario: Host of the request only
+     * Scenario: Foreign host
+     */
     #[Test]
     public function reportedUrlOfAHostWithoutSiteIsNotLinked(): void
     {
@@ -168,6 +192,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
         self::assertStringNotContainsString('href="https://example.com/login', $html);
     }
 
+    /**
+     * Scenario: Mail transport down
+     */
     #[Test]
     public function brokenTransportThrows(): void
     {

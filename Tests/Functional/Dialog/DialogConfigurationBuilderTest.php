@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Dialog;
 
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Dialog\DialogConfigurationBuilder;
 use Vkemeter\Opinion\Domain\Source;
@@ -21,6 +22,9 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Requirement: Dialog form (labels from the server configuration)
+     */
     #[Test]
     public function buildContainsTokenisedEndpointOptionsAndLabels(): void
     {
@@ -44,6 +48,10 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertContains('module', $configuration['collect']['context']);
     }
 
+    /**
+     * Scenario: Video disabled
+     * Requirement: Upload limit known in advance
+     */
     #[Test]
     public function videoIsOfferedOnlyWhenEnabled(): void
     {
@@ -57,10 +65,19 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
         $configuration = $builder->build($backendUser, Source::Backend);
         self::assertSame(['screenshot', 'video'], $configuration['captureKinds']);
+        $phpLimits = array_filter(array_map(
+            static fn(string $setting): int => GeneralUtility::getBytesFromSizeMeasurement((string)ini_get($setting)),
+            ['upload_max_filesize', 'post_max_size'],
+        ), static fn(int $bytes): bool => $bytes > 0);
+        self::assertSame(min([60 * 160 * 1024, ...$phpLimits]), $configuration['video']['uploadLimit'], 'smallest of server video limit, upload_max_filesize and post_max_size');
         self::assertGreaterThanOrEqual(10, $configuration['video']['maxDuration']);
-        self::assertLessThanOrEqual(60 * 160 * 1024, $configuration['video']['uploadLimit']);
+        self::assertLessThanOrEqual(60, $configuration['video']['maxDuration']);
     }
 
+    /**
+     * Scenario: Configured categories
+     * Scenario: Own category without label
+     */
     #[Test]
     public function categoriesFollowTheConfigurationWithTheirLabels(): void
     {
@@ -75,6 +92,9 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * Requirement: Valid category values (digits allowed)
+     */
     #[Test]
     public function numericCategoryValuesStayStrings(): void
     {
@@ -85,6 +105,9 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertSame([['value' => '1', 'label' => 'First'], ['value' => '2', 'label' => '2']], $configuration['categories']);
     }
 
+    /**
+     * Scenario: Disabled detail
+     */
     #[Test]
     public function switchedOffDetailsAreNeitherCollectedNorEmbedded(): void
     {
@@ -103,12 +126,18 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertSame(['siteIdentifier' => 'default', 'pageInfo' => ['parseTimeMs' => 10]], $configuration['context']);
     }
 
+    /**
+     * Scenario: Missing email address
+     */
     #[Test]
     public function userWithEmailAddressGetsTheForm(): void
     {
         self::assertNull($this->get(DialogConfigurationBuilder::class)->build($this->setUpBackendUser(1), Source::Backend)['unavailable']);
     }
 
+    /**
+     * Scenario: Missing email address
+     */
     #[Test]
     public function userWithoutEmailAddressGetsANoticeWithLinkToTheUserSettings(): void
     {
@@ -120,6 +149,9 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertSame('Open user settings', $unavailable['settingsLabel']);
     }
 
+    /**
+     * Scenario: Shipped category
+     */
     #[Test]
     public function labelsFollowTheBackendUserLanguage(): void
     {

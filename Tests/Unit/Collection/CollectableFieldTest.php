@@ -10,6 +10,9 @@ use Vkemeter\Opinion\Collection\CollectableField;
 
 final class CollectableFieldTest extends UnitTestCase
 {
+    /**
+     * Requirement: Per-detail switches (one switch per detail, enabled by default)
+     */
     #[Test]
     public function everyFieldHasASwitchInTheExtensionConfiguration(): void
     {
@@ -21,6 +24,9 @@ final class CollectableFieldTest extends UnitTestCase
         }
     }
 
+    /**
+     * Requirement: Per-detail switches
+     */
     #[Test]
     public function configurationKeysAreUnique(): void
     {

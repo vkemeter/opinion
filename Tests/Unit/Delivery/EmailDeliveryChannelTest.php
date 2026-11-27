@@ -41,6 +41,10 @@ final class EmailDeliveryChannelTest extends UnitTestCase
         yield 'empty prefix' => ['', 'Image is cropped.', '[Bug/high] Image is cropped.'];
     }
 
+    /**
+     * Scenario: Subject
+     * Scenario: Long message
+     */
     #[Test]
     #[DataProvider('subjectDataProvider')]
     public function buildSubjectContainsPrefixCategorySeverityAndMessageStart(string $prefix, string $message, string $expected): void
@@ -54,6 +58,9 @@ final class EmailDeliveryChannelTest extends UnitTestCase
         self::assertSame($expected, $subject);
     }
 
+    /**
+     * Scenario: Missing recipients
+     */
     #[Test]
     public function deliverFailsWithoutRecipients(): void
     {

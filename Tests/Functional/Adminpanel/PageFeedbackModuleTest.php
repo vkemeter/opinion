@@ -33,6 +33,10 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($this->setUpBackendUser(3));
     }
 
+    /**
+     * Scenario: Two open feedback
+     * Scenario: Backend feedback of the page
+     */
     #[Test]
     public function entryShowsTheNumberOfOpenFrontendFeedbackOfThePage(): void
     {
@@ -51,6 +55,9 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertSame(['opinion_page_list'], array_keys($module->getSubModules()));
     }
 
+    /**
+     * Scenario: Own closed status
+     */
     #[Test]
     public function ownClosedStatusesAreNotCounted(): void
     {
@@ -65,6 +72,9 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertSame('1', $module->getShortInfo());
     }
 
+    /**
+     * Scenario: Nothing open
+     */
     #[Test]
     public function entryIsHiddenWithoutOpenFrontendFeedbackOrWithoutAccess(): void
     {
@@ -82,6 +92,10 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertArrayNotHasKey('opinion_page', $this->loadModules(), 'user who may not send feedback');
     }
 
+    /**
+     * Scenario: Two open feedback
+     * Scenario: Markup in a message
+     */
     #[Test]
     public function listShowsTextDateAndStatusOnlyEscaped(): void
     {
@@ -100,6 +114,9 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertStringNotContainsString('<a ', $content, 'no link for editors');
     }
 
+    /**
+     * Scenario: Link for administrators
+     */
     #[Test]
     public function administratorsGetALinkToTheDetailView(): void
     {
@@ -113,6 +130,9 @@ final class PageFeedbackModuleTest extends FunctionalTestCase
         self::assertStringNotContainsString('token=', $content, 'shareable URL');
     }
 
+    /**
+     * Not in the spec or the documentation: the admin panel list shows ten entries and the number of the others (candidate for the spec)
+     */
     #[Test]
     public function listShowsTenAndTellsHowManyMore(): void
     {

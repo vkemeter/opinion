@@ -23,6 +23,9 @@ final class LabelViewHelperTest extends FunctionalTestCase
         ],
     ];
 
+    /**
+     * Requirement: Category labels (output escaped)
+     */
     #[Test]
     public function rendersTheLabelEscaped(): void
     {
@@ -32,6 +35,9 @@ final class LabelViewHelperTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * Requirement: Status labels and badges
+     */
     #[Test]
     public function statusBadgeFollowsTheRoleOfTheStatus(): void
     {

@@ -25,6 +25,9 @@ final class FileRangeStreamTest extends UnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * Scenario: Seeking in the player
+     */
     #[Test]
     public function emitSendsOnlyTheRange(): void
     {
@@ -33,6 +36,9 @@ final class FileRangeStreamTest extends UnitTestCase
         new FileRangeStream($this->path, 3, 4)->emit();
     }
 
+    /**
+     * Scenario: Seeking in the player
+     */
     #[Test]
     public function rangeCanBeReadAgain(): void
     {

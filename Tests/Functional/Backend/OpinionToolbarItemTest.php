@@ -29,6 +29,9 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Scenario: Editor with access
+     */
     #[Test]
     public function toolbarItemIsRegistered(): void
     {
@@ -38,6 +41,9 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         self::assertContains(OpinionToolbarItem::class, $classes);
     }
 
+    /**
+     * Scenario: Editor with access
+     */
     #[Test]
     public function accessFollowsTheAccessChecker(): void
     {
@@ -48,6 +54,10 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         self::assertTrue($this->getToolbarItem()->checkAccess());
     }
 
+    /**
+     * Requirement: Backend context (source backend)
+     * Scenario: Nothing unread
+     */
     #[Test]
     public function itemRendersButtonWithDialogConfiguration(): void
     {
@@ -62,6 +72,9 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         self::assertArrayNotHasKey('conversations', $configuration, 'no link in the dialog');
     }
 
+    /**
+     * Scenario: Answer for the sender
+     */
     #[Test]
     public function badgeCountsFeedbackWithUnreadMessages(): void
     {
@@ -81,6 +94,29 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         self::assertStringNotContainsString('toolbar-item-badge', $html, 'shown on the module menu entry, not on the toolbar');
     }
 
+    /**
+     * Scenario: Answer for the sender
+     */
+    #[Test]
+    public function editorWithModuleAccessGetsTheCountOfAnsweredOwnFeedback(): void
+    {
+        $feedbackRepository = $this->get(FeedbackRepository::class);
+        $conversation = $this->get(ConversationRepository::class);
+        foreach (['First', 'Second'] as $message) {
+            $conversation->add($feedbackRepository->add(new Submission($message . ' feedback', 'bug', Severity::Low, Source::Backend, 3, new \DateTimeImmutable()), null), 1, 'Answer', new \DateTimeImmutable());
+        }
+        // Answered as well, but sent by somebody else
+        $conversation->add($feedbackRepository->add(new Submission('Foreign feedback', 'bug', Severity::Low, Source::Backend, 1, new \DateTimeImmutable()), null), 4, 'Answer', new \DateTimeImmutable());
+        $this->setUpBackendUser(3)->groupData['modules'] = 'opinion_feedback';
+
+        [$html] = $this->renderItem();
+
+        self::assertStringContainsString('data-opinion-unread="2"', $html);
+    }
+
+    /**
+     * Scenario: Switched off
+     */
     #[Test]
     public function noUnreadCountWhileConversationIsSwitchedOff(): void
     {
@@ -94,6 +130,9 @@ final class OpinionToolbarItemTest extends FunctionalTestCase
         self::assertStringContainsString('data-opinion-unread="0"', $html);
     }
 
+    /**
+     * Scenario: Nothing unread
+     */
     #[Test]
     public function noUnreadCountWithoutModuleAccess(): void
     {

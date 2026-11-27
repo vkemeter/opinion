@@ -32,6 +32,13 @@ final class UrlParameterFilterTest extends UnitTestCase
     }
 
     /**
+     * Scenario: Preview parameter
+     * Scenario: Array parameter
+     * Scenario: Request token
+     * Scenario: Token in the fragment
+     * Scenario: Route with query in the fragment
+     * Scenario: Anchor
+     *
      * @param list<string> $deniedParameters
      */
     #[Test]

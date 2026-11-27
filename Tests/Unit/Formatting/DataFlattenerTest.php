@@ -10,6 +10,9 @@ use Vkemeter\Opinion\Formatting\DataFlattener;
 
 final class DataFlattenerTest extends UnitTestCase
 {
+    /**
+     * Requirement: Email channel (details as readable tables)
+     */
     #[Test]
     public function flattenCreatesDottedLabelsAndStringValues(): void
     {

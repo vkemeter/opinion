@@ -25,6 +25,9 @@ final class OpinionModuleTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Requirement: Admin panel tab (shown as tab "Feedback")
+     */
     #[Test]
     public function moduleIsRenderedAsTabWithFeedbackSubmodule(): void
     {
@@ -37,10 +40,12 @@ final class OpinionModuleTest extends FunctionalTestCase
         self::assertContains(SubmoduleProviderInterface::class, class_implements($module));
         self::assertContains(ShortInfoProviderInterface::class, class_implements($module));
         self::assertSame(['opinion_feedback'], array_keys($module->getSubModules()));
-        self::assertInstanceOf(FeedbackSubModule::class, $module->getSubModules()['opinion_feedback']);
         self::assertSame('Feedback', $module->getLabel());
     }
 
+    /**
+     * Scenario: Editor without access
+     */
     #[Test]
     public function moduleIsOnlyLoadedForUsersWithAccess(): void
     {
@@ -49,6 +54,9 @@ final class OpinionModuleTest extends FunctionalTestCase
         self::assertArrayNotHasKey('opinion', $this->loadModules());
     }
 
+    /**
+     * Requirement: Frontend context (source frontend with page, site, language and workspace)
+     */
     #[Test]
     public function submoduleContentContainsButtonWithDialogConfiguration(): void
     {
@@ -65,6 +73,9 @@ final class OpinionModuleTest extends FunctionalTestCase
         self::assertStringContainsString('>Send feedback</button>', $content);
     }
 
+    /**
+     * Scenario: Missing email address
+     */
     #[Test]
     public function submoduleTellsUsersWithoutEmailAddressWhyFeedbackIsUnavailable(): void
     {

@@ -29,6 +29,10 @@ final class ConfiguredValueListTest extends UnitTestCase
     }
 
     /**
+     * Scenario: Own list with labels
+     * Scenario: Invalid and duplicate entries
+     * Scenario: Nothing valid left
+     *
      * @param array<string, string> $expected
      */
     #[Test]

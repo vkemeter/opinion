@@ -28,6 +28,10 @@ final class AccessCheckerTest extends UnitTestCase
     }
 
     /**
+     * Scenario: Administrator
+     * Scenario: Editor without TSconfig option
+     * Scenario: Extension disabled
+     *
      * @param array<string, mixed> $tsConfig
      */
     #[Test]
@@ -42,12 +46,18 @@ final class AccessCheckerTest extends UnitTestCase
         self::assertSame($expected, $this->createSubject($enabled)->hasAccess($backendUser));
     }
 
+    /**
+     * Scenario: Request without backend session
+     */
     #[Test]
     public function hasAccessDeniesMissingBackendUser(): void
     {
         self::assertFalse($this->createSubject(true)->hasAccess(null));
     }
 
+    /**
+     * Scenario: Request without backend session
+     */
     #[Test]
     public function hasAccessDeniesBackendUserWithoutSession(): void
     {
@@ -58,6 +68,9 @@ final class AccessCheckerTest extends UnitTestCase
         self::assertFalse($this->createSubject(true)->hasAccess($backendUser));
     }
 
+    /**
+     * Scenario: Submission without email address
+     */
     #[Test]
     public function hasValidEmailRequiresAValidAddress(): void
     {

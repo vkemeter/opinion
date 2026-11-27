@@ -28,6 +28,9 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Scenario: Reading a conversation
+     */
     #[Test]
     public function messagesAreReturnedOldestFirstWithAuthor(): void
     {
@@ -46,6 +49,10 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         self::assertSame(2, $repository->countByFeedback($feedback));
     }
 
+    /**
+     * Scenario: Two administrators
+     * Scenario: Own messages
+     */
     #[Test]
     public function readStateIsKeptPerUserAndOwnMessagesAreNeverUnread(): void
     {
@@ -67,6 +74,9 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         self::assertSame([$feedback], $repository->findUnreadFeedbackUids(self::ADMIN, null), 'newer message unread again');
     }
 
+    /**
+     * Scenario: Answer for the sender
+     */
     #[Test]
     public function unreadFeedbackOfEditorsIsLimitedToTheirOwn(): void
     {
@@ -79,6 +89,9 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         self::assertSame([$own], $repository->findUnreadFeedbackUids(self::SENDER, self::SENDER));
     }
 
+    /**
+     * Scenario: Admin writes to closed feedback
+     */
     #[Test]
     public function addSetsTheStatusOnlyWhenGiven(): void
     {
@@ -94,6 +107,9 @@ final class ConversationRepositoryTest extends FunctionalTestCase
         self::assertSame('in_progress', $this->statusOf($feedback));
     }
 
+    /**
+     * Scenario: Cleanup of an old feedback
+     */
     #[Test]
     public function removeByFeedbackDeletesMessagesAndReadState(): void
     {

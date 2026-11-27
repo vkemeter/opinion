@@ -12,6 +12,9 @@ use Vkemeter\Opinion\Configuration\OpinionConfiguration;
 
 final class CollectionFilterTest extends UnitTestCase
 {
+    /**
+     * Requirement: Per-detail switches (enabled by default)
+     */
     #[Test]
     public function everythingIsKeptByDefault(): void
     {
@@ -20,6 +23,9 @@ final class CollectionFilterTest extends UnitTestCase
         self::assertSame($data, new CollectionFilter()->filter('client', $data, $this->configuration([])));
     }
 
+    /**
+     * Scenario: Disabled IP address
+     */
     #[Test]
     public function disabledFieldsAreRemovedFromTheirSectionOnly(): void
     {
@@ -33,6 +39,9 @@ final class CollectionFilterTest extends UnitTestCase
         );
     }
 
+    /**
+     * Scenario: Forged disabled detail
+     */
     #[Test]
     public function contextFieldsRemoveAllTheirKeysAndEmptyPageInfo(): void
     {
@@ -60,6 +69,9 @@ final class CollectionFilterTest extends UnitTestCase
         );
     }
 
+    /**
+     * Scenario: Disabled detail
+     */
     #[Test]
     public function enabledNamesListTheAllowedKeysOfASection(): void
     {

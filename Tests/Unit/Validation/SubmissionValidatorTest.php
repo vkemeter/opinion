@@ -36,6 +36,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * Requirement: Input validation
+     */
     #[Test]
     public function validInputYieldsTypedValues(): void
     {
@@ -57,6 +60,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(self::JPEG, $result->screenshot->content);
     }
 
+    /**
+     * Requirement: Input validation (clientInfo and context optional)
+     */
     #[Test]
     public function screenshotAndJsonFieldsAreOptional(): void
     {
@@ -68,6 +74,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame([], $result->context);
     }
 
+    /**
+     * Requirement: Screenshot upload validation (optional)
+     */
     #[Test]
     public function noFileUploadCountsAsNoScreenshot(): void
     {
@@ -95,9 +104,15 @@ final class SubmissionValidatorTest extends UnitTestCase
         yield 'client info JSON list' => [['clientInfo' => '[1,2]'], 'clientInfo', 'invalid'];
         yield 'client info too large' => [['clientInfo' => '{"a":"' . str_repeat('a', 65536) . '"}'], 'clientInfo', 'tooLarge'];
         yield 'context no JSON object' => [['context' => '"page"'], 'context', 'invalid'];
+        yield 'context JSON list' => [['context' => '[12]'], 'context', 'invalid'];
+        yield 'context too large' => [['context' => '{"a":"' . str_repeat('a', 65536) . '"}'], 'context', 'tooLarge'];
     }
 
     /**
+     * Scenario: Message too short
+     * Scenario: Unknown category
+     * Scenario: Context is a JSON list
+     *
      * @param array<string, mixed> $override
      */
     #[Test]
@@ -112,6 +127,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame([$field => $code], $result->errors);
     }
 
+    /**
+     * Scenario: Category no longer configured
+     */
     #[Test]
     public function categoryMustBeConfigured(): void
     {
@@ -121,6 +139,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['category' => 'invalid'], $validator->validate([...self::validFields(), 'category' => 'idea'], null, ['bug', 'question'])->errors, 'removed value');
     }
 
+    /**
+     * Requirement: Input validation (10 to 5000 characters)
+     */
     #[Test]
     public function messageWithExactlyTheLimitsIsValid(): void
     {
@@ -130,6 +151,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertTrue($validator->validate([...self::validFields(), 'message' => str_repeat('ä', 5000)], null, self::CATEGORIES)->isValid());
     }
 
+    /**
+     * Scenario: Disguised file
+     */
     #[Test]
     public function screenshotWithImageMediaTypeButOtherContentIsRejected(): void
     {
@@ -138,6 +162,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['screenshot' => 'invalidType'], $result->errors);
     }
 
+    /**
+     * Scenario: Too large
+     */
     #[Test]
     public function screenshotAboveTenMegabytesIsRejected(): void
     {
@@ -146,6 +173,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['screenshot' => 'tooLarge'], $result->errors);
     }
 
+    /**
+     * Scenario: Too large
+     */
     #[Test]
     public function screenshotExceedingPhpUploadLimitIsRejectedAsTooLarge(): void
     {
@@ -154,6 +184,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['screenshot' => 'tooLarge'], $result->errors);
     }
 
+    /**
+     * Requirement: Screenshot upload validation
+     */
     #[Test]
     public function failedUploadIsRejected(): void
     {
@@ -171,6 +204,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         yield 'WebM' => [self::WEBM, VideoType::Webm];
     }
 
+    /**
+     * Scenario: WebM video
+     */
     #[Test]
     #[DataProvider('videoDataProvider')]
     public function videoTypeIsDetectedFromTheContent(string $content, VideoType $type): void
@@ -194,6 +230,10 @@ final class SubmissionValidatorTest extends UnitTestCase
         yield 'video disabled' => [self::MP4, 0, 'videoDisabled'];
     }
 
+    /**
+     * Scenario: Disguised video
+     * Scenario: Disabled
+     */
     #[Test]
     #[DataProvider('invalidVideoDataProvider')]
     public function invalidVideoIsRejected(string $content, int $maxBytes, string $code): void
@@ -203,6 +243,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['video' => $code], $result->errors);
     }
 
+    /**
+     * Scenario: Screenshot and video
+     */
     #[Test]
     public function screenshotAndVideoTogetherAreRejected(): void
     {
@@ -211,6 +254,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['video' => 'withScreenshot'], $result->errors);
     }
 
+    /**
+     * Requirement: Video upload validation (tooLarge)
+     */
     #[Test]
     public function videoExceedingPhpUploadLimitIsRejectedAsTooLarge(): void
     {
@@ -219,6 +265,9 @@ final class SubmissionValidatorTest extends UnitTestCase
         self::assertSame(['video' => 'tooLarge'], $result->errors);
     }
 
+    /**
+     * Requirement: Input validation (an error per field)
+     */
     #[Test]
     public function allErrorsAreReportedAtOnce(): void
     {

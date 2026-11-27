@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Context;
 
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Configuration\SiteWriter;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Context\BackendContextProvider;
@@ -23,6 +24,9 @@ final class ContextProviderTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/pages.csv');
     }
 
+    /**
+     * Requirement: Frontend context validation (anything else is dropped)
+     */
     #[Test]
     public function frontendContextKeepsExistingPageAndDropsUnknownValues(): void
     {
@@ -36,6 +40,31 @@ final class ContextProviderTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * Scenario: Submission from a page
+     * Scenario: Language of another site
+     */
+    #[Test]
+    public function frontendContextKeepsSiteAndLanguageOfThatSiteOnly(): void
+    {
+        $language = static fn(int $id, string $title): array => ['languageId' => $id, 'title' => $title, 'locale' => 'en_US.UTF-8', 'base' => '/l' . $id . '/'];
+        $this->get(SiteWriter::class)->write('main', ['rootPageId' => 1, 'base' => 'https://example.com/', 'languages' => [$language(0, 'English'), $language(1, 'Deutsch')]]);
+        $provider = $this->get(FrontendContextProvider::class);
+
+        self::assertSame(
+            ['pageUid' => 12, 'pageTitle' => 'Teaser page', 'siteIdentifier' => 'main', 'languageId' => 1, 'language' => 'Deutsch'],
+            $provider->resolve(['pageUid' => 12, 'siteIdentifier' => 'main', 'languageId' => 1], new ServerRequest()),
+        );
+        self::assertSame(
+            ['pageUid' => 12, 'pageTitle' => 'Teaser page', 'siteIdentifier' => 'main'],
+            $provider->resolve(['pageUid' => 12, 'siteIdentifier' => 'main', 'languageId' => 7], new ServerRequest()),
+            'language of another site dropped, site kept',
+        );
+    }
+
+    /**
+     * Requirement: Frontend context validation (fixed schema, at most 50 images)
+     */
     #[Test]
     public function frontendContextKeepsSanitizedAdminPanelPageInfo(): void
     {
@@ -69,6 +98,9 @@ final class ContextProviderTest extends FunctionalTestCase
         self::assertStringNotContainsString('secret', (string)json_encode($result));
     }
 
+    /**
+     * Scenario: Deleted page
+     */
     #[Test]
     public function frontendContextDropsDeletedOrInvalidPages(): void
     {
@@ -79,6 +111,10 @@ final class ContextProviderTest extends FunctionalTestCase
         self::assertSame([], $provider->resolve(['pageUid' => -1, 'workspaceId' => 'live'], new ServerRequest()));
     }
 
+    /**
+     * Scenario: Absolute URL
+     * Scenario: Page module
+     */
     #[Test]
     public function backendContextKeepsRegisteredModulePageAndPathAndQueryOfTheUrl(): void
     {
@@ -95,6 +131,9 @@ final class ContextProviderTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * Scenario: Unknown module
+     */
     #[Test]
     public function backendContextDropsUnknownModulesAndRelativeUrls(): void
     {

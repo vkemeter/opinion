@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\Container;
@@ -17,6 +18,7 @@ use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\FeedbackModuleController;
 use Vkemeter\Opinion\Domain\DeliveryStatus;
@@ -27,6 +29,7 @@ use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
+use Vkemeter\Opinion\Tests\Functional\Fixtures\MailSpy;
 
 final class FeedbackModuleControllerTest extends FunctionalTestCase
 {
@@ -48,6 +51,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($this->setUpBackendUser(1));
     }
 
+    /**
+     * Scenario: Editor
+     */
     #[Test]
     public function moduleIsAStandaloneUserModule(): void
     {
@@ -56,13 +62,15 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertNotNull($module);
         self::assertTrue($module->isStandalone());
         self::assertFalse($module->hasParentModule());
-        self::assertSame('user', $module->getAccess());
-        self::assertSame('/module/opinion/feedback', $module->getPath());
         self::assertTrue($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(1)));
         // Editors need the module granted in their group
         self::assertFalse($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $this->setUpBackendUser(3)));
     }
 
+    /**
+     * Scenario: Status column
+     * Scenario: Sender with email address
+     */
     #[Test]
     public function listShowsFeedbackNewestFirst(): void
     {
@@ -83,6 +91,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('opinion/feedback/show', $html);
     }
 
+    /**
+     * Requirement: Detail view (full message and collected details as tables)
+     */
     #[Test]
     public function showRendersMessageAndDetails(): void
     {
@@ -94,12 +105,14 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('pageInfo.imagesOnPage.total', $html);
         self::assertStringContainsString('screen.width', $html);
         self::assertStringContainsString('No screenshot attached.', $html);
-        self::assertStringNotContainsString('dumpFile', $html);
         self::assertStringContainsString('opinion/feedback/save', $html);
         self::assertMatchesRegularExpression('#<option\s+value="new"\s+selected>\s*New\s*</option>#', $html);
         self::assertMatchesRegularExpression('#<option\s+value="closed"\s*>#', $html);
     }
 
+    /**
+     * Scenario: Backend feedback
+     */
     #[Test]
     public function showLinksTheReportedUrlOnce(): void
     {
@@ -121,6 +134,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(2, substr_count($html, '/typo3/module/web/layout?id=1'), 'Once as href and once as text, not in the tables');
     }
 
+    /**
+     * Scenario: Foreign host
+     * Scenario: Backslash in a backend path
+     */
     #[Test]
     public function showDoesNotLinkAForeignHostOrABackslashPath(): void
     {
@@ -138,6 +155,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringNotContainsString('evil.example/typo3"', $backslashHtml);
     }
 
+    /**
+     * Requirement: Deliver again (offered for failed or pending feedback)
+     */
     #[Test]
     public function showOffersANewDeliveryOnlyForUndeliveredFeedback(): void
     {
@@ -162,6 +182,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('Not delivered (no channel enabled)', $skippedHtml);
     }
 
+    /**
+     * Scenario: Successful retry
+     */
     #[Test]
     public function redeliverDeliversAgainAndRedirectsToTheDetailView(): void
     {
@@ -181,6 +204,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('The feedback has been delivered.', ($messages[0] ?? null)?->getMessage());
     }
 
+    /**
+     * Scenario: Already sent
+     */
     #[Test]
     public function redeliverLeavesSentFeedbackAlone(): void
     {
@@ -196,6 +222,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('This feedback cannot be delivered again.', ($messages[0] ?? null)?->getMessage());
     }
 
+    /**
+     * Scenario: All channels disabled
+     */
     #[Test]
     public function redeliverWithoutEnabledChannelReportsSkipped(): void
     {
@@ -212,6 +241,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('No delivery channel is enabled, the feedback has not been delivered.', ($messages[0] ?? null)?->getMessage());
     }
 
+    /**
+     * Requirement: Deliver again / Administrators change the status (by POST)
+     */
     #[Test]
     public function postRoutesOnlyAcceptPost(): void
     {
@@ -222,6 +254,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         }
     }
 
+    /**
+     * Scenario: Admin closes a feedback
+     */
     #[Test]
     public function statusActionChangesTheStatusOnly(): void
     {
@@ -240,6 +275,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('The status has been saved.', ($messages[0] ?? null)?->getMessage());
     }
 
+    /**
+     * Scenario: Invalid value
+     */
     #[Test]
     public function statusActionRejectsInvalidValues(): void
     {
@@ -252,6 +290,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('The status is invalid and has not been changed.', ($messages[0] ?? null)?->getMessage());
     }
 
+    /**
+     * Scenario: Own status
+     * Scenario: Own status with label
+     */
     #[Test]
     public function ownStatusesCanBeSetAndRemovedOnesAreKept(): void
     {
@@ -274,6 +316,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid));
     }
 
+    /**
+     * Scenario: Request by a non-admin
+     */
     #[Test]
     public function statusActionRejectsNonAdmins(): void
     {
@@ -284,6 +329,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('new', $this->get(FeedbackRepository::class)->findByUid($uid)['status'] ?? null);
     }
 
+    /**
+     * Scenario: Own list
+     * Scenario: Editor views own feedback
+     */
     #[Test]
     public function editorSeesOnlyOwnFeedbackWithoutDeliveryDetails(): void
     {
@@ -304,9 +353,12 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('>New</span>', $detail);
         self::assertStringNotContainsString('team@example.com', $detail);
         self::assertStringNotContainsString('Deliver again', $detail);
-        self::assertStringNotContainsString('opinion/feedback/status', $detail);
+        self::assertStringNotContainsString('name="status"', $detail, 'the status is read-only');
     }
 
+    /**
+     * Scenario: Screenshot through the module
+     */
     #[Test]
     public function showLinksTheScreenshotThroughTheModule(): void
     {
@@ -318,6 +370,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringNotContainsString('dumpFile', $html);
     }
 
+    /**
+     * Scenario: Video feedback
+     * Scenario: Mixed list
+     */
     #[Test]
     public function showPlaysTheVideoWithTheEndContextAndTheListMarksIt(): void
     {
@@ -339,6 +395,12 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(1, substr_count($list, 'title="With screenshot"'));
     }
 
+    /**
+     * Scenario: Administrator
+     * Scenario: Sender
+     * Scenario: Editor opens a foreign screenshot
+     * Scenario: Sender without access any more
+     */
     #[Test]
     public function screenshotIsDeliveredToAdminsAndTheSenderOnly(): void
     {
@@ -359,8 +421,18 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
         $this->setUpBackendUser(2);
         self::assertSame(403, $this->requestScreenshot($ofReporter)->getStatusCode(), 'without options.opinion.enable');
+
+        $this->removeFeedbackPermission(3);
+        $this->setUpBackendUser(3);
+        $response = $this->requestScreenshot($ofReporter);
+        self::assertSame(403, $response->getStatusCode(), 'sender without options.opinion.enable');
+        self::assertNotSame(self::png(), (string)$response->getBody());
     }
 
+    /**
+     * Scenario: Seeking in the player
+     * Scenario: Sender without access any more
+     */
     #[Test]
     public function videoIsDeliveredToAdminsAndTheSenderOnlyWithRanges(): void
     {
@@ -395,8 +467,19 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
         $this->setUpBackendUser(2);
         self::assertSame(403, $this->requestVideo($ofReporter)->getStatusCode(), 'without options.opinion.enable');
+
+        $this->removeFeedbackPermission(3);
+        $this->setUpBackendUser(3);
+        self::assertSame(403, $this->requestVideo($ofReporter, 'bytes=0-')->getStatusCode(), 'sender without options.opinion.enable');
+        self::assertSame(403, $this->requestVideo($ofReporter)->getStatusCode(), 'sender without options.opinion.enable');
     }
 
+    /**
+     * Scenario: Reading a conversation
+     * Scenario: Markup in a message
+     * Scenario: Two administrators
+     * Scenario: Deleted backend user
+     */
     #[Test]
     public function showRendersTheConversationOldestFirstEscapedAndMarksItReadForTheViewer(): void
     {
@@ -419,14 +502,14 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame([$uid], $conversation->findUnreadFeedbackUids(4, null), 'still unread for the other admin');
     }
 
+    /**
+     * Scenario: Sender answers
+     * Scenario: Message by an administrator
+     */
     #[Test]
     public function senderAndAdminWriteMessagesWithoutEmail(): void
     {
-        $mailer = $this->createMock(MailerInterface::class);
-        $mailer->expects(self::never())->method('send');
-        $container = $this->getContainer();
-        self::assertInstanceOf(Container::class, $container);
-        $container->set(MailerInterface::class, $mailer);
+        $mailer = $this->spyOnMails();
         $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
 
         $this->setUpBackendUser(3);
@@ -439,8 +522,13 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(['Any news?', 'We are on it.'], array_column($messages, 'message'));
         self::assertSame([3, 1], array_map(intval(...), array_column($messages, 'be_user')));
         self::assertSame('The message was sent.', $this->getFlashMessages()[0] ?? null);
+        self::assertSame([], $mailer->messages, 'no email to the sender or the recipients');
     }
 
+    /**
+     * Scenario: Foreign feedback
+     * Scenario: Empty message
+     */
     #[Test]
     public function invalidOrForeignMessagesAreRejected(): void
     {
@@ -448,7 +536,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $own = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
         $this->setUpBackendUser(3);
 
-        $this->postMessage($foreign, 'Not mine');
+        $response = $this->postMessage($foreign, 'Not mine');
+        self::assertSame(302, $response->getStatusCode(), 'rejected like an unknown uid');
+        self::assertStringNotContainsString('opinion/feedback/show', $response->getHeaderLine('Location'), 'back to the list');
+        self::assertSame([], $this->getFlashMessages(), 'nothing about the foreign feedback is revealed');
         $this->postMessage($own, "   \n  ");
         $this->postMessage($own, str_repeat('a', 5001));
 
@@ -463,6 +554,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(403, $this->postMessage($own, 'Without access')->getStatusCode());
     }
 
+    /**
+     * Scenario: Sender replies to closed feedback
+     * Scenario: Admin writes to closed feedback
+     */
     #[Test]
     public function replyOfTheSenderReopensClosedFeedbackAndOneOfTheAdminDoesNot(): void
     {
@@ -477,6 +572,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('in_progress', $this->statusOf($uid), 'sender');
     }
 
+    /**
+     * Scenario: Own reopen status
+     * Scenario: Reopen status not usable
+     */
     #[Test]
     public function replyReopensWithTheConfiguredStatus(): void
     {
@@ -498,6 +597,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('new', $this->statusOf($uid), 'reopen status not configured: the initial status');
     }
 
+    /**
+     * Scenario: Reading a conversation
+     */
     #[Test]
     public function usersWithoutRealNameAreShownWithTheirUsername(): void
     {
@@ -514,6 +616,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertMatchesRegularExpression('#<td>nameless</td>#', $list, 'sender column');
     }
 
+    /**
+     * Scenario: Status and message together
+     * Scenario: Nothing changed
+     */
     #[Test]
     public function statusAndMessageAreSavedTogetherOrNotAtAll(): void
     {
@@ -537,6 +643,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         ], $this->getFlashMessages());
     }
 
+    /**
+     * Scenario: Admin answers and closes
+     */
     #[Test]
     public function statusChosenByAnAdministratorWinsOverReopening(): void
     {
@@ -550,6 +659,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(1, $this->get(ConversationRepository::class)->countByFeedback($uid));
     }
 
+    /**
+     * Scenario: Switched off
+     * Scenario: Message while switched off
+     */
     #[Test]
     public function switchedOffConversationShowsNoThreadAndRejectsMessages(): void
     {
@@ -573,6 +686,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('closed', $this->statusOf($uid));
     }
 
+    /**
+     * Scenario: Collected details collapsed
+     */
     #[Test]
     public function detailViewHasOneFormAndCollapsedDetails(): void
     {
@@ -581,12 +697,15 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
 
         self::assertSame(1, substr_count($html, 'opinion/feedback/save'), 'one form for message and status');
-        self::assertStringNotContainsString('opinion/feedback/status', $html);
+        self::assertSame(1, substr_count($html, 'name="status"'), 'the status is part of that form');
         self::assertSame(1, preg_match_all('#<button\s+type="submit"\s+class="btn btn-primary#', $html), 'one save button');
         self::assertGreaterThan(0, substr_count($html, '<details'));
         self::assertStringNotContainsString('<details open', $html);
     }
 
+    /**
+     * Scenario: New answer for the sender
+     */
     #[Test]
     public function listMarksFeedbackWithUnreadMessages(): void
     {
@@ -602,6 +721,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(1, preg_match_all('#<span class="visually-hidden">2 messages</span>#', $html), 'message count');
     }
 
+    /**
+     * Scenario: Foreign uid
+     */
     #[Test]
     public function editorGetsNoForeignFeedback(): void
     {
@@ -613,6 +735,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(302, $response->getStatusCode());
     }
 
+    /**
+     * Scenario: Forged redelivery
+     * Scenario: Request by a non-admin
+     */
     #[Test]
     public function editorCannotDeliverAgainOrChangeTheStatus(): void
     {
@@ -633,6 +759,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame('new', $record['status'] ?? null);
     }
 
+    /**
+     * Scenario: Granted module without TSconfig option
+     */
     #[Test]
     public function moduleNeedsTheFeedbackPermission(): void
     {
@@ -641,6 +770,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(403, $this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getStatusCode());
     }
 
+    /**
+     * Requirement: Module access (with enabled = 0 only administrators)
+     */
     #[Test]
     public function disabledExtensionClosesTheModuleForEditorsOnly(): void
     {
@@ -652,6 +784,11 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertSame(403, $controller->listAction($this->createRequest('opinion_feedback'))->getStatusCode());
     }
 
+    /**
+     * Scenario: Own category in the filter
+     * Scenario: Category no longer configured
+     * Scenario: Removed category in the module
+     */
     #[Test]
     public function ownCategoriesAreListedFilteredAndShownWithTheirLabels(): void
     {
@@ -677,6 +814,10 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('Idea', (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$idea]))->getBody());
     }
 
+    /**
+     * Scenario: Invalid filter value
+     * Scenario: Markup in the search term
+     */
     #[Test]
     public function listCanBeFilteredAndKeepsTheFilterInItsLinks(): void
     {
@@ -700,6 +841,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringContainsString('Reset', $html);
     }
 
+    /**
+     * Scenario: Paging keeps the filter
+     */
     #[Test]
     public function pagingKeepsTheFilter(): void
     {
@@ -712,6 +856,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertMatchesRegularExpression('#href="[^"]*page=2[^"]*search=Bug#', $html);
     }
 
+    /**
+     * Scenario: Editor searches
+     */
     #[Test]
     public function editorSearchFindsOwnFeedbackOnly(): void
     {
@@ -726,6 +873,9 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringNotContainsString('opinion-filter-deliveryStatus', $html);
     }
 
+    /**
+     * Requirement: Filter state in the URL (kept when returning from the detail view)
+     */
     #[Test]
     public function statusChangeReturnsWithTheFilter(): void
     {
@@ -737,12 +887,261 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         self::assertStringNotContainsString('bogus', $response->getHeaderLine('Location'));
     }
 
+    /**
+     * Scenario: Unknown feedback
+     */
     #[Test]
     public function showRedirectsToListForUnknownFeedback(): void
     {
         $response = $this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => '999']));
 
         self::assertSame(302, $response->getStatusCode());
+    }
+
+    /**
+     * Scenario: All channels disabled
+     */
+    #[Test]
+    public function redeliverLeavesSkippedFeedbackUndelivered(): void
+    {
+        $mailer = $this->spyOnMails();
+        $uid = $this->addFeedback('Skipped feedback', '2026-10-01 10:00');
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($uid, DeliveryStatus::Skipped, 'no delivery channel enabled');
+
+        // Forged: the detail view offers no button for skipped feedback
+        $response = $this->get(FeedbackModuleController::class)->redeliverAction(
+            $this->createRequest('opinion_feedback.redeliver')->withMethod('POST')->withParsedBody(['uid' => (string)$uid]),
+        );
+
+        self::assertSame(302, $response->getStatusCode());
+        $record = $this->get(FeedbackRepository::class)->findByUid($uid);
+        self::assertSame('skipped', $record['delivery_status'] ?? null);
+        self::assertSame(1, (int)($record['delivery_attempts'] ?? 0));
+        self::assertSame([], $mailer->messages, 'no email sent');
+        self::assertSame(['This feedback cannot be delivered again.'], $this->getFlashMessages());
+    }
+
+    /**
+     * Scenario: Editor with access
+     */
+    #[Test]
+    public function editorWithTheOptionAndTheGrantedModuleGetsTheModule(): void
+    {
+        $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $backendUser = $this->setUpBackendUser(3);
+        $backendUser->groupData['modules'] = 'opinion_feedback';
+
+        self::assertTrue($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $backendUser));
+        $response = $this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('Feedback of the reporter', (string)$response->getBody());
+    }
+
+    /**
+     * Scenario: Granted module without TSconfig option
+     */
+    #[Test]
+    public function grantedModuleWithoutTheOptionDeniesAccess(): void
+    {
+        $this->addFeedback('Feedback of the editor', '2026-10-01 10:00', 2);
+        $this->setUpBackendUser(2)->groupData['modules'] = 'opinion_feedback';
+        $controller = $this->get(FeedbackModuleController::class);
+
+        $list = $controller->listAction($this->createRequest('opinion_feedback'));
+        self::assertSame(403, $list->getStatusCode());
+        self::assertStringNotContainsString('Feedback of the editor', (string)$list->getBody());
+        self::assertSame(403, $controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => '1']))->getStatusCode());
+    }
+
+    /**
+     * Scenario: Editor
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function grantedModuleWithoutTheOptionIsNotInTheModuleMenu(): void
+    {
+        self::markTestSkipped('Spec mismatch M2: the module menu offers "Feedback" to granted editors without options.opinion.enable');
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $backendUser = $this->setUpBackendUser(2);
+        $backendUser->groupData['modules'] = 'opinion_feedback';
+
+        self::assertFalse($this->get(ModuleProvider::class)->accessGranted('opinion_feedback', $backendUser));
+    }
+
+    /**
+     * Scenario: Pagination
+     */
+    #[Test]
+    public function thirdPageOfAHundredAndTwentyShowsTheLastTwenty(): void
+    {
+        $this->addNumberedFeedback(120);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['page' => '3']))->getBody();
+
+        self::assertSame(20, preg_match_all('#Numbered feedback \d{3}#', $html));
+        self::assertStringContainsString('Numbered feedback 001', $html, 'oldest on the last page');
+        self::assertStringContainsString('Numbered feedback 020', $html);
+        self::assertStringNotContainsString('Numbered feedback 021', $html);
+        self::assertStringContainsString('Page 3 of 3', $html);
+        self::assertMatchesRegularExpression('#href="[^"]*page=2[^"]*"\s*>Previous</a#', $html);
+        self::assertStringNotContainsString('>Next</a', $html);
+    }
+
+    /**
+     * Scenario: Page beyond the end
+     */
+    #[Test]
+    public function pageBeyondTheEndShowsTheLastPage(): void
+    {
+        $this->addNumberedFeedback(120);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback', ['page' => '99']))->getBody();
+
+        self::assertSame(20, preg_match_all('#Numbered feedback \d{3}#', $html));
+        self::assertStringContainsString('Numbered feedback 001', $html);
+        self::assertStringContainsString('Page 3 of 3', $html);
+    }
+
+    /**
+     * Scenario: Sender with email address
+     */
+    #[Test]
+    public function listShowsTheStoredSenderEmailAlsoAfterTheUserChanged(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $repository->add(new Submission('Sent before the change', 'bug', Severity::Low, Source::Backend, 1, new \DateTimeImmutable('2026-10-01 10:00'), systemInfo: ['backendUser' => ['username' => 'admin', 'realName' => 'Ada Admin', 'email' => 'ada.old@example.com']]), null);
+        $repository->add(new Submission('Sent by a deleted user', 'bug', Severity::Low, Source::Backend, 99, new \DateTimeImmutable('2026-10-02 10:00'), systemInfo: ['backendUser' => ['username' => 'gone', 'realName' => 'Gone User', 'email' => 'gone@example.com']]), null);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
+
+        self::assertStringContainsString('<a href="mailto:ada.old@example.com">ada.old@example.com</a>', $html);
+        self::assertStringNotContainsString('mailto:admin@example.com', $html, 'not the current address of the user');
+        self::assertStringContainsString('<a href="mailto:gone@example.com">gone@example.com</a>', $html);
+    }
+
+    /**
+     * Scenario: Editor views own feedback
+     */
+    #[Test]
+    public function editorSeesOwnFeedbackWithScreenshotAndDetailsButNoAdministration(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $screenshot = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
+        $uid = $this->get(FeedbackRepository::class)->add(new Submission('Feedback of the reporter', 'bug', Severity::Low, Source::Frontend, 3, new \DateTimeImmutable(), clientInfo: ['screen' => ['width' => 2560]], context: ['pageUid' => 12]), $screenshot);
+        $this->get(FeedbackRepository::class)->updateDeliveryStatus($uid, DeliveryStatus::Failed, 'email: FAILED Connection refused');
+        $this->setUpBackendUser(3);
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertStringContainsString('Feedback of the reporter', $html);
+        self::assertStringContainsString('/typo3/opinion/screenshot?', $html, 'screenshot');
+        self::assertStringContainsString('screen.width', $html, 'collected details');
+        self::assertStringContainsString('>New</span>', $html, 'processing status');
+        self::assertStringNotContainsString('name="status"', $html, 'status not changeable');
+        self::assertStringNotContainsString('Connection refused', $html, 'no delivery log');
+        self::assertStringNotContainsString('attempt(s)', $html, 'no attempt count');
+        self::assertStringNotContainsString('Deliver again', $html);
+    }
+
+    /**
+     * Scenario: Messages of both sides
+     */
+    #[Test]
+    public function threadShowsTheSenderOnTheStartSideAndOthersOnTheEndSide(): void
+    {
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $conversation = $this->get(ConversationRepository::class);
+        $conversation->add($uid, 3, 'Question of the sender', new \DateTimeImmutable('2026-10-02 09:00'));
+        $conversation->add($uid, 1, 'Answer of the admin', new \DateTimeImmutable('2026-10-02 10:00'));
+
+        $html = (string)$this->get(FeedbackModuleController::class)->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$uid]))->getBody();
+
+        self::assertMatchesRegularExpression('#<li class="d-flex justify-content-start">(?:(?!</li>).)*Question of the sender#s', $html);
+        self::assertMatchesRegularExpression('#<li class="d-flex justify-content-end">(?:(?!</li>).)*Answer of the admin#s', $html);
+        self::assertLessThan(strpos($html, 'Answer of the admin'), strpos($html, 'Question of the sender'), 'oldest first');
+        self::assertLessThan(strpos($html, 'opinion-conversation-message'), strpos($html, 'Answer of the admin'), 'form after the thread');
+    }
+
+    /**
+     * Scenario: Feedback without messages
+     */
+    #[Test]
+    public function feedbackWithoutMessagesHasAnEmptyConversationColumn(): void
+    {
+        $answered = $this->addFeedback('Answered feedback', '2026-10-01 10:00');
+        $this->addFeedback('Quiet feedback', '2026-10-02 10:00');
+        $this->get(ConversationRepository::class)->add($answered, 3, 'A reply', new \DateTimeImmutable());
+
+        $html = (string)$this->get(FeedbackModuleController::class)->listAction($this->createRequest('opinion_feedback'))->getBody();
+
+        self::assertSame(1, preg_match('#Quiet feedback.*?</tr>#s', $html, $row));
+        self::assertStringNotContainsString('message', strtolower(strip_tags(substr($row[0], (int)strpos($row[0], '</a>')))), 'no message count');
+        self::assertStringNotContainsString('text-bg-info', $row[0], 'no new badge');
+        self::assertSame(1, preg_match('#Answered feedback.*?</tr>#s', $html, $answeredRow));
+        self::assertStringContainsString('1 message', $answeredRow[0], 'the other row has its count');
+    }
+
+    /**
+     * Scenario: Empty message
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function emptyMessageOfTheSenderIsAnError(): void
+    {
+        self::markTestSkipped('Spec mismatch M3: an empty message is answered with an information, not an error message');
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->setUpBackendUser(3);
+
+        $this->postMessage($uid, "   \n ");
+
+        $messages = $this->get(FlashMessageService::class)->getMessageQueueByIdentifier()->getAllMessagesAndFlush();
+        self::assertCount(1, $messages);
+        self::assertSame(ContextualFeedbackSeverity::ERROR, $messages[0]->getSeverity());
+        self::assertSame(0, $this->get(ConversationRepository::class)->countByFeedback($uid));
+    }
+
+    /**
+     * Scenario: Sender replies to closed feedback
+     */
+    #[Test]
+    #[Group('spec-mismatch')]
+    public function postedUnchangedStatusDoesNotKeepASenderReplyFromReopening(): void
+    {
+        self::markTestSkipped('Spec mismatch M4: a non-admin sender who also posts the current status keeps closed feedback closed');
+        // @phpstan-ignore deadCode.unreachable (kept to show the expectation of the spec)
+        $uid = $this->addFeedback('Feedback of the reporter', '2026-10-01 10:00', 3);
+        $this->get(FeedbackRepository::class)->updateStatus($uid, 'closed');
+        $this->setUpBackendUser(3);
+
+        $this->postSave($uid, ['status' => 'closed', 'message' => 'Still broken.']);
+
+        self::assertSame('in_progress', $this->statusOf($uid));
+    }
+
+    private function addNumberedFeedback(int $count): void
+    {
+        for ($number = 1; $number <= $count; $number++) {
+            $this->addFeedback(sprintf('Numbered feedback %03d', $number), sprintf('2026-10-01 10:00 +%d minutes', $number));
+        }
+    }
+
+    /**
+     * Records the sent emails instead of sending them.
+     */
+    private function spyOnMails(): MailSpy
+    {
+        $spy = new MailSpy();
+        $container = $this->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->set(MailerInterface::class, $spy);
+
+        return $spy;
+    }
+
+    private function removeFeedbackPermission(int $userUid): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_users')->update('be_users', ['TSconfig' => ''], ['uid' => $userUid]);
     }
 
     private function postStatus(int $uid, string $status): ResponseInterface

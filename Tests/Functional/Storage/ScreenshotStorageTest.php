@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Storage;
 
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\Console\Tester\CommandTester;
+use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -21,6 +23,9 @@ final class ScreenshotStorageTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Requirement: Non-public screenshot storage
+     */
     #[Test]
     public function installCreatesNonPublicStorageBelowVarPath(): void
     {
@@ -36,6 +41,9 @@ final class ScreenshotStorageTest extends FunctionalTestCase
         self::assertDirectoryExists(Environment::getVarPath() . '/opinion');
     }
 
+    /**
+     * Scenario: Second setup run
+     */
     #[Test]
     public function installIsIdempotent(): void
     {
@@ -46,6 +54,31 @@ final class ScreenshotStorageTest extends FunctionalTestCase
             ->count('*', 'sys_file_storage', ['name' => ScreenshotStorageLocation::STORAGE_NAME]));
     }
 
+    /**
+     * Scenario: Second setup run
+     */
+    #[Test]
+    public function extensionSetupCreatesTheStorageOnce(): void
+    {
+        // The command authenticates as the CLI user, as bin/typo3 does
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $this->setUpBackendUser(1);
+        foreach ([1, 2] as $run) {
+            $tester = new CommandTester($this->get(CommandRegistry::class)->get('extension:setup'));
+            $tester->execute(['--extension' => ['opinion']]);
+            self::assertSame(0, $tester->getStatusCode(), 'run ' . $run . ': ' . $tester->getDisplay());
+        }
+
+        $storages = $this->get(ConnectionPool::class)->getConnectionForTable('sys_file_storage')
+            ->select(['is_public'], 'sys_file_storage', ['name' => ScreenshotStorageLocation::STORAGE_NAME])->fetchAllAssociative();
+        self::assertCount(1, $storages);
+        self::assertSame(0, (int)$storages[0]['is_public']);
+        self::assertDirectoryExists(Environment::getVarPath() . '/opinion');
+    }
+
+    /**
+     * Scenario: File name and folder
+     */
     #[Test]
     public function storeWritesFileIntoDatedFolderOfTheNonPublicStorage(): void
     {
@@ -59,6 +92,9 @@ final class ScreenshotStorageTest extends FunctionalTestCase
         self::assertFileExists(Environment::getVarPath() . '/opinion' . $file->getIdentifier());
     }
 
+    /**
+     * Scenario: Screenshot through the module
+     */
     #[Test]
     public function streamReturnsTheFileInline(): void
     {
@@ -72,6 +108,9 @@ final class ScreenshotStorageTest extends FunctionalTestCase
         self::assertSame(self::png(), (string)$response->getBody());
     }
 
+    /**
+     * Scenario: Screenshot storage missing
+     */
     #[Test]
     public function storeFailsWithoutStorage(): void
     {
@@ -82,16 +121,25 @@ final class ScreenshotStorageTest extends FunctionalTestCase
         $screenshotStorage->store(self::png(), 'png', new \DateTimeImmutable());
     }
 
+    /**
+     * Scenario: Writing the screenshot fails
+     */
     #[Test]
     public function storeFailsWhenTheDatedFolderCannotBeCreated(): void
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
-        // A file named like the year folder makes createFolder() fail
-        touch(Environment::getVarPath() . '/opinion/2031');
+        // A file named like the year folder makes createFolder() fail; removed again so no later test trips over it
+        $blocker = Environment::getVarPath() . '/opinion/2031';
+        touch($blocker);
 
-        $this->expectException(ScreenshotStorageException::class);
-        $this->expectExceptionCode(1795412871);
-        $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable('2031-10-09 12:00:00'));
+        try {
+            $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable('2031-10-09 12:00:00'));
+            self::fail('Expected exception');
+        } catch (ScreenshotStorageException) {
+            self::assertSame([], glob(Environment::getVarPath() . '/opinion/2031/*'));
+        } finally {
+            unlink($blocker);
+        }
     }
 
     private static function png(): string

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Processing;
 
 use PHPUnit\Framework\Attributes\Test;
-use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\File;
@@ -30,6 +30,7 @@ use Vkemeter\Opinion\Processing\SubmissionProcessor;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
 use Vkemeter\Opinion\Storage\ScreenshotStorageInstaller;
+use Vkemeter\Opinion\Tests\Functional\Fixtures\CollectingLogger;
 
 final class SubmissionProcessorTest extends FunctionalTestCase
 {
@@ -40,6 +41,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
 
     protected array $testExtensionsToLoad = ['vkemeter/opinion'];
 
+    /**
+     * Scenario: All channels disabled
+     */
     #[Test]
     public function withoutDeliveryChannelsTheFeedbackIsSkipped(): void
     {
@@ -51,6 +55,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame('no delivery channel enabled', $record['delivery_log'] ?? null);
     }
 
+    /**
+     * Scenario: Email disabled
+     */
     #[Test]
     public function disabledChannelsDoNotRun(): void
     {
@@ -65,19 +72,83 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame(DeliveryStatus::Skipped, $result->status);
     }
 
+    /**
+     * Scenario: Unknown identifier
+     */
     #[Test]
     public function unknownDisabledChannelIsLoggedAndAllChannelsRun(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects(self::once())->method('warning')->with(self::anything(), ['identifiers' => 'emial']);
-        $channel = $this->createChannel('email', static fn(): DeliveryResult => DeliveryResult::success('email'));
+        $logger = new CollectingLogger();
+        $ran = [];
+        $email = $this->createChannel('email', static function () use (&$ran): DeliveryResult {
+            $ran[] = 'email';
+            return DeliveryResult::success('email');
+        });
+        $jira = $this->createChannel('jira', static function () use (&$ran): DeliveryResult {
+            $ran[] = 'jira';
+            return DeliveryResult::success('jira');
+        });
 
-        $result = new SubmissionProcessor($this->get(FeedbackRepository::class), $this->get(ScreenshotStorage::class), [$channel], $logger)
+        $result = new SubmissionProcessor($this->get(FeedbackRepository::class), $this->get(ScreenshotStorage::class), [$email, $jira], $logger)
             ->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['emial']));
 
         self::assertSame(DeliveryStatus::Sent, $result->status);
+        self::assertSame(['email', 'jira'], $ran, 'every channel runs');
+        $warnings = $logger->messages('warning');
+        self::assertCount(1, $warnings);
+        self::assertStringContainsString('emial', $warnings[0], 'the warning names the identifier');
     }
 
+    /**
+     * Scenario: Custom channel disabled
+     */
+    #[Test]
+    public function disabledCustomChannelDoesNotRunAndTheEmailChannelStillDoes(): void
+    {
+        $email = $this->createChannel('email', static fn(): DeliveryResult => DeliveryResult::success('email'));
+        $jira = $this->createChannel('jira', static fn(): DeliveryResult => throw new \LogicException('jira must not run', 1795000002));
+
+        $result = $this->createProcessor([$email, $jira])->process($this->createSubmission(), $this->configuration(disabledDeliveryChannels: ['jira']));
+
+        self::assertSame(DeliveryStatus::Sent, $result->status);
+        self::assertSame(['email'], array_map(static fn(DeliveryResult $result): string => $result->channel, $result->deliveryResults));
+        self::assertStringStartsWith('email: OK', (string)($this->get(FeedbackRepository::class)->findByUid($result->feedbackUid)['delivery_log'] ?? ''));
+        self::assertStringNotContainsString('jira', (string)($this->get(FeedbackRepository::class)->findByUid($result->feedbackUid)['delivery_log'] ?? ''));
+    }
+
+    /**
+     * Requirement: Stored before delivery (an already stored screenshot is deleted when the record cannot be written)
+     */
+    #[Test]
+    public function screenshotAndVideoAreDeletedAgainWhenTheRecordCannotBeWritten(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $realConnectionPool = $this->get(ConnectionPool::class);
+        $connectionPool = self::createStub(ConnectionPool::class);
+        $connectionPool->method('getConnectionForTable')->willReturnCallback(
+            static fn(string $table): Connection => $table === FeedbackRepository::TABLE
+                ? throw new \RuntimeException('Server has gone away', 1795000003)
+                : $realConnectionPool->getConnectionForTable($table),
+        );
+        $processor = new SubmissionProcessor(new FeedbackRepository($connectionPool, $this->get(ConfigurationProviderInterface::class)), $this->get(ScreenshotStorage::class), [], new NullLogger());
+        // A month no other test of this class writes into
+        $folder = Environment::getVarPath() . '/opinion/2027/03';
+
+        foreach ([true, false] as $withScreenshot) {
+            try {
+                $processor->process($this->createSubmission(withScreenshot: $withScreenshot, withVideo: !$withScreenshot, createdAt: '2027-03-01 12:00:00'), $this->configuration());
+                self::fail('Expected exception');
+            } catch (\RuntimeException $exception) {
+                self::assertSame(1795000003, $exception->getCode());
+            }
+            self::assertSame([], glob($folder . '/*'), $withScreenshot ? 'screenshot left behind' : 'video left behind');
+        }
+        self::assertNull($this->get(FeedbackRepository::class)->findByUid(1));
+    }
+
+    /**
+     * Requirement: Delivery status (sent when every channel succeeded)
+     */
     #[Test]
     public function successfulDeliveryMarksFeedbackAsSent(): void
     {
@@ -91,6 +162,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame('test: OK delivered', $record['delivery_log'] ?? null);
     }
 
+    /**
+     * Scenario: Throwing channel
+     */
     #[Test]
     public function failingDeliveryKeepsFeedbackAndMarksItAsFailed(): void
     {
@@ -106,6 +180,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertStringContainsString('test: OK', (string)($record['delivery_log'] ?? ''));
     }
 
+    /**
+     * Requirement: Delivery status (a failure to write the status does not turn the submission into an error)
+     */
     #[Test]
     public function failingStatusUpdateAfterDeliveryStillReturnsTheResult(): void
     {
@@ -132,6 +209,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame('pending', $this->get(FeedbackRepository::class)->findByUid($result->feedbackUid)['delivery_status'] ?? null);
     }
 
+    /**
+     * Requirement: Stored before delivery
+     */
     #[Test]
     public function screenshotIsStoredReferencedAndPassedToTheChannels(): void
     {
@@ -151,6 +231,10 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertFalse($receivedScreenshot->getStorage()->isPublic());
     }
 
+    /**
+     * Scenario: Custom channel
+     * Scenario: Module changed during recording
+     */
     #[Test]
     public function videoIsStoredReferencedAndPassedToTheChannelsWithTheEndContext(): void
     {
@@ -190,6 +274,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         self::assertSame(['module' => 'web_list'], StoredSubmissionFactory::decode($record['context_at_end'] ?? null));
     }
 
+    /**
+     * Scenario: Screenshot storage missing
+     */
     #[Test]
     public function screenshotWithoutStorageIsRejectedAndNothingIsStored(): void
     {
@@ -223,7 +310,7 @@ final class SubmissionProcessorTest extends FunctionalTestCase
         return $channel;
     }
 
-    private function createSubmission(bool $withScreenshot = false): Submission
+    private function createSubmission(bool $withScreenshot = false, bool $withVideo = false, string $createdAt = '2026-10-09 12:00:00'): Submission
     {
         return new Submission(
             message: 'The teaser image is cropped.',
@@ -231,8 +318,9 @@ final class SubmissionProcessorTest extends FunctionalTestCase
             severity: Severity::Normal,
             source: Source::Frontend,
             backendUserUid: 1,
-            createdAt: new \DateTimeImmutable('2026-10-09 12:00:00'),
+            createdAt: new \DateTimeImmutable($createdAt),
             screenshot: $withScreenshot ? new Screenshot(base64_decode(self::PNG_BASE64, true), ScreenshotType::Png) : null,
+            video: $withVideo ? new Video(self::WEBM, VideoType::Webm) : null,
         );
     }
 

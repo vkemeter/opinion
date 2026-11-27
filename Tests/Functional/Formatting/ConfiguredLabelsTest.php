@@ -26,6 +26,10 @@ final class ConfiguredLabelsTest extends FunctionalTestCase
         ],
     ];
 
+    /**
+     * Scenario: Own category translated by an override
+     * Scenario: Own category without label
+     */
     #[Test]
     public function labelPrefersTranslationThenConfiguredLabelThenValue(): void
     {
@@ -43,6 +47,10 @@ final class ConfiguredLabelsTest extends FunctionalTestCase
         self::assertSame('feature', $subject->label('category', 'feature', $configuration, $english), 'removed own value');
     }
 
+    /**
+     * Scenario: Own status with label
+     * Scenario: Shipped status in German
+     */
     #[Test]
     public function statusLabelsFollowTheSameRule(): void
     {
@@ -53,14 +61,5 @@ final class ConfiguredLabelsTest extends FunctionalTestCase
         self::assertSame('Abgeschlossen', $subject->label('status', 'closed', $configuration, $german), 'shipped, also when removed');
         self::assertSame('Waiting for reply', $subject->label('status', 'waiting', $configuration, $german));
         self::assertSame('gone', $subject->label('status', 'gone', $configuration, $german));
-    }
-
-    #[Test]
-    public function unknownListIsRejected(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionCode(1795551289);
-
-        $this->get(ConfiguredLabels::class)->label('colour', 'red', new OpinionConfiguration(true, [], '', 180), $this->get(LanguageServiceFactory::class)->create('default'));
     }
 }

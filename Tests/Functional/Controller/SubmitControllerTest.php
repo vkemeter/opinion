@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\DependencyInjection\Container;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -14,7 +17,6 @@ use TYPO3\CMS\Core\Http\UploadedFile;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Resource\FileRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 use Vkemeter\Opinion\Controller\SubmitController;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
@@ -42,6 +44,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
     }
 
+    /**
+     * Scenario: Editor without TSconfig option
+     */
     #[Test]
     public function editorWithoutTsConfigIsDenied(): void
     {
@@ -54,6 +59,10 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Requirement: Access rules (editors with options.opinion.enable = 1)
+     * Scenario: New submission
+     */
     #[Test]
     public function editorWithTsConfigCanSubmit(): void
     {
@@ -67,6 +76,10 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(3, (int)($this->get(FeedbackRepository::class)->findByUid(1)['be_user'] ?? 0));
     }
 
+    /**
+     * Scenario: Administrator
+     * Scenario: Subject
+     */
     #[Test]
     public function adminCanSubmit(): void
     {
@@ -82,6 +95,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame('[Opinion] [Bug/normal] The teaser image is cropped.', $email->getSubject());
     }
 
+    /**
+     * Scenario: Missing recipients
+     */
     #[Test]
     public function missingRecipientsStillStoreTheFeedback(): void
     {
@@ -95,8 +111,12 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertTrue($body['success']);
         self::assertFalse($body['delivered']);
         self::assertSame('failed', $this->get(FeedbackRepository::class)->findByUid(1)['delivery_status'] ?? null);
+        self::assertSame('email: FAILED No valid recipient configured in the extension configuration.', $this->get(FeedbackRepository::class)->findByUid(1)['delivery_log'] ?? null);
     }
 
+    /**
+     * Scenario: Submission without email address
+     */
     #[Test]
     public function userWithoutEmailAddressIsToldToAddOne(): void
     {
@@ -109,6 +129,10 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Message too short
+     * Scenario: Unknown category
+     */
     #[Test]
     public function invalidInputIsRejectedWithTranslatedFieldErrors(): void
     {
@@ -124,6 +148,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Disabled
+     */
     #[Test]
     public function videoWhileVideoIsDisabledIsRejected(): void
     {
@@ -136,6 +163,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: WebM video
+     */
     #[Test]
     public function webmVideoIsAcceptedAndStored(): void
     {
@@ -151,6 +181,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame('webm', $references[0]->getOriginalFile()->getExtension());
     }
 
+    /**
+     * Scenario: Screenshot storage missing
+     */
     #[Test]
     public function videoWithoutStorageIsRejectedWithServiceUnavailable(): void
     {
@@ -164,6 +197,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Disguised video
+     */
     #[Test]
     public function disguisedVideoIsRejected(): void
     {
@@ -177,6 +213,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Screenshot and video
+     */
     #[Test]
     public function screenshotAndVideoTogetherAreRejected(): void
     {
@@ -191,6 +230,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Screenshot storage missing
+     */
     #[Test]
     public function screenshotWithoutStorageIsRejectedWithServiceUnavailable(): void
     {
@@ -202,22 +244,61 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Writing the screenshot fails
+     */
     #[Test]
     public function failingScreenshotWriteIsRejectedWithServiceUnavailable(): void
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
-        // A file named like the year folder makes creating the dated folder fail; other tests may have created the folder
-        GeneralUtility::rmdir(Environment::getVarPath() . '/opinion/' . date('Y'), true);
-        touch(Environment::getVarPath() . '/opinion/' . date('Y'));
+        $this->freezeClock('2030-06-15 12:00:00');
+        // A file named like the year folder makes creating the dated folder fail; no other test writes into 2030
+        $blocker = Environment::getVarPath() . '/opinion/2030';
+        touch($blocker);
         $this->setUpBackendUser(1);
 
-        $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
+        try {
+            $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
+        } finally {
+            unlink($blocker);
+        }
 
         self::assertSame(503, $response->getStatusCode());
-        self::assertStringContainsString('without', (string)$this->decode($response)['message']);
+        self::assertSame('The screenshot cannot be stored at the moment. Please send your feedback without a screenshot.', $this->decode($response)['message']);
         self::assertSame(0, $this->countFeedback());
     }
 
+    /**
+     * Scenario: Mail transport down
+     * Scenario: Stored but not delivered
+     */
+    #[Test]
+    public function unreachableMailServerKeepsTheFeedbackWithItsScreenshot(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';
+        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = '127.0.0.1:1';
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit($this->validFields(), base64_decode(self::PNG_BASE64, true));
+        $body = $this->decode($response);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertTrue($body['success']);
+        self::assertFalse($body['delivered']);
+        self::assertSame('Your feedback has been saved, but could not be delivered. The team will see it in the backend.', $body['message']);
+        $record = $this->get(FeedbackRepository::class)->findByUid(1);
+        self::assertSame('failed', $record['delivery_status'] ?? null);
+        self::assertStringContainsString('email: FAILED', (string)($record['delivery_log'] ?? ''));
+        $references = $this->get(FileRepository::class)->findByRelation(FeedbackRepository::TABLE, 'screenshot', 1);
+        self::assertCount(1, $references);
+        self::assertSame(base64_decode(self::PNG_BASE64, true), $references[0]->getOriginalFile()->getContents());
+    }
+
+    /**
+     * Scenario: Limit reached
+     * Scenario: Invalid submissions do not count
+     */
     #[Test]
     public function submissionsAboveTheRateLimitAreRejected(): void
     {
@@ -242,6 +323,9 @@ final class SubmitControllerTest extends FunctionalTestCase
         self::assertSame(200, $this->submit($this->validFields())->getStatusCode());
     }
 
+    /**
+     * Scenario: Extension disabled
+     */
     #[Test]
     public function disabledExtensionDeniesEvenAdmins(): void
     {
@@ -249,6 +333,80 @@ final class SubmitControllerTest extends FunctionalTestCase
         $this->setUpBackendUser(1);
 
         self::assertSame(403, $this->submit($this->validFields())->getStatusCode());
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    /**
+     * Scenario: Own configured category
+     */
+    #[Test]
+    public function ownConfiguredCategoryIsStored(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['categories'] = 'bug,question=Question';
+        $this->setUpBackendUser(1);
+
+        self::assertSame(200, $this->submit(['category' => 'question'] + $this->validFields())->getStatusCode());
+        self::assertSame('question', $this->get(FeedbackRepository::class)->findByUid(1)['category'] ?? null);
+    }
+
+    /**
+     * Scenario: Context is a JSON list
+     */
+    #[Test]
+    public function contextAsJsonListIsRejected(): void
+    {
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit(['context' => '[12]'] + $this->validFields());
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame(['context'], array_keys($this->decode($response)['errors']));
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    /**
+     * Scenario: Failed delivery, still new
+     */
+    #[Test]
+    public function failedDeliveryLeavesTheProcessingStatusNew(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['recipients'] = '';
+        $this->setUpBackendUser(1);
+
+        $this->submit($this->validFields());
+
+        $record = $this->get(FeedbackRepository::class)->findByUid(1);
+        self::assertSame('failed', $record['delivery_status'] ?? null);
+        self::assertSame('new', $record['status'] ?? null);
+    }
+
+    /**
+     * Scenario: Module changed during recording
+     */
+    #[Test]
+    public function contextAtEndIsValidatedLikeTheContext(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['opinion']['videoEnabled'] = '1';
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+        $fields = ['source' => 'backend', 'context' => '{"module":"web_layout"}'] + $this->validFields();
+
+        $this->submit(['contextAtEnd' => '{"module":"web_list","url":"https://evil.example/typo3/module/web/list?token=abc&id=1"}'] + $fields, null, self::WEBM);
+        $this->submit(['contextAtEnd' => '{"module":"not_a_module"}'] + $fields, null, self::WEBM);
+
+        self::assertSame(['module' => 'web_layout'], json_decode((string)($this->get(FeedbackRepository::class)->findByUid(1)['context'] ?? ''), true));
+        $contextAtEnd = (array)json_decode((string)($this->get(FeedbackRepository::class)->findByUid(1)['context_at_end'] ?? ''), true);
+        // MySQL's JSON column does not keep the key order
+        ksort($contextAtEnd);
+        self::assertSame(['module' => 'web_list', 'url' => '/typo3/module/web/list?id=1'], $contextAtEnd);
+        self::assertSame([], json_decode((string)($this->get(FeedbackRepository::class)->findByUid(2)['context_at_end'] ?? '[]'), true) ?? [], 'unregistered module dropped');
+    }
+
+    private function freezeClock(string $now): void
+    {
+        $container = $this->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->set(ClockInterface::class, new MockClock($now));
     }
 
     /**

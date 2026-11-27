@@ -13,6 +13,9 @@ use Vkemeter\Opinion\Configuration\ExtensionConfigurationProvider;
 
 final class ExtensionConfigurationProviderTest extends UnitTestCase
 {
+    /**
+     * Requirement: Email channel (recipients, subjectPrefix)
+     */
     #[Test]
     public function getConfigurationParsesSettings(): void
     {
@@ -29,6 +32,10 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(30, $configuration->retentionDays);
     }
 
+    /**
+     * Scenario: Attempt limit
+     * Requirement: Rate limit per backend user (default 10, 0 disables)
+     */
     #[Test]
     public function getConfigurationReadsRedeliveryAndRateLimit(): void
     {
@@ -41,6 +48,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(10, $defaults->rateLimit);
     }
 
+    /**
+     * Scenario: Out of range
+     */
     #[Test]
     public function getConfigurationReadsTheVideoSettings(): void
     {
@@ -56,6 +66,12 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(10, $this->createSubject(['videoMaxDuration' => '3'])->getConfiguration()->videoMaxDuration);
     }
 
+    /**
+     * Scenario: Default list
+     * Scenario: Own list with labels
+     * Scenario: Invalid and duplicate entries
+     * Scenario: Nothing valid left
+     */
     #[Test]
     public function getConfigurationReadsTheCategories(): void
     {
@@ -68,6 +84,12 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(['bug' => '', 'content' => '', 'idea' => '', 'other' => ''], $this->createSubject(['categories' => ' , ,=Label'])->getConfiguration()->categories);
     }
 
+    /**
+     * Scenario: Own list
+     * Scenario: Two final states
+     * Scenario: Initial status cannot be closed
+     * Scenario: Reopen status not usable
+     */
     #[Test]
     public function getConfigurationResolvesTheStatusRoles(): void
     {
@@ -96,6 +118,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(['new', 'in_progress', 'closed'], $this->createSubject(['statuses' => ' , Done!'])->getConfiguration()->statusValues(), 'nothing valid left');
     }
 
+    /**
+     * Scenario: Missing recipients
+     */
     #[Test]
     public function getConfigurationDropsInvalidRecipients(): void
     {
@@ -104,6 +129,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(['team@example.com'], $configuration->recipients);
     }
 
+    /**
+     * Requirement: Retention cleanup (default retentionDays 180)
+     */
     #[Test]
     public function getConfigurationFallsBackToDefaultsForMissingOrInvalidValues(): void
     {
@@ -115,6 +143,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame(180, $configuration->retentionDays);
     }
 
+    /**
+     * Scenario: Disabled IP address
+     */
     #[Test]
     public function getConfigurationReadsSwitchedOffDetails(): void
     {
@@ -126,6 +157,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertTrue($configuration->collects(CollectableField::ClientUrl));
     }
 
+    /**
+     * Scenario: Request token
+     */
     #[Test]
     public function getConfigurationReadsDeniedUrlParameters(): void
     {
@@ -134,6 +168,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertContains('ADMCMD_*', $this->createSubject([])->getConfiguration()->deniedUrlParameters);
     }
 
+    /**
+     * Scenario: Custom channel disabled
+     */
     #[Test]
     public function getConfigurationReadsDisabledDeliveryChannels(): void
     {
@@ -141,6 +178,10 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertSame([], $this->createSubject([])->getConfiguration()->disabledDeliveryChannels);
     }
 
+    /**
+     * Scenario: Extension disabled
+     * Scenario: Switched off
+     */
     #[Test]
     public function getConfigurationReadsDisabledSwitch(): void
     {
@@ -149,6 +190,9 @@ final class ExtensionConfigurationProviderTest extends UnitTestCase
         self::assertTrue($this->createSubject([])->getConfiguration()->conversationEnabled, 'on by default');
     }
 
+    /**
+     * Requirement: Retention cleanup (default retentionDays 180)
+     */
     #[Test]
     public function getConfigurationHandlesUnconfiguredExtension(): void
     {

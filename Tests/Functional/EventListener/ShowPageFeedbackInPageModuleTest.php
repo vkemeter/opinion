@@ -36,6 +36,10 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/pages.csv');
     }
 
+    /**
+     * Scenario: Administrator
+     * Scenario: Both sources
+     */
     #[Test]
     public function administratorsSeeBothGroupsWithLinks(): void
     {
@@ -56,6 +60,9 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         self::assertSame(3, substr_count($html, '/typo3/module/opinion/feedback/show?'));
     }
 
+    /**
+     * Scenario: Own closed status
+     */
     #[Test]
     public function ownClosedStatusesAreLeftOutAndOwnStatusesLabelled(): void
     {
@@ -70,6 +77,9 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         self::assertStringNotContainsString('Rejected one', $html);
     }
 
+    /**
+     * Scenario: Editor
+     */
     #[Test]
     public function editorsSeeTheEntriesWithoutLinks(): void
     {
@@ -89,6 +99,9 @@ final class ShowPageFeedbackInPageModuleTest extends FunctionalTestCase
         self::assertStringNotContainsString('/typo3/module/opinion/feedback/show', $html);
     }
 
+    /**
+     * Requirement: Info box in the page module (no box without open feedback)
+     */
     #[Test]
     public function noBoxWithoutOpenFeedbackOrWithoutPermissionToSendFeedback(): void
     {

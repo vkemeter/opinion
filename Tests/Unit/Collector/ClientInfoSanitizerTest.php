@@ -11,6 +11,9 @@ use Vkemeter\Opinion\Collector\SchemaSanitizer;
 
 final class ClientInfoSanitizerTest extends UnitTestCase
 {
+    /**
+     * Requirement: Browser details whitelist
+     */
     #[Test]
     public function whitelistedValuesAreKept(): void
     {
@@ -36,6 +39,9 @@ final class ClientInfoSanitizerTest extends UnitTestCase
         self::assertSame([...$clientInfo, 'devicePixelRatio' => 2.0], $sanitized);
     }
 
+    /**
+     * Scenario: Unknown key
+     */
     #[Test]
     public function unknownKeysAndPrivateDataAreDropped(): void
     {
@@ -57,6 +63,9 @@ final class ClientInfoSanitizerTest extends UnitTestCase
         self::assertStringNotContainsString('be_typo_user', (string)json_encode($sanitized));
     }
 
+    /**
+     * Scenario: Wrong type
+     */
     #[Test]
     public function valuesOfWrongTypeAreDropped(): void
     {
@@ -72,6 +81,9 @@ final class ClientInfoSanitizerTest extends UnitTestCase
         self::assertSame([], $sanitized);
     }
 
+    /**
+     * Requirement: Browser details whitelist (length caps)
+     */
     #[Test]
     public function stringsListsAndNumbersAreCapped(): void
     {
@@ -88,6 +100,9 @@ final class ClientInfoSanitizerTest extends UnitTestCase
         self::assertSame(100.0, $sanitized['devicePixelRatio']);
     }
 
+    /**
+     * Requirement: Browser details whitelist (expected types)
+     */
     #[Test]
     public function onlyHttpUrlsAreAccepted(): void
     {

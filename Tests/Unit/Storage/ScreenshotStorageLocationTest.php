@@ -30,6 +30,9 @@ final class ScreenshotStorageLocationTest extends UnitTestCase
         );
     }
 
+    /**
+     * Requirement: Non-public screenshot storage
+     */
     #[Test]
     public function absolutePathIsBelowVarPathOutsideTheWebRoot(): void
     {
@@ -39,12 +42,18 @@ final class ScreenshotStorageLocationTest extends UnitTestCase
         self::assertStringStartsNotWith(Environment::getPublicPath() . '/', $path);
     }
 
+    /**
+     * Requirement: Non-public screenshot storage (../var/opinion/)
+     */
     #[Test]
     public function relativePathPointsFromPublicPathToVarPath(): void
     {
         self::assertSame('../var/opinion/', new ScreenshotStorageLocation()->getPathRelativeToPublicPath());
     }
 
+    /**
+     * Requirement: Storage created on setup (found by its base path)
+     */
     #[Test]
     public function matchesRelativeAndAbsoluteConfiguration(): void
     {

@@ -13,6 +13,9 @@ final class VideoLimitsTest extends UnitTestCase
 {
     private const int KB = 1024;
 
+    /**
+     * Requirement: Upload limit known in advance
+     */
     #[Test]
     public function videoIsOfferedWithinTheServerLimit(): void
     {
@@ -22,6 +25,9 @@ final class VideoLimitsTest extends UnitTestCase
         );
     }
 
+    /**
+     * Requirement: Upload limit known in advance (shortened duration is implementation, see report F12)
+     */
     #[Test]
     public function lowerPhpLimitShortensTheRecording(): void
     {
@@ -31,6 +37,10 @@ final class VideoLimitsTest extends UnitTestCase
         );
     }
 
+    /**
+     * Scenario: Low PHP limit
+     * Scenario: Video disabled
+     */
     #[Test]
     public function videoIsNotOfferedBelowTenSecondsOrWhenDisabled(): void
     {
