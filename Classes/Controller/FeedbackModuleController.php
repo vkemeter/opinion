@@ -36,6 +36,7 @@ use Vkemeter\Opinion\Repository\ConversationRepository;
 use Vkemeter\Opinion\Repository\FeedbackFilter;
 use Vkemeter\Opinion\Repository\FeedbackRepository;
 use Vkemeter\Opinion\Storage\ScreenshotStorage;
+use Vkemeter\Opinion\Validation\SubmissionValidator;
 
 /**
  * Module "Feedback": administrators see all submissions and manage delivery
@@ -156,6 +157,7 @@ final readonly class FeedbackModuleController
             'record' => $record,
             'sender' => is_array($systemInfo['backendUser'] ?? null) ? $systemInfo['backendUser'] : [],
             'screenshot' => $screenshots[0] ?? null,
+            'pins' => SubmissionValidator::normalizePins(StoredSubmissionFactory::decode($record['pins'] ?? null)) ?? [],
             'video' => $this->fileRepository->findByRelation(FeedbackRepository::TABLE, 'video', $uid)[0] ?? null,
             'conversationEnabled' => $conversationEnabled,
             'messages' => $messages,

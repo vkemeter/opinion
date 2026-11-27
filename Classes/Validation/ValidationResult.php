@@ -16,6 +16,7 @@ final readonly class ValidationResult
      * @param array<string, mixed> $clientInfo
      * @param array<string, mixed> $context
      * @param array<string, mixed> $contextAtEnd context at the end of a recording, unresolved
+     * @param list<array{number: int, comment: string}> $pins comments of the pins on the screenshot
      */
     public function __construct(
         public array $errors,
@@ -28,6 +29,7 @@ final readonly class ValidationResult
         public ?Screenshot $screenshot = null,
         public ?Video $video = null,
         public array $contextAtEnd = [],
+        public array $pins = [],
     ) {}
 
     public function isValid(): bool

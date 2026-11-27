@@ -16,6 +16,7 @@ final readonly class Submission
      * @param string $backendUrl base URL of the backend the feedback was sent from, '' = unknown
      * @param int $feedbackUid uid of the stored record, 0 before storing
      * @param File|null $videoFile the stored video, for delivery channels
+     * @param list<array{number: int, comment: string}> $pins comments of the pins on the screenshot, sorted by number
      */
     public function __construct(
         public string $message,
@@ -33,6 +34,7 @@ final readonly class Submission
         public string $backendUrl = '',
         public int $feedbackUid = 0,
         public ?File $videoFile = null,
+        public array $pins = [],
     ) {}
 
     /**
@@ -56,6 +58,7 @@ final readonly class Submission
             $this->backendUrl,
             $feedbackUid,
             $videoFile,
+            $this->pins,
         );
     }
 }

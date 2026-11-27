@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vkemeter\Opinion\Tests\Functional\Controller;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -400,6 +401,54 @@ final class SubmitControllerTest extends FunctionalTestCase
         ksort($contextAtEnd);
         self::assertSame(['module' => 'web_list', 'url' => '/typo3/module/web/list?id=1'], $contextAtEnd);
         self::assertSame([], json_decode((string)($this->get(FeedbackRepository::class)->findByUid(2)['context_at_end'] ?? '[]'), true) ?? [], 'unregistered module dropped');
+    }
+
+    /**
+     * Scenario: Valid pins
+     * Scenario: Feedback with pins (feedback-storage)
+     */
+    #[Test]
+    public function validPinsAreStoredSortedByNumber(): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit([...$this->validFields(), 'pins' => '[{"number":2,"comment":"typo"},{"number":1,"comment":"wrong logo"}]'], base64_decode(self::PNG_BASE64, true));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(
+            [['number' => 1, 'comment' => 'wrong logo'], ['number' => 2, 'comment' => 'typo']],
+            json_decode((string)($this->get(FeedbackRepository::class)->findByUid(1)['pins'] ?? ''), true),
+        );
+    }
+
+    /**
+     * Scenario: Pins without screenshot
+     * Scenario: Duplicate number
+     */
+    #[Test]
+    #[DataProvider('invalidPinsProvider')]
+    public function invalidPinsAreRejectedAndNothingIsStored(string $pins, bool $withScreenshot): void
+    {
+        $this->get(ScreenshotStorageInstaller::class)->install();
+        $this->setUpBackendUser(1);
+
+        $response = $this->submit([...$this->validFields(), 'pins' => $pins], $withScreenshot ? base64_decode(self::PNG_BASE64, true) : null);
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame(['pins'], array_keys($this->decode($response)['errors']));
+        self::assertSame(0, $this->countFeedback());
+    }
+
+    /**
+     * @return array<string, array{string, bool}>
+     */
+    public static function invalidPinsProvider(): array
+    {
+        return [
+            'without screenshot' => ['[{"number":1,"comment":"typo"}]', false],
+            'duplicate number' => ['[{"number":1,"comment":"typo"},{"number":1,"comment":"logo"}]', true],
+        ];
     }
 
     private function freezeClock(string $now): void

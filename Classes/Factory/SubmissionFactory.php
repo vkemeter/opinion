@@ -80,6 +80,7 @@ final readonly class SubmissionFactory
                 ? $this->filterUrl($this->collectionFilter->filter('context', $this->resolveContext($result->source, $result->contextAtEnd, $request), $configuration), $configuration)
                 : [],
             backendUrl: rtrim((string)$this->backendEntryPointResolver->getUriFromRequest($request), '/'),
+            pins: $result->pins,
         );
     }
 

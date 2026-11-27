@@ -115,6 +115,26 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     }
 
     /**
+     * Scenario: Feedback with pins (email)
+     */
+    #[Test]
+    public function pinCommentsAreListedInBothPartsOnlyWhenPresent(): void
+    {
+        $channel = $this->get(EmailDeliveryChannel::class);
+        $channel->deliver($this->createSubmission(pins: [['number' => 1, 'comment' => "wrong logo\nnew one"], ['number' => 3, 'comment' => '<b>typo</b>']]), null, $this->configuration());
+        $email = $this->getSentEmail();
+
+        $html = (string)$email->getHtmlBody();
+        self::assertStringContainsString("<li value=\"1\">wrong logo<br />\nnew one</li>", $html);
+        self::assertStringContainsString('<li value="3">&lt;b&gt;typo&lt;/b&gt;</li>', $html);
+        self::assertStringContainsString("Pin comments:\n1. wrong logo\nnew one\n3. <b>typo</b>\n", (string)$email->getTextBody());
+
+        $channel->deliver($this->createSubmission(), null, $this->configuration());
+        self::assertStringNotContainsString('Pin comments', (string)$this->getSentEmail()->getHtmlBody());
+        self::assertStringNotContainsString('Pin comments', (string)$this->getSentEmail()->getTextBody());
+    }
+
+    /**
      * Requirement: Screenshot in the email (only when one exists)
      */
     #[Test]
@@ -223,8 +243,9 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     /**
      * @param array<string, mixed> $clientInfo
      * @param array<string, mixed> $context
+     * @param list<array{number: int, comment: string}> $pins
      */
-    private function createSubmission(array $clientInfo = ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true], array $context = ['pageUid' => 12], string $category = 'content'): Submission
+    private function createSubmission(array $clientInfo = ['screen' => ['width' => 2560, 'height' => 1440], 'online' => true], array $context = ['pageUid' => 12], string $category = 'content', array $pins = []): Submission
     {
         return new Submission(
             message: 'Teaser <b>image</b> is cropped.',
@@ -239,6 +260,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
                 'backendUser' => ['uid' => 2, 'username' => 'editor', 'realName' => 'Eddie Editor', 'email' => 'editor@example.com'],
             ],
             context: $context,
+            pins: $pins,
         );
     }
 

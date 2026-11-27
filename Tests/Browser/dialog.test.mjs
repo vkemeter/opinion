@@ -48,7 +48,7 @@ const html = `<!doctype html><html><head><link rel="stylesheet" href="/Css/opini
 import { openOpinionDialog } from '/JavaScript/opinion-dialog.js';
 const config = ${JSON.stringify(config)};
 // Labels are rendered as [key], so the tests can find elements by them
-config.labels = new Proxy({}, { get: (_, key) => ({ charactersLeft: 'Characters left: {count}', videoTimeLeft: 'Left: {time}' })[key] ?? '[' + String(key) + ']' });
+config.labels = new Proxy({}, { get: (_, key) => ({ charactersLeft: 'Characters left: {count}', videoTimeLeft: 'Left: {time}', annotationPinField: 'Comment for pin {number}' })[key] ?? '[' + String(key) + ']' });
 document.getElementById('open').addEventListener('click', () => { window.dialog = openOpinionDialog(config); });
 document.getElementById('open').addEventListener('open-unavailable', () => { window.dialog = openOpinionDialog({ ...config, unavailable: window.unavailable }); });
 document.getElementById('open').addEventListener('open-with-collect', () => { window.dialog = openOpinionDialog({ ...config, collect: window.dialogConfigOverride }); });
@@ -614,39 +614,134 @@ await scenario('screenshot annotation: crop, reset crop, reopen with the frame',
   assert(reset.width === full.width && reset.height === full.height, 'reset crop did not restore the full size');
 });
 
-// Scenario: Placing a note, Escape in the text field
-await scenario('screenshot annotation: text in the chosen colour, Escape keeps the editor', ['--auto-accept-this-tab-capture'], async (page) => {
+// Scenario: Placing two pins, Empty comment, Escape in the comment field, Cancel and Add, Several lines,
+// Reopen with pins, Undo the last pin, Limit reached, Pin outside the crop, List after apply, Remove the screenshot
+await scenario('screenshot annotation: numbered pins with comments, crop, list and upload', ['--auto-accept-this-tab-capture'], async (page) => {
+  let body = '';
+  await page.route('**/typo3/ajax/opinion/submit**', async (route) => {
+    body = route.request().postDataBuffer().toString('utf8');
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, title: 'Feedback', message: 'ok', delivered: true }) });
+  });
+  const placePin = async (point, comment) => {
+    const box = await canvasBox(page);
+    await page.mouse.click(box.x + box.width * point[0], box.y + box.height * point[1]);
+    await page.waitForSelector('.opinion-annotation__comment');
+    await page.keyboard.type(comment);
+    await page.keyboard.press('Control+Enter');
+  };
+  const pinList = () => page.locator('.opinion-dialog__pins li').evaluateAll((items) => items.map((item) => `${item.value} ${item.textContent}`));
+  const commentTitle = () => page.locator('.opinion-annotation__comment-title').textContent();
+
+  // At most 20 pins; "Remove" drops them together with the screenshot
+  await button(page, '[screenshotTake]').click();
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
+  assert(await page.locator('.opinion-dialog__pins').isHidden(), 'pin list shown without pins');
+  await button(page, '[annotate]').click();
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  await button(page, '[annotationPin]').click();
+  for (let i = 0; i < 20; i++) {
+    await placePin([0.05 + (i % 10) * 0.09, i < 10 ? 0.3 : 0.6], `note ${i + 1}`);
+  }
+  assert(await button(page, '[annotationPin]').isDisabled(), 'pin tool enabled with 20 pins');
+  await closeEditor(page, () => button(page, '[annotationApply]').click());
+  assert((await pinList()).length === 20 && (await pinList())[19] === '20 note 20', 'list of 20 pins wrong');
+  await button(page, '[screenshotRemove]').click();
+  assert(await page.locator('.opinion-dialog__pins li').count() === 0 && await page.locator('.opinion-dialog__pins').isHidden(), 'pins kept after remove');
+
   await button(page, '[screenshotTake]').click();
   await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
   await button(page, '[annotate]').click();
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await button(page, '[annotationText]').click();
+  await button(page, '[annotationPin]').click();
+  assert(await pressed(button(page, '[annotationPin]')) === 'true', 'pin not pressed');
   await button(page, '[annotationColorYellow]').click();
   const box = await canvasBox(page);
 
-  // Escape discards the text, the editor stays open
+  // Escape discards the comment, the editor stays open
   await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
-  await page.waitForSelector('.opinion-annotation__text');
-  assert(await page.getAttribute('.opinion-annotation__text', 'maxlength') === '200', 'no length limit');
+  await page.waitForSelector('.opinion-annotation__comment');
+  assert(await page.getAttribute('.opinion-annotation__comment-field', 'maxlength') === '500', 'no length limit');
+  assert(await commentTitle() === 'Comment for pin 1', 'box not titled with the number');
+  assert(await page.getByRole('textbox', { name: 'Comment for pin 1' }).count() === 1, 'field not labelled with the number');
   await page.keyboard.type('discard me');
   await page.keyboard.press('Escape');
   assert(await page.locator('dialog.opinion-annotation[open]').count() === 1, 'Escape closed the editor');
-  assert(await page.locator('.opinion-annotation__text').count() === 0, 'text field still open');
-  assert(await button(page, '[annotationUndo]').isDisabled(), 'discarded text was placed');
+  assert(await page.locator('.opinion-annotation__comment').count() === 0, 'comment field still open');
+  assert(await button(page, '[annotationUndo]').isDisabled(), 'discarded pin was placed');
 
-  // An empty text places nothing
+  // An empty comment places nothing and keeps the number
   await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
-  await page.keyboard.press('Enter');
-  assert(await button(page, '[annotationUndo]').isDisabled(), 'empty text was placed');
+  await button(page, '[annotationPinAdd]').click();
+  assert(await button(page, '[annotationUndo]').isDisabled(), 'empty pin was placed');
 
-  const textBox = [0.3, 0.6, 0.6, 0.75];
-  assert(await countPixels(page, textBox, isYellow) === 0, 'yellow before the text');
-  await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.6);
-  await page.keyboard.type('should be blue');
+  // "Cancel" discards, "Add" places
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.keyboard.type('discard me too');
+  await button(page.locator('.opinion-annotation__comment'), '[cancel]').click();
+  assert(await page.locator('.opinion-annotation__comment').count() === 0 && await button(page, '[annotationUndo]').isDisabled(), 'Cancel placed a pin');
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.keyboard.type('typo');
+  await button(page, '[annotationPinAdd]').click();
+  assert(await button(page, '[annotationUndo]').isEnabled(), 'Add placed no pin');
+  await page.keyboard.press('Control+z');
+
+  const pinBox = [0.15, 0.15, 0.25, 0.25];
+  assert(await countPixels(page, pinBox, isYellow) === 0, 'yellow before the pin');
+  // Enter breaks the line, Ctrl + Enter adds
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.keyboard.type('wrong logo');
   await page.keyboard.press('Enter');
-  assert(await button(page, '[annotationUndo]').isEnabled(), 'text not placed');
-  assert(await countPixels(page, textBox, isYellow) > 50, 'text not drawn in yellow');
+  assert(await page.locator('.opinion-annotation__comment').count() === 1, 'Enter closed the comment box');
+  await page.keyboard.type('should be the new one');
+  await page.keyboard.press('Control+Enter');
+  // 30 CSS pixels wide on the captured page, whatever the device pixel ratio
+  const pinWidth = await page.evaluate(() => {
+    const canvas = document.querySelector('.opinion-annotation__canvas');
+    const y = Math.round(canvas.height * 0.2);
+    const row = canvas.getContext('2d').getImageData(0, y, canvas.width, 1).data;
+    let count = 0;
+    for (let i = 0; i < row.length; i += 4) if (row[i] > 200 && row[i + 1] > 170 && row[i + 2] < 110) count++;
+    return { count, expected: 30 * canvas.width / window.innerWidth };
+  });
+  assert(Math.abs(pinWidth.count - pinWidth.expected) <= 4, 'pin not 30 CSS pixels wide: ' + JSON.stringify(pinWidth));
+  assert(await countPixels(page, pinBox, isYellow) > 50, 'pin not drawn in yellow');
+  await placePin([0.8, 0.2], 'first try');
+  // Undo frees the number of the last pin
+  await page.keyboard.press('Control+z');
+  await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.2);
+  assert(await commentTitle() === 'Comment for pin 2', 'undo did not free number 2');
+  // Undo while a comment box is open discards the box first, so no number is skipped
+  await button(page, '[annotationUndo]').click();
+  assert(await page.locator('.opinion-annotation__comment').count() === 0, 'comment box kept after undo');
+  await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.2);
+  assert(await commentTitle() === 'Comment for pin 1', 'number not freed by undo with open box');
+  await page.keyboard.press('Escape');
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.2);
+  await page.keyboard.type('wrong logo');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('should be the new one');
+  await button(page, '[annotationPinAdd]').click();
+  await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.2);
+  await page.keyboard.type('cut off');
+  await page.keyboard.press('Control+Enter');
+  await placePin([0.3, 0.7], 'typo');
+
+  // Reopening shows the pins, they can be undone
   await closeEditor(page, () => button(page, '[annotationApply]').click());
+  await button(page, '[annotate]').click();
+  await page.waitForSelector('dialog.opinion-annotation[open]');
+  assert(await countPixels(page, pinBox, isYellow) > 50, 'pin not shown again');
+  await page.keyboard.press('Control+z');
+  await button(page, '[annotationPin]').click();
+  await button(page, '[annotationColorYellow]').click();
+  await placePin([0.3, 0.7], 'typo');
+
+  // The crop excludes pin 2: its badge and comment are not sent, the others keep their numbers
+  await button(page, '[annotationCrop]').click();
+  await dragOnCanvas(page, [0.1, 0.1], [0.6, 0.9]);
+  await closeEditor(page, () => button(page, '[annotationApply]').click());
+  const list = await pinList();
+  assert(JSON.stringify(list) === JSON.stringify(['1 wrong logo\nshould be the new one', '3 typo']), 'pin list wrong: ' + JSON.stringify(list));
 
   const annotated = await page.getAttribute('.opinion-dialog__preview', 'src');
   const yellowInJpeg = await page.evaluate(async ({ source, box }) => {
@@ -658,14 +753,46 @@ await scenario('screenshot annotation: text in the chosen colour, Escape keeps t
     let count = 0;
     for (let i = 0; i < data.length; i += 4) if (data[i] > 200 && data[i + 1] > 170 && data[i + 2] < 110) count++;
     return count;
-  }, { source: annotated, box: textBox });
-  assert(yellowInJpeg > 50, 'text not burnt into the JPEG');
+  }, { source: annotated, box: [0.1, 0.06, 0.3, 0.19] });
+  assert(yellowInJpeg > 50, 'pin 1 not burnt into the JPEG');
 
-  // Placed text is undone like any other shape
+  await description(page).fill('The teaser image is cropped.');
+  await button(page, '[send]').click();
+  await waitForStatus(page, 'ok');
+  const pins = body.match(/name="pins"\r\n\r\n(.*)\r\n/)?.[1];
+  assert(pins === JSON.stringify([{ number: 1, comment: 'wrong logo\nshould be the new one' }, { number: 3, comment: 'typo' }]), 'pins not sent: ' + pins);
+});
+
+// Scenario: Pin size on a high-resolution capture
+await scenario('screenshot annotation: pin of 30 CSS pixels on a capture larger than the page', ['--auto-accept-this-tab-capture'], async (page) => {
+  await button(page, '[screenshotTake]').click();
+  await page.waitForSelector('.opinion-dialog__preview-wrapper:not([hidden])', { timeout: 10000 });
   await button(page, '[annotate]').click();
   await page.waitForSelector('dialog.opinion-annotation[open]');
-  await page.keyboard.press('Control+z');
-  assert(await countPixels(page, textBox, isYellow) === 0, 'undo did not remove the text');
+  await button(page, '[annotationPin]').click();
+  await button(page, '[annotationColorYellow]').click();
+  const box = await canvasBox(page);
+  await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.keyboard.type('size');
+  await page.keyboard.press('Control+Enter');
+  await closeEditor(page, () => button(page, '[annotationApply]').click());
+  const measured = await page.evaluate(async (source) => {
+    const image = new Image(); image.src = source; await image.decode();
+    const c = document.createElement('canvas'); c.width = image.width; c.height = image.height;
+    const ctx = c.getContext('2d'); ctx.drawImage(image, 0, 0);
+    const row = ctx.getImageData(0, Math.round(image.height / 2), image.width, 1).data;
+    // From the first to the last yellow pixel: the number in the middle is not yellow
+    const yellow = [];
+    for (let i = 0; i < row.length; i += 4) if (row[i] > 200 && row[i + 1] > 170 && row[i + 2] < 110) yellow.push(i / 4);
+    return { width: yellow.length ? yellow.at(-1) - yellow[0] + 1 : 0, imageWidth: image.width, pageWidth: window.innerWidth };
+  }, await page.getAttribute('.opinion-dialog__preview', 'src'));
+  console.log('   pin', JSON.stringify(measured));
+  // Headless Chrome captures the tab at 1600 instead of 2560 pixels; the ratio is what counts
+  assert(measured.imageWidth >= measured.pageWidth * 1.2, 'capture not larger than the page');
+  assert(Math.abs(measured.width - (30 * measured.imageWidth) / measured.pageWidth) <= 4, 'pin not 30 CSS pixels wide');
+}, async (page) => {
+  const session = await page.context().newCDPSession(page);
+  await session.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 2, mobile: false });
 });
 
 // Scenario: Timeout

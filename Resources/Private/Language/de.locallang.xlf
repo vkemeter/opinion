@@ -112,6 +112,10 @@
                 <source>Context at the end of the recording</source>
                 <target>Kontext am Ende der Aufnahme</target>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.pins">
+                <source>Pin comments</source>
+                <target>Pin-Kommentare</target>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.backend_url">
                 <source>Backend URL</source>
                 <target>Backend-URL</target>
@@ -320,6 +324,10 @@
                 <source>The page details at the end of the recording are too large.</source>
                 <target>Die Seitendetails am Ende der Aufnahme sind zu groß.</target>
             </trans-unit>
+            <trans-unit id="error.pins.invalid">
+                <source>The pin comments could not be read. Please mark up the screenshot again.</source>
+                <target>Die Pin-Kommentare konnten nicht gelesen werden. Bitte markieren Sie den Screenshot erneut.</target>
+            </trans-unit>
             <trans-unit id="email.headline">
                 <source>New feedback</source>
                 <target>Neues Feedback</target>
@@ -501,8 +509,8 @@
                 <target>Screenshot markieren</target>
             </trans-unit>
             <trans-unit id="dialog.annotationHint">
-                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and add short notes as text. Black out personal data before sending.</source>
-                <target>Zeichnen Sie mit der Maus, einem Stift oder dem Finger auf den Screenshot. Schneiden Sie ihn auf den relevanten Teil zu und ergänzen Sie kurze Notizen als Text. Schwärzen Sie personenbezogene Daten vor dem Senden.</target>
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and set numbered pins with a comment each. Black out personal data before sending.</source>
+                <target>Zeichnen Sie mit der Maus, einem Stift oder dem Finger auf den Screenshot. Schneiden Sie ihn auf den relevanten Teil zu und setzen Sie nummerierte Pins mit je einem Kommentar. Schwärzen Sie personenbezogene Daten vor dem Senden.</target>
             </trans-unit>
             <trans-unit id="dialog.annotationTools">
                 <source>Tool</source>
@@ -516,13 +524,21 @@
                 <source>Arrow</source>
                 <target>Pfeil</target>
             </trans-unit>
-            <trans-unit id="dialog.annotationText">
-                <source>Text</source>
-                <target>Text</target>
+            <trans-unit id="dialog.annotationPin">
+                <source>Pin with comment</source>
+                <target>Pin mit Kommentar</target>
             </trans-unit>
-            <trans-unit id="dialog.annotationTextField">
-                <source>Text on the screenshot</source>
-                <target>Text auf dem Screenshot</target>
+            <trans-unit id="dialog.annotationPinField">
+                <source>Comment for pin {number}</source>
+                <target>Kommentar zu Pin {number}</target>
+            </trans-unit>
+            <trans-unit id="dialog.annotationPinAdd">
+                <source>Add</source>
+                <target>Hinzufügen</target>
+            </trans-unit>
+            <trans-unit id="dialog.pinComments">
+                <source>Pin comments</source>
+                <target>Pin-Kommentare</target>
             </trans-unit>
             <trans-unit id="dialog.annotationCrop">
                 <source>Crop</source>

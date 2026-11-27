@@ -48,6 +48,7 @@ final readonly class FeedbackRepository
                 'system_info' => $submission->systemInfo,
                 'context' => $submission->context,
                 'context_at_end' => $submission->contextAtEnd,
+                'pins' => $submission->pins,
                 'backend_url' => $submission->backendUrl,
                 'page_uid' => self::pageUidOf($submission->context),
                 'status' => $this->configurationProvider->getConfiguration()->initialStatus(),
@@ -59,6 +60,7 @@ final readonly class FeedbackRepository
                 'system_info' => Types::JSON,
                 'context' => Types::JSON,
                 'context_at_end' => Types::JSON,
+                'pins' => Types::JSON,
             ]);
             $uid = (int)$connection->lastInsertId();
 

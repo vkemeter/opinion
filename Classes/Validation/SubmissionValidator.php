@@ -22,6 +22,8 @@ final readonly class SubmissionValidator
     public const int MESSAGE_MAX_LENGTH = 5000;
     public const int JSON_MAX_BYTES = 65536;
     public const int SCREENSHOT_MAX_BYTES = 10 * 1024 * 1024;
+    public const int PINS_MAX = 20;
+    public const int PIN_COMMENT_MAX_LENGTH = 500;
 
     /**
      * @param array<array-key, mixed> $fields
@@ -58,12 +60,13 @@ final readonly class SubmissionValidator
         if ($screenshot !== null && $video !== null) {
             $errors['video'] = 'withScreenshot';
         }
+        $pins = $this->validatePins($fields, $screenshot !== null || isset($errors['screenshot']), $errors);
 
         if ($errors !== []) {
             return new ValidationResult($errors);
         }
 
-        return new ValidationResult([], $message, $category, $severity, $source, $clientInfo, $context, $screenshot, $video, $contextAtEnd);
+        return new ValidationResult([], $message, $category, $severity, $source, $clientInfo, $context, $screenshot, $video, $contextAtEnd, $pins);
     }
 
     /**
@@ -121,6 +124,60 @@ final readonly class SubmissionValidator
 
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    /**
+     * Pins as list of number and comment, sorted by number, or null when the value is not valid.
+     *
+     * @return list<array{number: int, comment: string}>|null
+     */
+    public static function normalizePins(mixed $value): ?array
+    {
+        if (!is_array($value) || !array_is_list($value) || count($value) > self::PINS_MAX) {
+            return null;
+        }
+        $pins = [];
+        foreach ($value as $pin) {
+            $number = is_array($pin) ? ($pin['number'] ?? null) : null;
+            $comment = is_array($pin) && is_string($pin['comment'] ?? null) ? trim($pin['comment']) : '';
+            if (!is_int($number) || $number < 1 || $number > self::PINS_MAX || isset($pins[$number])
+                || $comment === '' || mb_strlen($comment) > self::PIN_COMMENT_MAX_LENGTH) {
+                return null;
+            }
+            $pins[$number] = ['number' => $number, 'comment' => $comment];
+        }
+        ksort($pins);
+
+        return array_values($pins);
+    }
+
+    /**
+     * @param array<array-key, mixed> $fields
+     * @param bool $hasScreenshot whether a screenshot was uploaded, also an invalid one
+     * @param array<string, string> $errors
+     * @return list<array{number: int, comment: string}>
+     */
+    private function validatePins(array $fields, bool $hasScreenshot, array &$errors): array
+    {
+        $value = $fields['pins'] ?? '';
+        if ($value === '') {
+            return [];
+        }
+        if (!is_string($value) || strlen($value) > self::JSON_MAX_BYTES) {
+            $errors['pins'] = 'invalid';
+            return [];
+        }
+        try {
+            $pins = self::normalizePins(json_decode($value, true, 16, JSON_THROW_ON_ERROR));
+        } catch (\JsonException) {
+            $pins = null;
+        }
+        if ($pins === null || ($pins !== [] && !$hasScreenshot)) {
+            $errors['pins'] = 'invalid';
+            return [];
+        }
+
+        return $pins;
     }
 
     /**

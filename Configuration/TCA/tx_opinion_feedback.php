@@ -32,7 +32,7 @@ return [
     ],
     'types' => [
         1 => [
-            'showitem' => 'status,source,category,severity,be_user,message,
+            'showitem' => 'status,source,category,severity,be_user,message,pins,
             --div--;opinion.messages:tx_opinion_feedback.tab.details, client_info, system_info, context, context_at_end,
             --div--;opinion.messages:tx_opinion_feedback.tab.delivery, delivery_status, delivery_attempts, delivery_log, backend_url',
         ],
@@ -109,6 +109,11 @@ return [
                 'allowed' => 'mp4,webm',
                 'readOnly' => true,
             ],
+        ],
+        // Comments of the numbered pins on the screenshot: list of {number, comment}
+        'pins' => [
+            'label' => 'opinion.messages:tx_opinion_feedback.pins',
+            'config' => $readOnlyJson,
         ],
         'client_info' => [
             'label' => 'opinion.messages:tx_opinion_feedback.client_info',

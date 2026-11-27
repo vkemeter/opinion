@@ -165,8 +165,11 @@ final class DialogConfigurationBuilderTest extends FunctionalTestCase
         self::assertSame('Schwärzen', $configuration['labels']['annotationBlackout']);
         self::assertSame('Zuschneiden', $configuration['labels']['annotationCrop']);
         self::assertSame('Zuschnitt aufheben', $configuration['labels']['annotationResetCrop']);
-        self::assertSame('Text', $configuration['labels']['annotationText']);
-        self::assertSame('Text auf dem Screenshot', $configuration['labels']['annotationTextField']);
+        self::assertSame('Pin mit Kommentar', $configuration['labels']['annotationPin']);
+        self::assertSame('Kommentar zu Pin {number}', $configuration['labels']['annotationPinField']);
+        self::assertSame('Pin-Kommentare', $configuration['labels']['pinComments']);
+        self::assertSame('Hinzufügen', $configuration['labels']['annotationPinAdd']);
+        self::assertArrayNotHasKey('annotationText', $configuration['labels']);
         self::assertSame('Fehler', $configuration['categories'][0]['label']);
     }
 }

@@ -118,6 +118,14 @@
 										src="{f:be.uri(route: 'opinion_screenshot', parameters: {uid: record.uid})}"
 										alt="{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.screenshot')}" />
 								</a>
+								<f:if condition="{pins}">
+									<h3 class="h4 mt-3">{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.pins')}</h3>
+									<ol>
+										<f:for each="{pins}" as="pin">
+											<li value="{pin.number}">{pin.comment -> f:format.nl2br()}</li>
+										</f:for>
+									</ol>
+								</f:if>
 							</f:then>
 							<f:else>
 								<p class="text-body-secondary">{f:translate(domain: 'opinion.messages', key: 'module.show.noScreenshot')}</p>

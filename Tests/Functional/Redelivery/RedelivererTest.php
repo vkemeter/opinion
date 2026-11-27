@@ -192,6 +192,28 @@ final class RedelivererTest extends FunctionalTestCase
     }
 
     /**
+     * Scenario: Redelivery (pin comments for delivery channels)
+     * Scenario: Old record (feedback-storage)
+     */
+    #[Test]
+    public function storedPinsArePassedAndRecordsWithoutPinsAreDelivered(): void
+    {
+        $repository = $this->get(FeedbackRepository::class);
+        $pins = [['number' => 1, 'comment' => 'wrong logo'], ['number' => 2, 'comment' => 'typo']];
+        $withPins = $repository->add(new Submission('The teaser image is cropped.', 'bug', Severity::High, Source::Backend, 3, new \DateTimeImmutable('2026-10-09 12:00:00'), pins: $pins), null);
+        $oldRecord = $repository->add(new Submission('The teaser image is cropped.', 'bug', Severity::High, Source::Backend, 3, new \DateTimeImmutable('2026-10-09 12:00:00')), null);
+        $this->get(ConnectionPool::class)->getConnectionForTable(FeedbackRepository::TABLE)->update(FeedbackRepository::TABLE, ['pins' => null], ['uid' => $oldRecord]);
+
+        $delivered = [];
+        $channel = $this->createCapturingChannel($delivered);
+        $configuration = new OpinionConfiguration(true, ['team@example.com'], '[Opinion]', 180);
+
+        self::assertSame(DeliveryStatus::Sent, $this->createRedeliverer([$channel])->redeliver($withPins, $configuration)?->status);
+        self::assertSame(DeliveryStatus::Sent, $this->createRedeliverer([$channel])->redeliver($oldRecord, $configuration)?->status);
+        self::assertSame([$pins, []], array_map(static fn(Submission $submission): array => $submission->pins, $delivered));
+    }
+
+    /**
      * Scenario: Unknown feedback
      */
     #[Test]

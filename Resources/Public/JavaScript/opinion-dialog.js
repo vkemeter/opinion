@@ -216,6 +216,9 @@ class OpinionDialog {
       if (capture.contextAtEnd) {
         body.append('contextAtEnd', JSON.stringify(capture.contextAtEnd));
       }
+      if (capture.pins.length > 0) {
+        body.append('pins', JSON.stringify(capture.pins));
+      }
     }
 
     this.setBusy(true);

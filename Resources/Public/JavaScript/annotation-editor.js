@@ -1,11 +1,11 @@
-import { COLORS, TOOLS, cropFromPoints, isShapeLargeEnough, renderAnnotations } from './annotation.js';
+import { COLORS, PINS_MAX, TOOLS, cropFromPoints, isShapeLargeEnough, pinRadiusFor, renderAnnotations } from './annotation.js';
 import { el } from './dom.js';
 import { icon } from './icons.js';
 
 const TOOL_LABELS = {
   rectangle: 'annotationRectangle',
   arrow: 'annotationArrow',
-  text: 'annotationText',
+  pin: 'annotationPin',
   blackout: 'annotationBlackout',
   crop: 'annotationCrop',
 };
@@ -14,7 +14,7 @@ const COLOR_LABELS = { red: 'annotationColorRed', yellow: 'annotationColorYellow
 const COLORLESS_TOOLS = ['blackout', 'crop'];
 const CROP_DIM_COLOR = 'rgb(0 0 0 / 55%)';
 const CROP_FRAME_COLOR = '#fff';
-const TEXT_MAX_LENGTH = 200;
+const PIN_COMMENT_MAX_LENGTH = 500;
 
 /**
  * Opens the full-screen editor above the feedback dialog.
@@ -45,7 +45,9 @@ class AnnotationEditor {
     this.tool = TOOLS[0];
     this.color = Object.keys(COLORS)[0];
     this.draft = null;
-    this.textInput = null;
+    this.commentBox = null;
+    this.commentField = null;
+    this.pinDraft = null;
     this.result = null;
     this.renderScheduled = false;
     this.element = this.render();
@@ -103,7 +105,7 @@ class AnnotationEditor {
     cancelButton.addEventListener('click', () => this.element.close());
     const applyButton = el('button', { class: 'opinion-dialog__button opinion-dialog__button--primary opinion-annotation__button', type: 'button' }, [icon('apply'), this.labels.annotationApply]);
     applyButton.addEventListener('click', () => {
-      this.commitText();
+      this.commitComment();
       this.result = { shapes: this.shapes, crop: this.crop };
       this.element.close();
     });
@@ -121,8 +123,8 @@ class AnnotationEditor {
     });
 
     dialog.addEventListener('keydown', (event) => {
-      // In the text field Ctrl/Cmd + Z is the native text undo
-      if (event.target === this.textInput) {
+      // In the comment box Ctrl/Cmd + Z is the native text undo
+      if (this.commentBox?.contains(event.target)) {
         return;
       }
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
@@ -158,12 +160,15 @@ class AnnotationEditor {
   }
 
   undo() {
+    // An open comment box would keep the number of a pin that is removed now
+    this.closeCommentInput();
     this.shapes.pop();
     this.updateControls();
     this.draw();
   }
 
   clear() {
+    this.closeCommentInput();
     this.shapes = [];
     this.updateControls();
     this.draw();
@@ -179,15 +184,17 @@ class AnnotationEditor {
     if (event.button !== 0) {
       return;
     }
-    // preventDefault() keeps the focus where it is, so an open text field does not blur by itself
+    // preventDefault() keeps the focus in an open comment box; a click elsewhere adds its pin
     event.preventDefault();
-    if (this.textInput) {
-      this.commitText();
+    if (this.commentBox) {
+      this.commitComment();
       return;
     }
     const { x, y } = this.toImagePoint(event);
-    if (this.tool === 'text') {
-      this.openTextInput(x, y);
+    if (this.tool === 'pin') {
+      if (this.pinCount() < PINS_MAX) {
+        this.openCommentInput(x, y);
+      }
       return;
     }
     this.canvas.setPointerCapture(event.pointerId);
@@ -221,58 +228,81 @@ class AnnotationEditor {
     this.draw();
   }
 
-  openTextInput(x, y) {
-    const input = el('input', { class: 'opinion-annotation__text', type: 'text', maxlength: String(TEXT_MAX_LENGTH), 'aria-label': this.labels.annotationTextField });
-    const color = COLORS[this.color];
-    input.style.setProperty('--opinion-text-color', color);
-    const canvasRect = this.canvas.getBoundingClientRect();
-    const stageRect = this.stage.getBoundingClientRect();
-    input.style.left = `${canvasRect.left - stageRect.left + (x * canvasRect.width) / this.canvas.width}px`;
-    input.style.top = `${canvasRect.top - stageRect.top + (y * canvasRect.height) / this.canvas.height}px`;
-    input.addEventListener('keydown', (event) => {
+  openCommentInput(x, y) {
+    const number = this.pinCount() + 1;
+    const titleId = `${this.id}-comment-title`;
+    const field = el('textarea', { class: 'opinion-annotation__comment-field', rows: '3', maxlength: String(PIN_COMMENT_MAX_LENGTH), 'aria-labelledby': titleId });
+    const cancelButton = el('button', { class: 'opinion-annotation__comment-button', type: 'button' }, this.labels.cancel);
+    const addButton = el('button', { class: 'opinion-annotation__comment-button opinion-annotation__comment-button--add', type: 'button', 'aria-keyshortcuts': 'Control+Enter Meta+Enter' }, this.labels.annotationPinAdd);
+    const box = el('div', { class: 'opinion-annotation__comment', role: 'group', 'aria-labelledby': titleId }, [
+      el('p', { class: 'opinion-annotation__comment-title', id: titleId }, this.labels.annotationPinField.replace('{number}', String(number))),
+      field,
+      el('div', { class: 'opinion-annotation__comment-actions' }, [cancelButton, addButton]),
+    ]);
+    cancelButton.addEventListener('click', () => this.closeCommentInput());
+    addButton.addEventListener('click', () => this.commitComment());
+    box.addEventListener('keydown', (event) => {
       // Enter and Escape confirm or cancel an IME composition (Japanese, Chinese, Korean); 229 covers Safari
       if (event.isComposing || event.keyCode === 229) {
         return;
       }
-      if (event.key === 'Enter') {
+      // Enter is a line break, Ctrl/Cmd + Enter adds
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && event.target === field) {
         event.preventDefault();
-        this.commitText();
+        this.commitComment();
       } else if (event.key === 'Escape') {
-        // Discard the text only, the editor stays open
+        // Discard the comment only, the editor stays open
         event.preventDefault();
         event.stopPropagation();
-        this.closeTextInput();
+        this.closeCommentInput();
       }
     });
-    input.addEventListener('blur', () => this.commitText());
-    this.textInput = input;
-    this.textPosition = { x, y, color };
-    this.stage.append(input);
-    input.focus();
-  }
-
-  commitText() {
-    if (!this.textInput) {
-      return;
-    }
-    const text = this.textInput.value.trim();
-    if (text !== '') {
-      this.shapes.push({ tool: 'text', ...this.textPosition, text });
-    }
-    this.closeTextInput();
-    this.updateControls();
+    this.commentBox = box;
+    this.commentField = field;
+    // The capture shows the window the editor runs in
+    this.pinDraft = { tool: 'pin', color: COLORS[this.color], x, y, radius: pinRadiusFor(this.canvas.width, window.innerWidth), number };
+    this.stage.append(box);
+    this.placeCommentBox(x, y);
     this.draw();
+    field.focus();
   }
 
-  closeTextInput() {
-    const input = this.textInput;
-    if (!input) {
+  // Next to the pin, flipped to the other side or shifted where it would leave the stage
+  placeCommentBox(x, y) {
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const stageRect = this.stage.getBoundingClientRect();
+    const pointX = canvasRect.left - stageRect.left + (x * canvasRect.width) / this.canvas.width;
+    const pointY = canvasRect.top - stageRect.top + (y * canvasRect.height) / this.canvas.height;
+    const { offsetWidth: width, offsetHeight: height } = this.commentBox;
+    const gap = 20;
+    const clamp = (value, max) => Math.max(8, Math.min(value, max - 8));
+    const left = pointX + gap + width <= stageRect.width ? pointX + gap : pointX - gap - width;
+    this.commentBox.style.left = `${clamp(left, stageRect.width - width)}px`;
+    this.commentBox.style.top = `${clamp(pointY - gap, stageRect.height - height)}px`;
+  }
+
+  commitComment() {
+    if (!this.commentBox) {
       return;
     }
-    // Cleared first, so the blur caused by removing the field does not commit again
-    this.textInput = null;
-    input.remove();
+    const comment = this.commentField.value.trim();
+    if (comment !== '') {
+      this.shapes.push({ ...this.pinDraft, comment });
+    }
+    this.closeCommentInput();
+    this.updateControls();
+  }
+
+  closeCommentInput() {
+    if (!this.commentBox) {
+      return;
+    }
+    this.commentBox.remove();
+    this.commentBox = null;
+    this.commentField = null;
+    this.pinDraft = null;
     this.toolButtons[this.tool].focus();
+    this.draw();
   }
 
   toImagePoint(event) {
@@ -296,7 +326,8 @@ class AnnotationEditor {
   }
 
   draw() {
-    const draftShape = this.draft && this.draft.tool !== 'crop' ? this.draft : null;
+    // The shape being dragged, or the pin whose comment is being typed
+    const draftShape = this.draft && this.draft.tool !== 'crop' ? this.draft : this.pinDraft;
     renderAnnotations(this.context, this.image, draftShape ? [...this.shapes, draftShape] : this.shapes);
     const crop = this.draft?.tool === 'crop' ? cropFromPoints(this.draft.x1, this.draft.y1, this.draft.x2, this.draft.y2) : this.crop;
     if (crop) {
@@ -330,12 +361,18 @@ class AnnotationEditor {
       button.setAttribute('aria-pressed', String(color === this.color));
       button.disabled = COLORLESS_TOOLS.includes(this.tool);
     }
+    this.toolButtons.pin.disabled = this.pinCount() >= PINS_MAX;
     this.undoButton.disabled = this.shapes.length === 0;
     this.clearButton.disabled = this.shapes.length === 0;
     this.resetCropButton.disabled = this.crop === null;
     // A disabled button loses the focus, keep it inside the editor
     if (focused?.disabled) {
-      this.toolButtons[this.tool].focus();
+      (this.toolButtons[this.tool].disabled ? this.undoButton : this.toolButtons[this.tool]).focus();
     }
+  }
+
+  // Pins are only removed from the end (undo) or all at once, so their numbers are always 1..n
+  pinCount() {
+    return this.shapes.filter((shape) => shape.tool === 'pin').length;
   }
 }

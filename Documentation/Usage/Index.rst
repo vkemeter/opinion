@@ -181,11 +181,11 @@ frame, for example the page preview, and record there.
 Mark up the screenshot
 ======================
 
-Click :guilabel:`Mark up` below the preview to open the screenshot in a
+Click :guilabel:`Mark up` above the preview to open the screenshot in a
 full-screen editor.
 
 ..  figure:: /Images/AnnotationEditor.png
-    :alt: The editor with a rectangle, an arrow, a text note and a blacked-out area on the screenshot
+    :alt: The editor with a rectangle, an arrow and two numbered pins on the screenshot, the comment box of the second pin is open
     :class: with-border with-shadow
 
     Marking up the screenshot
@@ -196,11 +196,20 @@ full-screen editor.
 :guilabel:`Arrow`
     Points at an element; drag from the start to the tip.
 
-:guilabel:`Text`
-    Click on the image, type a short note (one line, up to 200 characters)
-    and press :kbd:`Enter`. The text is drawn in the selected colour with a
-    dark outline. :kbd:`Esc` discards the text and keeps the editor open.
-    Placed text cannot be edited or moved; undo it and place it again.
+:guilabel:`Pin with comment`
+    Click on the spot you mean: a numbered badge appears in the selected
+    colour and a comment box opens next to it. Type the comment (up to 500
+    characters, :kbd:`Enter` for a new line) and click :guilabel:`Add` or
+    press :kbd:`Ctrl` + :kbd:`Enter` (:kbd:`Cmd` + :kbd:`Enter` on macOS); a
+    click elsewhere on the image adds it as well. :guilabel:`Cancel` or :kbd:`Esc` discards it and keeps the editor
+    open, an empty comment sets no pin. Pins are numbered 1, 2, 3, … in the
+    order you set them, up to 20. Placed pins cannot be edited or moved; undo
+    them and set them again.
+
+    The dialog lists the comments with their numbers below the preview; they
+    are sent as text next to the screenshot and shown in the detail view of
+    the module and in the email. A pin outside the crop frame is cut off
+    together with its comment, the other pins keep their numbers.
 
 :guilabel:`Black out`
     Covers an area with black, for example personal data that must not be
@@ -216,7 +225,7 @@ full-screen editor.
     part of :guilabel:`Undo`.
 
 Colour
-    Red, yellow or blue for rectangle, arrow and text. Black out is always
+    Red, yellow or blue for rectangle, arrow and pin. Black out is always
     black.
 
 :guilabel:`Undo` (also :kbd:`Ctrl` + :kbd:`Z` or :kbd:`Cmd` + :kbd:`Z`)

@@ -32,8 +32,9 @@ Features
 *   **Screenshot of the current tab** via the browser's screen capture
     (`getDisplayMedia()`), with preview, retake and remove.
 *   **Mark up the screenshot** in a full-screen editor: rectangle, arrow,
-    text notes, black out and crop. Markings are burnt into the image in the
-    browser; only the cropped part is sent.
+    numbered pins with a comment each, black out and crop. Markings are burnt
+    into the image in the browser; only the cropped part is sent. The pin
+    comments are listed in the module and the email.
 *   **Video of the current tab** instead of the screenshot, off by default:
     the dialog closes while recording, clicks are marked, and in the backend
     the recording continues across modules.

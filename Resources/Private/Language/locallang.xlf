@@ -85,6 +85,9 @@
             <trans-unit id="tx_opinion_feedback.context_at_end">
                 <source>Context at the end of the recording</source>
             </trans-unit>
+            <trans-unit id="tx_opinion_feedback.pins">
+                <source>Pin comments</source>
+            </trans-unit>
             <trans-unit id="tx_opinion_feedback.backend_url">
                 <source>Backend URL</source>
             </trans-unit>
@@ -241,6 +244,9 @@
             <trans-unit id="error.contextAtEnd.tooLarge">
                 <source>The page details at the end of the recording are too large.</source>
             </trans-unit>
+            <trans-unit id="error.pins.invalid">
+                <source>The pin comments could not be read. Please mark up the screenshot again.</source>
+            </trans-unit>
             <trans-unit id="email.headline">
                 <source>New feedback</source>
             </trans-unit>
@@ -377,7 +383,7 @@
                 <source>Mark up screenshot</source>
             </trans-unit>
             <trans-unit id="dialog.annotationHint">
-                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and add short notes as text. Black out personal data before sending.</source>
+                <source>Draw on the screenshot with the mouse, a pen or your finger. Crop it to the relevant part and set numbered pins with a comment each. Black out personal data before sending.</source>
             </trans-unit>
             <trans-unit id="dialog.annotationTools">
                 <source>Tool</source>
@@ -388,11 +394,17 @@
             <trans-unit id="dialog.annotationArrow">
                 <source>Arrow</source>
             </trans-unit>
-            <trans-unit id="dialog.annotationText">
-                <source>Text</source>
+            <trans-unit id="dialog.annotationPin">
+                <source>Pin with comment</source>
             </trans-unit>
-            <trans-unit id="dialog.annotationTextField">
-                <source>Text on the screenshot</source>
+            <trans-unit id="dialog.annotationPinField">
+                <source>Comment for pin {number}</source>
+            </trans-unit>
+            <trans-unit id="dialog.annotationPinAdd">
+                <source>Add</source>
+            </trans-unit>
+            <trans-unit id="dialog.pinComments">
+                <source>Pin comments</source>
             </trans-unit>
             <trans-unit id="dialog.annotationCrop">
                 <source>Crop</source>

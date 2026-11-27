@@ -8,7 +8,10 @@
 </f:if>
 {f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.message')}:
 {submission.message -> f:format.raw()}
-<f:if condition="{video}">
+<f:if condition="{submission.pins}">
+{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.pins')}:
+<f:for each="{submission.pins}" as="pin">{pin.number}. {pin.comment -> f:format.raw()}
+</f:for></f:if><f:if condition="{video}">
 {f:translate(domain: 'opinion.messages', key: 'email.video', arguments: {size: video.size}) -> f:format.raw()}<f:if condition="{video.url}">: {video.url -> f:format.raw()}</f:if>
 </f:if><f:for each="{context: context, contextAtEnd: contextAtEnd, clientInfo: clientInfo, systemInfo: systemInfo}" as="rows" key="section"><f:if condition="{rows}">
 

@@ -1,16 +1,33 @@
 import { canvasToJpeg } from './screenshot.js';
 
-export const TOOLS = ['rectangle', 'arrow', 'text', 'blackout', 'crop'];
+export const TOOLS = ['rectangle', 'arrow', 'pin', 'blackout', 'crop'];
 export const COLORS = { red: '#e00000', yellow: '#ffd400', blue: '#0078e6' };
 const BLACKOUT_COLOR = '#000';
 // Shapes smaller than this (in image pixels) are treated as accidental clicks
 const MIN_SIZE = 4;
 // Crop frames smaller than this (in image pixels, both sides) are ignored
 const MIN_CROP_SIZE = 16;
-const TEXT_OUTLINE_COLOR = '#111';
+const PIN_NUMBER_COLOR = '#fff';
+const PIN_NUMBER_COLOR_ON_LIGHT = '#1d2329';
+// The font of the dialog
+const PIN_FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif";
+export const PINS_MAX = 20;
+// Size of a pin in CSS pixels of the captured page
+const PIN_RADIUS = 15;
+const PIN_FONT_SIZE = 12;
 
 /**
- * A shape is { tool, color, x1, y1, x2, y2 } or, for text, { tool: 'text', color, x, y, text }
+ * Radius of a pin in image pixels: 15 CSS pixels of the captured page, whatever its device pixel ratio.
+ *
+ * @param {number} imageWidth width of the capture
+ * @param {number} pageWidth width of the captured page in CSS pixels
+ */
+export function pinRadiusFor(imageWidth, pageWidth) {
+  return PIN_RADIUS * (pageWidth > 0 ? imageWidth / pageWidth : 1);
+}
+
+/**
+ * A shape is { tool, color, x1, y1, x2, y2 } or, for a pin, { tool: 'pin', color, x, y, radius, number, comment }
  * in image pixel coordinates.
  */
 export function isShapeLargeEnough(shape) {
@@ -35,6 +52,21 @@ export function cropFromPoints(x1, y1, x2, y2) {
 }
 
 /**
+ * The comments of the pins that end up in the sent image: inside the crop, sorted by number.
+ *
+ * @param {Array<object>} shapes
+ * @param {{ x: number, y: number, width: number, height: number }|null} crop
+ * @returns {Array<{ number: number, comment: string }>}
+ */
+export function sentPins(shapes, crop) {
+  const inside = ({ x, y }) => !crop || (x >= crop.x && x <= crop.x + crop.width && y >= crop.y && y <= crop.y + crop.height);
+  return shapes
+    .filter((shape) => shape.tool === 'pin' && inside(shape))
+    .map(({ number, comment }) => ({ number, comment }))
+    .sort((a, b) => a.number - b.number);
+}
+
+/**
  * Draws the image and all shapes onto the canvas, which must have the image size.
  *
  * @param {CanvasRenderingContext2D} context
@@ -52,8 +84,8 @@ export function renderAnnotations(context, image, shapes) {
 }
 
 function drawShape(context, shape, lineWidth) {
-  if (shape.tool === 'text') {
-    drawText(context, shape, lineWidth);
+  if (shape.tool === 'pin') {
+    drawPin(context, shape);
     return;
   }
   const x = Math.min(shape.x1, shape.x2);
@@ -81,17 +113,22 @@ function drawShape(context, shape, lineWidth) {
   context.restore();
 }
 
-function drawText(context, { color, x, y, text }, lineWidth) {
+function drawPin(context, { color, x, y, number, radius }) {
   context.save();
-  context.font = `bold ${lineWidth * 8}px sans-serif`;
-  context.textBaseline = 'top';
-  context.lineJoin = 'round';
-  // Dark outline, so the text stays readable on any background
-  context.lineWidth = lineWidth * 2;
-  context.strokeStyle = TEXT_OUTLINE_COLOR;
-  context.strokeText(text, x, y);
+  // Flat badge with a soft shadow below, like the pins of the dialog's design
+  context.shadowColor = 'rgb(0 0 0 / 30%)';
+  context.shadowBlur = radius * 0.4;
+  context.shadowOffsetY = radius * 0.15;
+  context.beginPath();
+  context.arc(x, y, radius, 0, 2 * Math.PI);
   context.fillStyle = color;
-  context.fillText(text, x, y);
+  context.fill();
+  context.shadowColor = 'transparent';
+  context.font = `600 ${Math.round(radius * PIN_FONT_SIZE / PIN_RADIUS)}px ${PIN_FONT}`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillStyle = color === COLORS.yellow ? PIN_NUMBER_COLOR_ON_LIGHT : PIN_NUMBER_COLOR;
+  context.fillText(String(number), x, y + radius * 0.05);
   context.restore();
 }
 

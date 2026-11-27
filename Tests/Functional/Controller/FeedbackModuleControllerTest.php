@@ -370,6 +370,26 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     }
 
     /**
+     * Scenario: Feedback with pins
+     * Scenario: Markup in a comment
+     */
+    #[Test]
+    public function showListsThePinCommentsEscaped(): void
+    {
+        $withPins = $this->addFeedbackWithScreenshot(1, [['number' => 1, 'comment' => "wrong logo\nshould be the new one"], ['number' => 3, 'comment' => '<b>bold</b>']]);
+        $withoutPins = $this->addFeedbackWithScreenshot(1);
+        $controller = $this->get(FeedbackModuleController::class);
+
+        $html = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$withPins]))->getBody();
+        $plain = (string)$controller->showAction($this->createRequest('opinion_feedback.show', ['uid' => (string)$withoutPins]))->getBody();
+
+        self::assertStringContainsString('Pin comments', $html);
+        self::assertStringContainsString("<li value=\"1\">wrong logo<br />\nshould be the new one</li>", $html);
+        self::assertStringContainsString('<li value="3">&lt;b&gt;bold&lt;/b&gt;</li>', $html);
+        self::assertStringNotContainsString('Pin comments', $plain);
+    }
+
+    /**
      * Scenario: Video feedback
      * Scenario: Mixed list
      */
@@ -1188,12 +1208,15 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
         return $this->get(FeedbackModuleController::class)->videoAction($range === '' ? $request : $request->withHeader('Range', $range));
     }
 
-    private function addFeedbackWithScreenshot(int $senderUid): int
+    /**
+     * @param list<array{number: int, comment: string}> $pins
+     */
+    private function addFeedbackWithScreenshot(int $senderUid, array $pins = []): int
     {
         $this->get(ScreenshotStorageInstaller::class)->install();
         $screenshot = $this->get(ScreenshotStorage::class)->store(self::png(), 'png', new \DateTimeImmutable());
 
-        return $this->get(FeedbackRepository::class)->add(new Submission('With screenshot', 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable()), $screenshot);
+        return $this->get(FeedbackRepository::class)->add(new Submission('With screenshot', 'bug', Severity::Low, Source::Backend, $senderUid, new \DateTimeImmutable(), pins: $pins), $screenshot);
     }
 
     private static function png(): string

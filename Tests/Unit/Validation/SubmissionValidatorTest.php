@@ -280,6 +280,96 @@ final class SubmissionValidatorTest extends UnitTestCase
     }
 
     /**
+     * Requirement: Pin validation (valid pins, unexpected keys)
+     */
+    #[Test]
+    public function validPinsAreTrimmedSortedAndStrippedOfUnknownKeys(): void
+    {
+        $result = new SubmissionValidator()->validate([
+            ...self::validFields(),
+            'pins' => '[{"number":2,"comment":" typo "},{"number":1,"comment":"wrong logo","selector":".logo"}]',
+        ], $this->upload(self::JPEG), self::CATEGORIES);
+
+        self::assertTrue($result->isValid());
+        self::assertSame([['number' => 1, 'comment' => 'wrong logo'], ['number' => 2, 'comment' => 'typo']], $result->pins);
+    }
+
+    /**
+     * Requirement: Pin validation (an empty or missing field means no pins)
+     */
+    #[Test]
+    #[DataProvider('noPinsProvider')]
+    public function emptyPinsMeanNoPins(string $pins): void
+    {
+        $result = new SubmissionValidator()->validate([...self::validFields(), 'pins' => $pins], null, self::CATEGORIES);
+
+        self::assertTrue($result->isValid());
+        self::assertSame([], $result->pins);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function noPinsProvider(): array
+    {
+        return ['missing' => [''], 'empty list' => ['[]']];
+    }
+
+    /**
+     * Requirement: Pin validation
+     */
+    #[Test]
+    #[DataProvider('invalidPinsProvider')]
+    public function invalidPinsAreRejected(string $pins): void
+    {
+        $result = new SubmissionValidator()->validate([...self::validFields(), 'pins' => $pins], $this->upload(self::JPEG), self::CATEGORIES);
+
+        self::assertSame(['pins' => 'invalid'], $result->errors);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function invalidPinsProvider(): array
+    {
+        $pin = static fn(int $number, string $comment = 'typo'): array => ['number' => $number, 'comment' => $comment];
+
+        return [
+            'duplicate number' => [(string)json_encode([$pin(1), $pin(1)])],
+            'comment too long' => [(string)json_encode([$pin(1, str_repeat('ä', 501))])],
+            'empty comment' => [(string)json_encode([$pin(1, '   ')])],
+            'number zero' => [(string)json_encode([$pin(0)])],
+            'number above 20' => [(string)json_encode([$pin(21)])],
+            'number as string' => ['[{"number":"1","comment":"typo"}]'],
+            'more than 20 pins' => [(string)json_encode(array_map($pin, range(1, 21)))],
+            'object instead of list' => ['{"number":1,"comment":"typo"}'],
+            'no JSON' => ['[{'],
+        ];
+    }
+
+    #[Test]
+    public function commentWithExactly500CharactersIsValid(): void
+    {
+        $result = new SubmissionValidator()->validate([
+            ...self::validFields(),
+            'pins' => (string)json_encode([['number' => 1, 'comment' => str_repeat('ä', 500)]]),
+        ], $this->upload(self::JPEG), self::CATEGORIES);
+
+        self::assertTrue($result->isValid());
+    }
+
+    /**
+     * Requirement: Pin validation (pins without screenshot)
+     */
+    #[Test]
+    public function pinsWithoutScreenshotAreRejected(): void
+    {
+        $result = new SubmissionValidator()->validate([...self::validFields(), 'pins' => '[{"number":1,"comment":"typo"}]'], null, self::CATEGORIES);
+
+        self::assertSame(['pins' => 'invalid'], $result->errors);
+    }
+
+    /**
      * @return array<string, string>
      */
     private static function validFields(): array

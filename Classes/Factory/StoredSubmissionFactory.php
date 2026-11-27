@@ -7,6 +7,7 @@ namespace Vkemeter\Opinion\Factory;
 use Vkemeter\Opinion\Domain\Severity;
 use Vkemeter\Opinion\Domain\Source;
 use Vkemeter\Opinion\Domain\Submission;
+use Vkemeter\Opinion\Validation\SubmissionValidator;
 
 /**
  * Rebuilds the submission of a stored feedback record, so it can be delivered again.
@@ -32,6 +33,7 @@ final readonly class StoredSubmissionFactory
             context: self::decode($record['context'] ?? null),
             contextAtEnd: self::decode($record['context_at_end'] ?? null),
             backendUrl: (string)($record['backend_url'] ?? ''),
+            pins: SubmissionValidator::normalizePins(self::decode($record['pins'] ?? null)) ?? [],
         );
     }
 

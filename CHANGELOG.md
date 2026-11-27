@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Numbered pins with a comment each in the screenshot editor. They replace
+  the text tool: a click sets a badge (1, 2, 3, …, at most 20) and opens a
+  comment box (several lines, "Cancel" and "Add"); the comment is sent as text
+  next to the screenshot. The dialog lists the comments below
+  the preview; the detail view and the email show them as numbered list. Pins
+  outside the crop frame are cut off with their comment. New read-only field
+  `pins`; run `extension:setup` (or the database analyzer) after the update
+- The capture buttons of the dialog are placed above the preview, so they are
+  not missed on small screens; "Mark up" and "Remove" have the style of
+  "Retake" and an icon
 - `opinion:redeliver` delivers the oldest feedback first by its creation time,
   also for imported or backdated records (it ordered by uid before)
 - The upgrade wizard "Opinion: page of existing feedback" is done after it ran,

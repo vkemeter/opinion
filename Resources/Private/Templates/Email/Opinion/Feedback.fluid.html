@@ -68,6 +68,15 @@
 			</p>
 		</f:if>
 
+		<f:if condition="{submission.pins}">
+			<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.pins')}</h4>
+			<ol>
+				<f:for each="{submission.pins}" as="pin">
+					<li value="{pin.number}">{pin.comment -> f:format.nl2br()}</li>
+				</f:for>
+			</ol>
+		</f:if>
+
 		<f:if condition="{video}">
 			<h4>{f:translate(domain: 'opinion.messages', key: 'tx_opinion_feedback.video')}</h4>
 			<p style="word-break: break-all">
