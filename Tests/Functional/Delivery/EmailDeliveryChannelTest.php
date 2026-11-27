@@ -61,6 +61,7 @@ final class EmailDeliveryChannelTest extends FunctionalTestCase
     /**
      * Scenario: Feedback with screenshot
      * Scenario: Reply-to
+     * Scenario: Markup in the message
      */
     #[Test]
     public function deliverSendsMailWithAllDetailsAndScreenshot(): void

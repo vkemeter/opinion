@@ -251,7 +251,8 @@ final class CleanupCommandTest extends FunctionalTestCase
     }
 
     /**
-     * Requirement: Retention cleanup / Redelivery command (selectable as Scheduler task)
+     * Requirement: Cleanup summary, errors and scheduling / Redelivery command (selectable as Scheduler task)
+     * Scenario: Scheduler task
      */
     #[Test]
     public function commandIsSchedulable(): void

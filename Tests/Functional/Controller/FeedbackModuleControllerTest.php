@@ -111,6 +111,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
     /**
      * Scenario: Backend feedback
+     * Scenario: Own backend host
      */
     #[Test]
     public function showLinksTheReportedUrlOnce(): void
@@ -547,6 +548,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     /**
      * Scenario: Foreign feedback
      * Scenario: Empty message
+     * Scenario: Message too long
      */
     #[Test]
     public function invalidOrForeignMessagesAreRejected(): void
@@ -576,6 +578,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
     /**
      * Scenario: Sender replies to closed feedback
      * Scenario: Admin writes to closed feedback
+     * Scenario: Default reopen status
      */
     #[Test]
     public function replyOfTheSenderReopensClosedFeedbackAndOneOfTheAdminDoesNot(): void
@@ -877,6 +880,7 @@ final class FeedbackModuleControllerTest extends FunctionalTestCase
 
     /**
      * Scenario: Editor searches
+     * Scenario: Search in the message
      */
     #[Test]
     public function editorSearchFindsOwnFeedbackOnly(): void

@@ -38,6 +38,7 @@ final class UrlParameterFilterTest extends UnitTestCase
      * Scenario: Token in the fragment
      * Scenario: Route with query in the fragment
      * Scenario: Anchor
+     * Scenario: Emptied fragment
      *
      * @param list<string> $deniedParameters
      */
