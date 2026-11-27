@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.3.0 – 2026-11-27
 
 - Numbered pins with a comment each in the screenshot editor. They replace
   the text tool: a click sets a badge (1, 2, 3, …, at most 20) and opens a

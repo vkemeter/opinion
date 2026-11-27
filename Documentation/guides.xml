@@ -12,7 +12,7 @@
                interlink-shortcode="vkemeter/opinion"
                typo3-core-preferred="stable"/>
     <project title="Opinion"
-             version="2.2"
-             release="2.2.0"
+             version="2.3"
+             release="2.3.0"
              copyright="since 2026 by Volker Kemeter"/>
 </guides>
