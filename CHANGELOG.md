@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.1 – 2026-11-28
+
+- The browser test of the pin size no longer depends on the size of the tab
+  capture, so it passes on Linux CI too. No change to the extension itself;
+  this release replaces 2.3.0, whose tag was moved after publication.
+
 ## 2.3.0 – 2026-11-27
 
 - Numbered pins with a comment each in the screenshot editor. They replace
